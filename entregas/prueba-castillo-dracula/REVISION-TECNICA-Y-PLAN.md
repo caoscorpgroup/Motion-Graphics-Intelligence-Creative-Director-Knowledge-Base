@@ -92,7 +92,7 @@ Cuando llegue:
 
 ## 7. Límites de esta revisión
 
-Esta revisión es visual y documental, no una validación de píxeles. Todavía no se han comprobado dimensiones exactas, alfa, perfiles de color, resolución efectiva, ni alineación entre capas. Tampoco se ha ejecutado una composición ni una prueba de paralaje. No presentar estas tareas como terminadas hasta disponer de los archivos legibles y ejecutar las pruebas.
+**Actualización 2026-11-09:** los seis PNG ya fueron recuperados y analizados con Pillow en un entorno Linux aislado. Se confirmó que todos miden 1920×1080, están en RGBA y que cinco contienen transparencia alfa real; el cielo es opaco de forma intencional. El primer plano presenta esquinas opacas y requiere tratamiento especial. Los resultados medidos están en `diagnostico/asset-report.json` y `diagnostico/RESULTADOS-INSPECCION.md`. Aún no se ha certificado alineación semántica, separación de elementos, composición final ni prueba de paralaje. No declarar Fase 1 completa hasta ejecutar esas pruebas.
 
 ## 8. Ubicación de originales
 
