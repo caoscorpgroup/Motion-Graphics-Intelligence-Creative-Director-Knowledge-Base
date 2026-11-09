@@ -1,0 +1,25 @@
+{
+  "source_directory": "entregas/Gemini-por-integrar",
+  "inspection": "Executed in an isolated Linux image-processing environment with Pillow; originals opened read-only.",
+  "assets": [
+    {"file":"01-fondo-cielo.PNG","format":"PNG","mode":"RGBA","width":1920,"height":1080,"aspect_ratio":"16:9","alpha_min":255,"alpha_max":255,"transparent_pixels":0,"partial_alpha_pixels":0,"opaque_pixels":2073600,"alpha_bbox":[0,0,1920,1080],"assessment":"Opaque full-frame background; expected for rear sky layer."},
+    {"file":"02-castillo.PNG","format":"PNG","mode":"RGBA","width":1920,"height":1080,"aspect_ratio":"16:9","alpha_min":0,"alpha_max":255,"transparent_pixels":1578726,"partial_alpha_pixels":1125,"opaque_pixels":493749,"alpha_bbox":[462,5,1461,1076],"assessment":"Real transparency; usable as an independent layer, with partial-alpha edge pixels."},
+    {"file":"03-colina-camino.PNG","format":"PNG","mode":"RGBA","width":1920,"height":1080,"aspect_ratio":"16:9","alpha_min":0,"alpha_max":255,"transparent_pixels":742859,"partial_alpha_pixels":493,"opaque_pixels":1330248,"alpha_bbox":[0,35,1920,1080],"assessment":"Real transparency in upper region; bottom corners are opaque, consistent with ground/terrain reaching canvas edges."},
+    {"file":"04-primer-plano.PNG","format":"PNG","mode":"RGBA","width":1920,"height":1080,"aspect_ratio":"16:9","alpha_min":0,"alpha_max":255,"transparent_pixels":1563523,"partial_alpha_pixels":4558,"opaque_pixels":505519,"alpha_bbox":[0,0,1920,1080],"assessment":"Has real transparency internally, but all four corners are opaque dark pixels. Not a clean isolated foreground with transparent canvas corners; requires visual edge/mask review before parallax."},
+    {"file":"05-carruaje-caballo.PNG","format":"PNG","mode":"RGBA","width":1920,"height":1080,"aspect_ratio":"16:9","alpha_min":0,"alpha_max":255,"transparent_pixels":1335932,"partial_alpha_pixels":2537,"opaque_pixels":735131,"alpha_bbox":[83,130,1836,1026],"assessment":"Real transparency; large content bounds suggest horse/carriage occupy much of the frame. Must inspect crop and separate parts before animation."},
+    {"file":"06-murcielagos-humo.PNG","format":"PNG","mode":"RGBA","width":1920,"height":1080,"aspect_ratio":"16:9","alpha_min":0,"alpha_max":255,"transparent_pixels":1324214,"partial_alpha_pixels":7331,"opaque_pixels":742055,"alpha_bbox":[12,15,1915,1076],"assessment":"Real transparency; combined effects sheet. Bat silhouettes and smoke columns must be extracted as separate assets; static silhouettes are not a wing-flap animation cycle."}
+  ],
+  "summary": {
+    "files_found": 6,
+    "common_dimensions": "1920x1080",
+    "common_aspect_ratio": "16:9",
+    "files_with_real_transparency": 5,
+    "opaque_full_frame_backgrounds": ["01-fondo-cielo.PNG"],
+    "special_attention": ["04-primer-plano.PNG has opaque corner pixels despite internal transparency","06-murcielagos-humo.PNG combines different animation elements","05-carruaje-caballo.PNG needs articulation review"]
+  },
+  "limitations": [
+    "Alpha-channel statistics do not prove semantic alignment or visual quality.",
+    "No original image was modified.",
+    "No final parallax or character animation has been approved."
+  ]
+}
