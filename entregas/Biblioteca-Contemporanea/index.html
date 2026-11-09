@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Contemporánea - Modular Professional Rig & Motion Graphics</title>
+    <link rel="stylesheet" href="./styles/main.css">
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1>Biblioteca Contemporánea <span>Modular Architecture & Full-Body IK/FK Rig</span></h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn" id="btn-audit">📊 Matriz de Auditoría</button>
+            <button class="btn btn-primary" id="btn-fullscreen">⛶ Pantalla Completa</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="stage-container">
+            <div class="viewport-wrapper" id="viewport">
+                <!-- SVG Scene embedding assets -->
+                <svg class="scene-svg" viewBox="0 0 1280 720" id="scene-svg">
+                    <defs>
+                        <linearGradient id="wallGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#1e293b"/>
+                            <stop offset="100%" stop-color="#0f172a"/>
+                        </linearGradient>
+                        <linearGradient id="floorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#334155"/>
+                            <stop offset="100%" stop-color="#1e293b"/>
+                        </linearGradient>
+                        <linearGradient id="woodShelf" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#78350f"/>
+                            <stop offset="50%" stop-color="#92400e"/>
+                            <stop offset="100%" stop-color="#78350f"/>
+                        </linearGradient>
+                        <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+                        </filter>
+                    </defs>
+
+                    <!-- Background & Architecture -->
+                    <rect width="1280" height="720" fill="url(#wallGradient)" />
+                    <path d="M 850 60 L 1200 60 L 1200 450 L 850 450 Z" fill="#0ea5e9" opacity="0.08" />
+                    
+                    <!-- Shelves & Objects -->
+                    <g id="scenery-shelves">
+                        <rect x="60" y="120" width="220" height="420" fill="url(#woodShelf)" rx="4" filter="url(#dropShadow)" />
+                        <rect x="340" y="100" width="360" height="440" fill="url(#woodShelf)" rx="4" filter="url(#dropShadow)" />
+                        <rect x="350" y="180" width="340" height="12" fill="#451a03" />
+                        <rect x="350" y="280" width="340" height="12" fill="#451a03" />
+                        <g id="target-book-shelf">
+                            <rect id="shelf-book-item" x="420" y="235" width="20" height="45" fill="#f43f5e" rx="3" filter="url(#dropShadow)" />
+                        </g>
+                    </g>
+
+                    <rect x="0" y="540" width="1280" height="180" fill="url(#floorGradient)" />
+
+                    <!-- Counter -->
+                    <g id="scenery-counter" transform="translate(720, 420)">
+                        <rect x="0" y="0" width="380" height="120" fill="#334155" rx="6" filter="url(#dropShadow)" />
+                        <rect x="10" y="-15" width="360" height="20" fill="#475569" rx="4" />
+                    </g>
+
+                    <!-- Characters -->
+                    <g id="char-librarian" transform="translate(860, 410)"></g>
+                    <g id="char-client" transform="translate(250, 490)"></g>
+                    <g id="char-assistant" transform="translate(580, 495)"></g>
+                    <g id="char-girl" transform="translate(420, 505)"></g>
+                </svg>
+            </div>
+
+            <!-- Timeline Controller -->
+            <div class="control-panel">
+                <div class="timeline-row">
+                    <span id="time-current" class="time-display">00.00s</span>
+                    <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="20" step="0.05" value="0">
+                    <span id="time-total" class="time-display">20.00s</span>
+                </div>
+                <div class="controls-row">
+                    <div class="controls-group">
+                        <button class="btn" id="btn-play">▶ Reproducir</button>
+                        <button class="btn" id="btn-pause">⏸ Pausa</button>
+                        <button class="btn" id="btn-reset">↺ Reiniciar</button>
+                        <button class="btn" id="btn-loop">🔁 Bucle: <span id="loop-status">ON</span></button>
+                    </div>
+                    <div class="controls-group">
+                        <label style="font-size:0.875rem; color:var(--text-muted)">Velocidad:</label>
+                        <select id="speed-select" class="speed-select">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1.0x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2.0x</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="panel-card">
+                <h3>🛠 Modos de Rig & X-Ray</h3>
+                <div class="toggles-group">
+                    <div class="toggle-item">
+                        <span>Modo X-Ray Dinámico</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-xray">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-item">
+                        <span>Motor de Animación</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-anim" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Audit Modal -->
+    <div class="modal-overlay" id="modal-audit">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Matriz de Cumplimiento y Auditoría Técnica</h3>
+                <button class="btn" id="btn-close-audit">✕ Cerrar</button>
+            </div>
+            <div class="modal-body" id="audit-body-container"></div>
+        </div>
+    </div>
+
+    <!-- Modular Script loaders -->
+    <script src="./source/character-rig.js"></script>
+    <script src="./source/forward-kinematics.js"></script>
+    <script src="./source/inverse-kinematics.js"></script>
+    <script src="./source/walk-cycle.js"></script>
+    <script src="./source/character-expressions.js"></script>
+    <script src="./source/object-interaction.js"></script>
+    <script src="./source/xray-debug.js"></script>
+    <script src="./source/timeline.js"></script>
+    <script src="./source/scene.js"></script>
+    <script src="./source/animation-controller.js"></script>
+</body>
+</html>

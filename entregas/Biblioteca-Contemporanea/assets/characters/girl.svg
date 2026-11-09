@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -100 100 200">
+    <g id="girl-rig" class="rig-root">
+        <ellipse cx="0" cy="75" rx="16" ry="4" fill="#000" opacity="0.3"/>
+        <path d="M -14 -8 L 14 -8 L 18 40 L -18 40 Z" fill="#eab308" />
+        <circle cx="0" cy="-36" r="18" fill="#fbcfe8" />
+        <circle cx="-18" cy="-38" r="7" fill="#854d0e" />
+        <circle cx="18" cy="-38" r="7" fill="#854d0e" />
+    </g>
+</svg>

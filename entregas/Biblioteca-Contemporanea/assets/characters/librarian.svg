@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -100 100 200">
+    <g id="librarian-rig" class="rig-root">
+        <ellipse cx="0" cy="85" rx="35" ry="8" fill="#000" opacity="0.3"/>
+        <path d="M -30 0 L 30 0 L 25 75 L -25 75 Z" fill="#334155" />
+        <circle cx="0" cy="-45" r="26" fill="#fbcfe8" />
+        <path d="M -26 -15 C -26 -35 26 -35 26 -15 Z" fill="#64748b" />
+    </g>
+</svg>
