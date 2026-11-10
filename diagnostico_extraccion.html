@@ -1,107 +1,253 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diagnóstico de Extracción de Recursos - Rig 2D</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background-color: #0f111a;
-      color: #fff;
-      font-family: system-ui, -apple-system, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 1.2rem;
-      margin-bottom: 15px;
-      color: #88c0d0;
-      letter-spacing: 0.5px;
-    }
-    canvas {
-      background: #181b28;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-      border-radius: 8px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico de extracción de piezas</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 16px;
+  background: #17191e;
+  color: #f2f2f2;
+  font-family: Arial, sans-serif;
+}
+h2 { font-size: 20px; }
+p { color: #bfc3cc; line-height: 1.5; }
+button, .file {
+  display: inline-block;
+  padding: 12px 16px;
+  margin: 5px 4px 10px 0;
+  border: 0;
+  border-radius: 8px;
+  background: #343b49;
+  color: white;
+  font-size: 14px;
+}
+.file { background: #315b91; }
+#stage {
+  position: relative;
+  width: 100%;
+  margin-top: 12px;
+  touch-action: none;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+#overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+#results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.piece {
+  background: #252932;
+  padding: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.piece canvas {
+  background: #fff;
+  max-height: 220px;
+  object-fit: contain;
+}
+.piece button { margin-top: 8px; }
+small { color: #aeb5c1; }
+</style>
 </head>
 <body>
 
-<h1>INSPECCIÓN VISUAL DE RECURSOS - VISTA DE DIAGNÓSTICO</h1>
-<canvas id="diagnosticCanvas" width="1150" height="380"></canvas>
+<h2>Diagnóstico de extracción</h2>
+<p>
+Selecciona la hoja de piezas separadas para rigging
+(imagen 3 o imagen 5 de referencias-visuales).
+Después, dibuja rectángulos sobre las piezas que quieras
+extraer. Puedes hacerlo con el dedo.
+</p>
+
+<label class="file">
+  Seleccionar imagen
+  <input id="file" type="file" accept="image/*" hidden>
+</label>
+
+<div id="info">No hay ninguna imagen cargada.</div>
+
+<div id="stage">
+  <canvas id="source"></canvas>
+  <canvas id="overlay"></canvas>
+</div>
+
+<p>
+  <button id="add" disabled>Guardar recorte</button>
+  <button id="clear" disabled>Limpiar selección</button>
+</p>
+
+<div id="results"></div>
 
 <script>
-const canvas = document.getElementById('diagnosticCanvas');
-const ctx = canvas.getContext('2d');
+const fileInput = document.getElementById("file");
+const source = document.getElementById("source");
+const overlay = document.getElementById("overlay");
+const ctx = source.getContext("2d");
+const octx = overlay.getContext("2d");
+const info = document.getElementById("info");
+const add = document.getElementById("add");
+const clear = document.getElementById("clear");
+const results = document.getElementById("results");
 
-const charImg = new Image();
-charImg.src = 'watermarked_img_2084642056169506536.jpg';
+let img = new Image();
+let selection = null;
+let start = null;
+let drawing = false;
+let count = 0;
 
-// Definición de las 5 piezas requeridas con sus coordenadas originales verificadas
-const items = [
-  { name: '1. Cabeza',      sx: 348, sy: 50,  sw: 105, sh: 130 },
-  { name: '2. Torso',       sx: 345, sy: 215, sw: 120, sh: 165 },
-  { name: '3. Brazo Sup.',  sx: 372, sy: 162, sw: 50,  sh: 75  },
-  { name: '4. Antebrazo',   sx: 375, sy: 225, sw: 45,  sh: 70  },
-  { name: '5. Mano',        sx: 368, sy: 290, sw: 45,  sh: 55  }
-];
+fileInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-charImg.onload = () => {
-  // Fondo neutro
-  ctx.fillStyle = '#181b28';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const url = URL.createObjectURL(file);
+  img.onload = () => {
+    source.width = img.naturalWidth;
+    source.height = img.naturalHeight;
+    overlay.width = img.naturalWidth;
+    overlay.height = img.naturalHeight;
 
-  let startX = 40;
-  const yPos = 50;
-  const targetHeight = 200; // Altura estándar visual para comparar proporciones
+    ctx.clearRect(0, 0, source.width, source.height);
+    ctx.drawImage(img, 0, 0);
 
-  items.forEach((item, index) => {
-    // Mantener proporciones originales escalando uniformemente según la altura de visualización
-    const scale = targetHeight / item.sh;
-    const dw = item.sw * scale;
-    const dh = item.sh * scale;
+    info.textContent =
+      file.name + " — " +
+      img.naturalWidth + " × " + img.naturalHeight + " px";
 
-    // Panel contenedor individual para separar visualmente cada pieza
-    ctx.fillStyle = '#222638';
-    ctx.strokeStyle = '#3b4252';
-    ctx.lineWidth = 2;
-    ctx.fillRect(startX - 15, yPos - 15, dw + 30, targetHeight + 90);
-    ctx.strokeRect(startX - 15, yPos - 15, dw + 30, targetHeight + 90);
+    selection = null;
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    results.innerHTML = "";
+    count = 0;
+    add.disabled = false;
+    clear.disabled = false;
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+});
 
-    // Dibujar recorte original exacto (sin transformaciones, rotaciones ni filtros)
-    ctx.drawImage(
-      charImg,
-      item.sx, item.sy, item.sw, item.sh,
-      startX, yPos, dw, dh
-    );
+function position(e) {
+  const rect = overlay.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * overlay.width / rect.width,
+    y: (e.clientY - rect.top) * overlay.height / rect.height
+  };
+}
 
-    // Identificación de la pieza
-    ctx.fillStyle = '#eceff4';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.fillText(item.name, startX, yPos + targetHeight + 15);
+overlay.addEventListener("pointerdown", e => {
+  if (!img.src) return;
+  drawing = true;
+  start = position(e);
+  selection = null;
+  overlay.setPointerCapture(e.pointerId);
+});
 
-    // Coordenadas técnicas sx, sy, sw, sh
-    ctx.fillStyle = '#8fbcbb';
-    ctx.font = '11px monospace';
-    ctx.fillText(`sx: ${item.sx} | sy: ${item.sy}`, startX, yPos + targetHeight + 38);
-    ctx.fillText(`sw: ${item.sw} | sh: ${item.sh}`, startX, yPos + targetHeight + 54);
+overlay.addEventListener("pointermove", e => {
+  if (!drawing) return;
+  const p = position(e);
 
-    // Espaciado dinámico horizontal para el siguiente elemento
-    startX += dw + 45;
-  });
-};
+  selection = {
+    x: Math.min(start.x, p.x),
+    y: Math.min(start.y, p.y),
+    w: Math.abs(p.x - start.x),
+    h: Math.abs(p.y - start.y)
+  };
 
-charImg.onerror = () => {
-  ctx.fillStyle = '#bf616a';
-  ctx.font = '16px sans-serif';
-  ctx.fillText('Error al cargar la imagen de referencia.', 40, 50);
-};
+  drawOverlay();
+});
+
+overlay.addEventListener("pointerup", () => {
+  drawing = false;
+  drawOverlay();
+});
+
+function drawOverlay() {
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  if (!selection) return;
+
+  octx.strokeStyle = "#00e5ff";
+  octx.lineWidth = Math.max(2, overlay.width / 500);
+  octx.fillStyle = "rgba(0,229,255,0.12)";
+  octx.fillRect(
+    selection.x, selection.y,
+    selection.w, selection.h
+  );
+  octx.strokeRect(
+    selection.x, selection.y,
+    selection.w, selection.h
+  );
+}
+
+add.addEventListener("click", () => {
+  if (!selection || selection.w < 3 || selection.h < 3) {
+    alert("Dibuja primero un rectángulo sobre una pieza.");
+    return;
+  }
+
+  const x = Math.round(selection.x);
+  const y = Math.round(selection.y);
+  const w = Math.round(selection.w);
+  const h = Math.round(selection.h);
+
+  const crop = document.createElement("canvas");
+  crop.width = w;
+  crop.height = h;
+  crop.getContext("2d").drawImage(
+    source, x, y, w, h, 0, 0, w, h
+  );
+
+  count++;
+  const card = document.createElement("div");
+  card.className = "piece";
+
+  const title = document.createElement("p");
+  title.textContent = "Pieza " + count;
+
+  const dimensions = document.createElement("small");
+  dimensions.textContent =
+    w + " × " + h + " px · X:" + x + " Y:" + y;
+
+  const preview = document.createElement("canvas");
+  preview.width = w;
+  preview.height = h;
+  preview.getContext("2d").drawImage(crop, 0, 0);
+
+  const download = document.createElement("button");
+  download.textContent = "Descargar PNG";
+  download.onclick = () => {
+    const a = document.createElement("a");
+    a.download = "pieza_" + count + ".png";
+    a.href = crop.toDataURL("image/png");
+    a.click();
+  };
+
+  card.append(title, dimensions, preview, download);
+  results.appendChild(card);
+
+  selection = null;
+  drawOverlay();
+});
+
+clear.addEventListener("click", () => {
+  selection = null;
+  drawOverlay();
+});
 </script>
-
 </body>
 </html>
+
