@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WILDLIFE SANCTUARY — The Living Ecosystem (20s Seamless Loop)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #141916;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  #diorama {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 177.78vh;
+    max-height: 56.25vw;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(255, 232, 185, 0.14);
+    background: #f3c68f;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #grain-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.085;
+    mix-blend-mode: overlay;
+  }
+  #vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 48%, rgba(255, 236, 198, 0.04) 55%, rgba(16, 22, 18, 0.48) 100%);
+  }
+</style>
+</head>
+<body>
+<div id="diorama">
+  <canvas id="c-sky"></canvas>
+  <canvas id="c-far"></canvas>
+  <canvas id="c-mid"></canvas>
+  <canvas id="c-front"></canvas>
+  <svg id="grain-overlay" xmlns="http://www.w3.org/2000/svg">
+    <filter id="editorial-grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#editorial-grain)"/>
+  </svg>
+  <div id="vignette"></div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // =========================================================================
+  // 1. CONSTANTES DE PRODUCCIÓN Y RELOJ MAESTRO (LOOP PERFECTO DE 20.00s)
+  // =========================================================================
+  const W = 1920;
+  const H = 1080;
+  const LOOP_SECONDS = 20.0;
+  const TAU = Math.PI * 2;
+
+  const diorama = document.getElementById('diorama');
+  const canvases = {
+    sky: document.getElementById('c-sky'),
+    far: document.getElementById('c-far'),
+    mid: document.getElementById('c-mid'),
+    front: document.getElementById('c-front')
+  };
+  const ctxs = {
+    sky: canvases.sky.getContext('2d'),
+    far: canvases.far.getContext('2d'),
+    mid: canvases.mid.getContext('2d'),
+    front: canvases.front.getContext('2d')
+  };
+
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for (const k in canvases) {
+      const c = canvases[k];
+      c.width = Math.round(W * dpr);
+      c.height = Math.round(H * dpr);
+      ctxs[k].setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Generador pseudoaleatorio determinista (Mulberry32)
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function() {
+      a |= 0;
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const rng = mulberry32(20261110);
+
+  // Utilidades matemáticas periódicas y curvas de interpolación
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smoothstep = (e0, e1, x) => {
+    const t = clamp((x - e0) / (e1 - e0), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+  // Onda periódica suave [0..1] con meseta configurable para poses naturales
+  function periodicWindow(phase, start, peakIn, holdEnd, end) {
+    // Asegura continuidad circular en [0, 1)
+    let p = phase;
+    if (end > 1.0 && p < end - 1.0) p += 1.0;
+    if (p < start || p > end) return 0;
+    if (p < peakIn) return smoothstep(start, peakIn, p);
+    if (p <= holdEnd) return 1;
+    return 1 - smoothstep(holdEnd, end, p);
+  }
+
+  // =========================================================================
+  // 2. PARALLAX SUAVE 2.5D E INTERACCIÓN TÁCTIL / CURSOR
+  // =========================================================================
+  const pointer = { tx: 0, ty: 0, x: 0, y: 0 };
+  let paused = false;
+  let pauseStart = 0;
+  let pausedAccum = 0;
+  const startTime = performance.now();
+
+  function updatePointer(clientX, clientY) {
+    const r = diorama.getBoundingClientRect();
+    const nx = ((clientX - r.left) / r.width) * 2 - 1;
+    const ny = ((clientY - r.top) / r.height) * 2 - 1;
+    pointer.tx = clamp(nx, -1, 1);
+    pointer.ty = clamp(ny, -1, 1);
+  }
+  window.addEventListener('pointermove', e => updatePointer(e.clientX, e.clientY), { passive: true });
+  window.addEventListener('pointerdown', e => {
+    updatePointer(e.clientX, e.clientY);
+  }, { passive: true });
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (!paused) {
+        paused = true;
+        pauseStart = performance.now();
+      } else {
+        paused = false;
+        pausedAccum += performance.now() - pauseStart;
+      }
+    }
+  });
+
+  // =========================================================================
+  // 3. ELEMENTOS AMBIENTALES DETERMINISTAS (NUBES, ÁRBOLES, HIERBA, POLEN)
+  // =========================================================================
+  const clouds = Array.from({ length: 6 }, (_, i) => ({
+    baseX: i * 340 + rng() * 140,
+    y: 85 + (i % 3) * 52 + rng() * 25,
+    scale: 0.72 + (i % 3) * 0.28,
+    speedCycles: 1, // 1 cruce exacto por ciclo de 20s
+    alpha: 0.34 + (i % 2) * 0.14
+  }));
+
+  // 6 Aves en segundo plano en dos bandadas con trayectorias periódicas cerradas
+  const birds = Array.from({ length: 6 }, (_, i) => {
+    const flock = i < 3 ? 0 : 1;
+    const idx = i % 3;
+    return {
+      flock,
+      offsetX: idx * 46 + (idx === 1 ? -14 : 0),
+      offsetY: (idx === 1 ? -22 : idx === 2 ? 18 : 0),
+      baseY: flock === 0 ? 195 : 275,
+      ampY: flock === 0 ? 22 : 16,
+      flapFreq: flock === 0 ? 34 : 38, // enteros para loop exacto
+      flapPhase: idx * 1.15,
+      scale: flock === 0 ? 0.85 : 0.62,
+      direction: flock === 0 ? 1 : -1
+    };
+  });
+
+  // 4 Mariposas en primer plano con curvas de Lissajous cerradas (múltiplos enteros)
+  const butterflies = [
+    { cx: 360, cy: 760, rx: 145, ry: 68, kx: 2, ky: 3, ph: 0.2, flap: 44, col1: '#f6a828', col2: '#d95b26', scale: 0.95 },
+    { cx: 880, cy: 790, rx: 170, ry: 55, kx: 1, ky: 4, ph: 1.8, flap: 48, col1: '#68c3d4', col2: '#2e6f8e', scale: 0.88 },
+    { cx: 1290, cy: 740, rx: 130, ry: 72, kx: 3, ky: 2, ph: 3.4, flap: 42, col1: '#f4d35e', col2: '#ee6c4d', scale: 1.02 },
+    { cx: 1620, cy: 840, rx: 115, ry: 50, kx: 2, ky: 5, ph: 5.0, flap: 46, col1: '#e07a5f', col2: '#81b29a', scale: 0.82 }
+  ];
+
+  // Briznas de hierba con frecuencias y fases individuales
+  const grassClusters = [];
+  for (let i = 0; i < 150; i++) {
+    const gx = 30 + rng() * 1860;
+    // Evitar el interior profundo de la laguna derecha
+    if (gx > 1230 && gx < 1820 && rng() > 0.28) continue;
+    const gy = (gx > 1200)
+      ? 865 + rng() * 195
+      : 730 + rng() * 335;
+    const blades = 3 + Math.floor(rng() * 4);
+    grassClusters.push({
+      x: gx,
+      y: gy,
+      scale: 0.65 + ((gy - 700) / 380) * 0.65,
+      freq: 2 + Math.floor(rng() * 3), // 2, 3 o 4 ciclos por loop
+      phase: rng() * TAU,
+      amp: 0.14 + rng() * 0.16,
+      hueShift: rng(),
+      blades: Array.from({ length: blades }, (_, b) => ({
+        lean: (b - (blades - 1) / 2) * 0.24 + (rng() - 0.5) * 0.12,
+        h: 22 + rng() * 24,
+        w: 2.2 + rng() * 1.6
+      }))
+    });
+  }
+  grassClusters.sort((a, b) => a.y - b.y);
+
+  // Motas de polen y luz flotante con ciclos cerrados
+  const pollen = Array.from({ length: 55 }, () => ({
+    x0: rng() * W,
+    y0: 280 + rng() * 740,
+    rx: 18 + rng() * 42,
+    ry: 14 + rng() * 34,
+    kx: 1 + Math.floor(rng() * 2),
+    ky: 1 + Math.floor(rng() * 3),
+    ph: rng() * TAU,
+    r: 1.4 + rng() * 2.5,
+    a: 0.22 + rng() * 0.45
+  }));
+
+  // =========================================================================
+  // 4. CAPA 1: CIELO, SOL DORADO, RAYOS DE LUZ Y CORDILLERA LEJANA
+  // =========================================================================
+  function renderSky(ctx, theta, px, py) {
+    ctx.clearRect(0, 0, W, H);
+
+    // Gradiente atmosférico de tarde dorada
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, 660);
+    skyGrad.addColorStop(0.0, '#628896');
+    skyGrad.addColorStop(0.32, '#9fb8a8');
+    skyGrad.addColorStop(0.66, '#e7c68f');
+    skyGrad.addColorStop(1.0, '#f4dbb0');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Disco solar cálido con halo
+    const sunX = 1360 + px * 8;
+    const sunY = 205 + py * 6;
+    const halo = ctx.createRadialGradient(sunX, sunY, 20, sunX, sunY, 440);
+    halo.addColorStop(0, 'rgba(255, 247, 220, 0.92)');
+    halo.addColorStop(0.18, 'rgba(255, 224, 158, 0.55)');
+    halo.addColorStop(0.55, 'rgba(246, 189, 118, 0.18)');
+    halo.addColorStop(1, 'rgba(246, 189, 118, 0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, W, 720);
+
+    // Rayos de luz volumétricos oblicuos (respiración lenta de intensidad)
+    ctx.save();
+    const rayPulse = 0.85 + 0.15 * Math.sin(theta * 2);
+    const rays = [
+      { x1: 1220, x2: 1420, b1: 180, b2: 560, a: 0.085 },
+      { x1: 1320, x2: 1490, b1: 580, b2: 960, a: 0.075 },
+      { x1: 1410, x2: 1580, b1: 990, b2: 1420, a: 0.065 }
+    ];
+    for (const r of rays) {
+      const rg = ctx.createLinearGradient(sunX, sunY, (r.b1 + r.b2) * 0.5, 840);
+      rg.addColorStop(0, `rgba(255, 245, 214, ${r.a * rayPulse})`);
+      rg.addColorStop(1, 'rgba(255, 245, 214, 0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath();
+      ctx.moveTo(r.x1 + px * 8, sunY);
+      ctx.lineTo(r.x2 + px * 8, sunY);
+      ctx.lineTo(r.b2 + px * 16, 860);
+      ctx.lineTo(r.b1 + px * 16, 860);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Nubes estratificadas en movimiento periódico continuo
+    const span = W + 480;
+    for (const cl of clouds) {
+      const cx = ((cl.baseX + (theta / TAU) * span * cl.speedCycles) % span) - 240 + px * 12;
+      const cy = cl.y + Math.sin(theta + cl.baseX) * 4 + py * 6;
+      drawCloud(ctx, cx, cy, cl.scale, cl.alpha);
+    }
+
+    // Cordillera lejana en dos planos atmosféricos
+    ctx.save();
+    ctx.translate(px * 14, py * 8);
+    ctx.fillStyle = '#9aa89c';
+    ctx.beginPath();
+    ctx.moveTo(-60, 560);
+    ctx.lineTo(140, 395);
+    ctx.lineTo(340, 445);
+    ctx.lineTo(590, 355);
+    ctx.lineTo(860, 430);
+    ctx.lineTo(1120, 370);
+    ctx.lineTo(1410, 425);
+    ctx.lineTo(1690, 340);
+    ctx.lineTo(1980, 415);
+    ctx.lineTo(1980, 580);
+    ctx.lineTo(-60, 580);
+    ctx.closePath();
+    ctx.fill();
+
+    // Segundo cordón montañoso más cercano y cálido
+    ctx.fillStyle = '#7e9183';
+    ctx.beginPath();
+    ctx.moveTo(-60, 590);
+    ctx.quadraticCurveTo(220, 445, 480, 495);
+    ctx.quadraticCurveTo(780, 420, 1080, 490);
+    ctx.quadraticCurveTo(1440, 415, 1980, 480);
+    ctx.lineTo(1980, 620);
+    ctx.lineTo(-60, 620);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCloud(ctx, x, y, s, alpha) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ctx.fillStyle = `rgba(255, 244, 224, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, 42, 0, TAU);
+    ctx.arc(38, -8, 52, 0, TAU);
+    ctx.arc(86, -2, 44, 0, TAU);
+    ctx.arc(124, 8, 32, 0, TAU);
+    ctx.arc(-34, 10, 30, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 5. CAPA 2: PAISAJE LEJANO, ARBOLEDA, MIRADOR DE MADERA Y BANDADA DE AVES
+  // =========================================================================
+  function renderFar(ctx, theta, phase, px, py) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.translate(px * 24, py * 14);
+
+    // Colinas onduladas de sabana y bosque
+    const hillGrad = ctx.createLinearGradient(0, 460, 0, 720);
+    hillGrad.addColorStop(0, '#6c8566');
+    hillGrad.addColorStop(1, '#536e52');
+    ctx.fillStyle = hillGrad;
+    ctx.beginPath();
+    ctx.moveTo(-80, 680);
+    ctx.bezierCurveTo(260, 495, 580, 520, 940, 565);
+    ctx.bezierCurveTo(1310, 610, 1620, 510, 2000, 545);
+    ctx.lineTo(2000, 740);
+    ctx.lineTo(-80, 740);
+    ctx.closePath();
+    ctx.fill();
+
+    // Siluetas de acacias lejanas en el horizonte
+    const distantTrees = [
+      { x: 520, y: 535, s: 0.52 },
+      { x: 645, y: 545, s: 0.42 },
+      { x: 960, y: 562, s: 0.48 },
+      { x: 1120, y: 558, s: 0.38 },
+      { x: 1580, y: 530, s: 0.56 }
+    ];
+    for (const dt of distantTrees) {
+      drawDistantAcacia(ctx, dt.x, dt.y, dt.s, theta);
+    }
+
+    // Pasarela / Mirador arquitectónico naturalista en plano medio-lejano
+    drawBoardwalkBridge(ctx);
+
+    // Bandada de 6 aves articuladas en vuelo continuo (trayectorias periódicas cerradas)
+    for (const b of birds) {
+      // Recorrido horizontal continuo con wrap suave fuera de los márgenes
+      const cyclePos = frac(phase + (b.flock === 0 ? 0.08 : 0.52));
+      const travel = (cyclePos * 2360) - 220;
+      const bx = (b.direction === 1 ? travel : (W + 220 - travel)) + b.offsetX;
+      const by = b.baseY + b.offsetY + Math.sin(theta * 2 + b.flapPhase) * b.ampY;
+      drawBird(ctx, bx, by, b.scale, b.direction, theta * b.flapFreq + b.flapPhase);
+    }
+
+    ctx.restore();
+  }
+
+  function frac(x) {
+    return x - Math.floor(x);
+  }
+
+  function drawDistantAcacia(ctx, x, y, s, theta) {
+    const sway = Math.sin(theta * 2 + x * 0.01) * 0.03;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ctx.rotate(sway);
+    ctx.strokeStyle = '#3f5141';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-6, -42, 0, -76);
+    ctx.moveTo(-2, -45);
+    ctx.lineTo(-42, -72);
+    ctx.moveTo(2, -48);
+    ctx.lineTo(44, -74);
+    ctx.stroke();
+
+    ctx.fillStyle = '#4c664d';
+    ctx.beginPath();
+    ctx.ellipse(0, -82, 88, 22, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#5e7a5a';
+    ctx.beginPath();
+    ctx.ellipse(-12, -88, 66, 15, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBoardwalkBridge(ctx) {
+    // Sendero panorámico elevado con barandal de madera y pilares de piedra
+    ctx.save();
+    ctx.strokeStyle = '#6f5843';
+    ctx.fillStyle = '#8b6f54';
+    // Pilares
+    for (let x = 670; x <= 1220; x += 68) {
+      const py = 592 + Math.sin((x - 670) * 0.0055) * 14;
+      ctx.fillStyle = '#5c4a3c';
+      ctx.fillRect(x - 4, py, 8, 34);
+    }
+    // Tablero
+    ctx.beginPath();
+    ctx.moveTo(640, 596);
+    ctx.quadraticCurveTo(940, 616, 1255, 594);
+    ctx.lineWidth = 9;
+    ctx.strokeStyle = '#9c7c5c';
+    ctx.stroke();
+
+    // Barandal superior
+    ctx.beginPath();
+    ctx.moveTo(640, 578);
+    ctx.quadraticCurveTo(940, 598, 1255, 576);
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = '#b49370';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBird(ctx, x, y, scale, dir, wingPhase) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale * dir, scale);
+
+    const innerAng = Math.sin(wingPhase) * 0.65 - 0.15;
+    const outerAng = Math.sin(wingPhase - 0.55) * 0.75;
+
+    // Ala trasera
+    ctx.save();
+    ctx.translate(2, -3);
+    ctx.rotate(innerAng * 0.85 - 0.25);
+    ctx.fillStyle = '#495a54';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-8, -22, -22, -26);
+    ctx.lineTo(-10, -4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Cuerpo aerodinámico
+    ctx.fillStyle = '#2f3d39';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 18, 5.5, -0.08, 0, TAU);
+    ctx.fill();
+
+    // Cabeza y pico
+    ctx.beginPath();
+    ctx.arc(17, -2.5, 4.5, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#d98a3c';
+    ctx.beginPath();
+    ctx.moveTo(21, -3.5);
+    ctx.lineTo(29, -1.5);
+    ctx.lineTo(21, -0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cola
+    ctx.fillStyle = '#2f3d39';
+    ctx.beginPath();
+    ctx.moveTo(-16, 0);
+    ctx.lineTo(-28, -4);
+    ctx.lineTo(-26, 3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ala principal articulada en dos segmentos (húmero + punta)
+    ctx.save();
+    ctx.translate(2, -2);
+    ctx.rotate(innerAng);
+    ctx.fillStyle = '#384843';
+    ctx.beginPath();
+    ctx.moveTo(-4, 0);
+    ctx.lineTo(-14, -24);
+    ctx.lineTo(4, -22);
+    ctx.lineTo(8, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Segmento distal del ala
+    ctx.translate(-5, -23);
+    ctx.rotate(outerAng);
+    ctx.fillStyle = '#293632';
+    ctx.beginPath();
+    ctx.moveTo(-9, 0);
+    ctx.lineTo(-18, -24);
+    ctx.lineTo(6, -16);
+    ctx.lineTo(9, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 6. CAPA 3: ESCENARIO PRINCIPAL, CASCADA, LAGUNA Y LOS 11 ANIMALES
+  // =========================================================================
+  function renderMid(ctx, theta, phase, px, py) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.translate(px * 42, py * 24);
+
+    // --- A. TERRENO PRINCIPAL Y SENDERO DE TIERRA ---
+    const groundGrad = ctx.createLinearGradient(0, 610, 0, H);
+    groundGrad.addColorStop(0.0, '#789262');
+    groundGrad.addColorStop(0.32, '#8da167');
+    groundGrad.addColorStop(0.68, '#a4a66a');
+    groundGrad.addColorStop(1.0, '#698253');
+    ctx.fillStyle = groundGrad;
+    ctx.beginPath();
+    ctx.moveTo(-100, 645);
+    ctx.bezierCurveTo(380, 610, 860, 625, 1340, 640);
+    ctx.lineTo(2020, 635);
+    ctx.lineTo(2020, 1140);
+    ctx.lineTo(-100, 1140);
+    ctx.closePath();
+    ctx.fill();
+
+    // Claro de tierra ocre cálida en el centro-izquierda (pradera de elefantes y cebras)
+    const savannaGrad = ctx.createRadialGradient(840, 795, 60, 840, 795, 480);
+    savannaGrad.addColorStop(0, 'rgba(208, 178, 122, 0.72)');
+    savannaGrad.addColorStop(0.65, 'rgba(186, 165, 112, 0.38)');
+    savannaGrad.addColorStop(1, 'rgba(141, 161, 103, 0)');
+    ctx.fillStyle = savannaGrad;
+    ctx.beginPath();
+    ctx.ellipse(840, 795, 490, 165, -0.03, 0, TAU);
+    ctx.fill();
+
+    // --- B. FORMACIÓN ROCOSA, CASCADA Y LAGUNA CRISTALINA (DERECHA) ---
+    drawWaterfallAndLagoon(ctx, theta);
+
+    // --- C. ÁRBOLES MONUMENTALES DE ACACIA Y SELVA (IZQUIERDA) ---
+    drawHeroAcaciaLeft(ctx, theta);
+    drawMidTreeCenterLeft(ctx, theta);
+
+    // --- D. LOS 11 ANIMALES ARTICULADOS EN SUS RESPECTIVOS PLANOS ---
+    // Ordenados por profundidad Y para oclusión natural
+
+    // 1. Jirafa joven (plano medio-trasero, izquierda, observando y respirando)
+    drawGiraffe(ctx, {
+      x: 455, y: 695, scale: 0.72, facing: 1,
+      theta, phase,
+      mode: 'watch',
+      cycleOffset: 0.15
+    });
+
+    // 2. Jirafa adulta (plano medio, izquierda, inclinándose para ramonear hojas de la acacia)
+    drawGiraffe(ctx, {
+      x: 335, y: 745, scale: 0.96, facing: -1,
+      theta, phase,
+      mode: 'browse',
+      cycleOffset: 0.0
+    });
+
+    // 3 y 4. Dos Monos articulados en las ramas y lianas de la acacia izquierda
+    drawMonkeyBrachiating(ctx, 245, 435, 0.88, theta);
+    drawMonkeyJumping(ctx, 415, 475, 0.82, theta);
+
+    // 5. Flamenco trasero en la laguna (alimentándose en el agua)
+    drawFlamingo(ctx, {
+      x: 1665, y: 765, scale: 0.78, facing: -1,
+      theta, mode: 'feed', cycleOffset: 0.3
+    });
+
+    // 6. Cebra trasera (observando y espantando insectos con la cola)
+    drawZebra(ctx, {
+      x: 1125, y: 735, scale: 0.76, facing: -1,
+      theta, mode: 'alert', cycleOffset: 0.4
+    });
+
+    // 7. Elefante adulto (caminata lenta en ciclo cerrado de ida y vuelta suave, trompa y orejas)
+    drawElephant(ctx, {
+      x: 785, y: 785, scale: 1.0, facing: 1,
+      theta, isBaby: false, cycleOffset: 0.0
+    });
+
+    // 8. Cría de elefante (siguiendo al adulto con paso más ágil)
+    drawElephant(ctx, {
+      x: 620, y: 810, scale: 0.64, facing: 1,
+      theta, isBaby: true, cycleOffset: 0.25
+    });
+
+    // 9. Flamenco medio en la laguna (caminando lentamente en agua poco profunda)
+    drawFlamingo(ctx, {
+      x: 1475, y: 815, scale: 0.92, facing: 1,
+      theta, mode: 'walk', cycleOffset: 0.1
+    });
+
+    // 10. Cebra delantera (ciclo de pastoreo: baja cuello, mastica, levanta cabeza)
+    drawZebra(ctx, {
+      x: 1015, y: 830, scale: 0.94, facing: 1,
+      theta, mode: 'graze', cycleOffset: 0.05
+    });
+
+    // 11. Flamenco delantero en primer plano de la laguna (equilibrio sobre una pata)
+    drawFlamingo(ctx, {
+      x: 1585, y: 865, scale: 1.02, facing: -1,
+      theta, mode: 'balance', cycleOffset: 0.6
+    });
+
+    // --- E. ROCAS PERIMETRALES Y ARBUSTOS MEDIOS ---
+    drawMidRocksAndBushes(ctx, theta);
+
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // CASCADA Y LAGUNA CON ONDAS Y REFLEJOS CONTINUOS
+  // -------------------------------------------------------------------------
+  function drawWaterfallAndLagoon(ctx, theta) {
+    // Escarpado rocoso de donde nace la cascada
+    ctx.save();
+    ctx.fillStyle = '#5c635c';
+    ctx.beginPath();
+    ctx.moveTo(1480, 675);
+    ctx.lineTo(1545, 545);
+    ctx.lineTo(1660, 520);
+    ctx.lineTo(1810, 535);
+    ctx.lineTo(1960, 580);
+    ctx.lineTo(1960, 725);
+    ctx.lineTo(1480, 725);
+    ctx.closePath();
+    ctx.fill();
+
+    // Facetas iluminadas de las rocas
+    ctx.fillStyle = '#797d72';
+    ctx.beginPath();
+    ctx.moveTo(1545, 545);
+    ctx.lineTo(1660, 520);
+    ctx.lineTo(1690, 620);
+    ctx.lineTo(1560, 645);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#474e48';
+    ctx.beginPath();
+    ctx.moveTo(1750, 530);
+    ctx.lineTo(1890, 560);
+    ctx.lineTo(1855, 695);
+    ctx.lineTo(1735, 680);
+    ctx.closePath();
+    ctx.fill();
+
+    // Laguna naturalista
+    const lakeGrad = ctx.createLinearGradient(1280, 710, 1850, 960);
+    lakeGrad.addColorStop(0.0, '#4a9096');
+    lakeGrad.addColorStop(0.45, '#3b7d87');
+    lakeGrad.addColorStop(1.0, '#2a5f6b');
+    ctx.fillStyle = lakeGrad;
+    ctx.beginPath();
+    ctx.moveTo(1320, 765);
+    ctx.bezierCurveTo(1360, 705, 1620, 695, 1890, 720);
+    ctx.lineTo(1960, 935);
+    ctx.bezierCurveTo(1680, 975, 1340, 945, 1285, 845);
+    ctx.bezierCurveTo(1265, 810, 1295, 785, 1320, 765);
+    ctx.closePath();
+    ctx.fill();
+
+    // Orilla húmeda / arena clara
+    ctx.strokeStyle = 'rgba(218, 204, 168, 0.55)';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Cortina de agua de la cascada con bandas verticales animadas en loop
+    const wfX = 1665, wfY = 555, wfW = 68, wfH = 175;
+    const wfGrad = ctx.createLinearGradient(wfX, wfY, wfX, wfY + wfH);
+    wfGrad.addColorStop(0, 'rgba(220, 246, 248, 0.92)');
+    wfGrad.addColorStop(0.6, 'rgba(154, 218, 226, 0.88)');
+    wfGrad.addColorStop(1, 'rgba(235, 252, 255, 0.96)');
+    ctx.fillStyle = wfGrad;
+    ctx.beginPath();
+    ctx.moveTo(wfX + 8, wfY);
+    ctx.lineTo(wfX + wfW - 8, wfY);
+    ctx.lineTo(wfX + wfW + 10, wfY + wfH);
+    ctx.lineTo(wfX - 10, wfY + wfH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Vetas de caída continua (frecuencia entera: 18 ciclos por loop)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.lineWidth = 2.4;
+    for (let s = 0; s < 7; s++) {
+      const sx = wfX + 6 + s * 9.5;
+      const offset = frac((theta / TAU) * 18 + s * 0.17) * wfH;
+      for (let k = -1; k <= 1; k++) {
+        const y1 = wfY + offset + k * wfH;
+        const y2 = y1 + 34;
+        const cy1 = Math.max(wfY, y1);
+        const cy2 = Math.min(wfY + wfH, y2);
+        if (cy2 > cy1) {
+          ctx.beginPath();
+          ctx.moveTo(sx, cy1);
+          ctx.lineTo(sx + (s - 3) * 0.8, cy2);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Espuma en la base de la cascada
+    const splashX = wfX + wfW * 0.5;
+    const splashY = wfY + wfH + 2;
+    for (let b = 0; b < 9; b++) {
+      const ang = (b / 9) * TAU + theta * 6;
+      const pulse = 0.6 + 0.4 * Math.sin(theta * 12 + b);
+      const bx = splashX + Math.cos(ang) * 34;
+      const by = splashY + Math.sin(ang) * 8;
+      ctx.fillStyle = `rgba(245, 254, 255, ${0.55 * pulse})`;
+      ctx.beginPath();
+      ctx.arc(bx, by, 7 * pulse + 3, 0, TAU);
+      ctx.fill();
+    }
+
+    // Ondas concéntricas expandiéndose desde la cascada y los flamencos
+    const rippleSources = [
+      { x: splashX, y: splashY + 8, maxR: 135, speed: 5 },
+      { x: 1475, y: 845, maxR: 52, speed: 4 },
+      { x: 1585, y: 895, maxR: 40, speed: 3 }
+    ];
+    for (const rs of rippleSources) {
+      for (let r = 0; r < 3; r++) {
+        const prog = frac((theta / TAU) * rs.speed + r / 3);
+        const radX = 12 + prog * rs.maxR;
+        const radY = radX * 0.28;
+        const alpha = (1 - prog) * 0.35;
+        ctx.strokeStyle = `rgba(225, 248, 250, ${alpha})`;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.ellipse(rs.x, rs.y, radX, radY, 0, 0, TAU);
+        ctx.stroke();
+      }
+    }
+
+    // Reflejos luminosos horizontales en la superficie de la laguna
+    for (let i = 0; i < 14; i++) {
+      const ry = 745 + i * 14;
+      const rx = 1410 + ((i * 73) % 340) + Math.sin(theta * 3 + i) * 14;
+      const rw = 36 + (i % 4) * 18 + Math.cos(theta * 4 + i) * 8;
+      ctx.fillStyle = 'rgba(246, 232, 185, 0.22)';
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, rw, 2.2, 0, 0, TAU);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // ÁRBOLES DE ACACIA CON FOLLAJE Y RAMAS EN MOVIMIENTO INDEPENDIENTE
+  // -------------------------------------------------------------------------
+  function drawHeroAcaciaLeft(ctx, theta) {
+    const trunkSway = Math.sin(theta * 2) * 0.015;
+    ctx.save();
+    ctx.translate(185, 765);
+    ctx.rotate(trunkSway);
+
+    // Sombra proyectada en el suelo
+    ctx.fillStyle = 'rgba(42, 56, 38, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(45, 6, 175, 26, -0.04, 0, TAU);
+    ctx.fill();
+
+    // Tronco principal retorcido y texturizado
+    ctx.fillStyle = '#4e3c30';
+    ctx.beginPath();
+    ctx.moveTo(-26, 0);
+    ctx.quadraticCurveTo(-22, -165, -8, -320);
+    ctx.lineTo(18, -320);
+    ctx.quadraticCurveTo(10, -165, 26, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Luz cálida en el borde derecho del tronco
+    ctx.strokeStyle = '#735a47';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(16, -8);
+    ctx.quadraticCurveTo(6, -165, 13, -315);
+    ctx.stroke();
+
+    // Ramas principales que sostienen las copas y los monos
+    const branches = [
+      { x1: -4, y1: -230, cx: -75, cy: -290, x2: -145, y2: -345, w: 12 },
+      { x1: 4, y1: -255, cx: 85, cy: -310, x2: 195, y2: -335, w: 13 },
+      { x1: 12, y1: -215, cx: 145, cy: -245, x2: 265, y2: -265, w: 10 },
+      { x1: 0, y1: -305, cx: 10, cy: -365, x2: 25, y2: -410, w: 11 }
+    ];
+    ctx.strokeStyle = '#4e3c30';
+    ctx.lineCap = 'round';
+    for (const b of branches) {
+      ctx.lineWidth = b.w;
+      ctx.beginPath();
+      ctx.moveTo(b.x1, b.y1);
+      ctx.quadraticCurveTo(b.cx, b.cy, b.x2, b.y2);
+      ctx.stroke();
+    }
+
+    // Liana colgante para los monos
+    const vineSway = Math.sin(theta * 3 + 0.5) * 14;
+    ctx.strokeStyle = '#465e38';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(145, -285);
+    ctx.quadraticCurveTo(155 + vineSway, -210, 148 + vineSway * 1.4, -145);
+    ctx.stroke();
+
+    // Copas estratificadas de acacia con fases independientes de viento
+    const canopies = [
+      { x: -135, y: -355, rx: 125, ry: 34, freq: 3, ph: 0.2, c1: '#496942', c2: '#6b8e55' },
+      { x: 18, y: -415, rx: 165, ry: 42, freq: 2, ph: 1.4, c1: '#43623d', c2: '#75995b' },
+      { x: 205, y: -340, rx: 145, ry: 36, freq: 3, ph: 2.6, c1: '#4e6f45', c2: '#7fa162' },
+      { x: 270, y: -270, rx: 95, ry: 26, freq: 4, ph: 3.8, c1: '#537449', c2: '#89aa68' }
+    ];
+    for (const cp of canopies) {
+      const dx = Math.sin(theta * cp.freq + cp.ph) * 6;
+      const dy = Math.cos(theta * cp.freq + cp.ph) * 2.5;
+      ctx.save();
+      ctx.translate(cp.x + dx, cp.y + dy);
+      ctx.fillStyle = cp.c1;
+      ctx.beginPath();
+      ctx.ellipse(0, 4, cp.rx, cp.ry, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = cp.c2;
+      ctx.beginPath();
+      ctx.ellipse(8, -5, cp.rx * 0.86, cp.ry * 0.72, 0, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function drawMidTreeCenterLeft(ctx, theta) {
+    ctx.save();
+    ctx.translate(530, 675);
+    ctx.rotate(Math.sin(theta * 2 + 1.1) * 0.014);
+
+    ctx.fillStyle = '#5a4638';
+    ctx.beginPath();
+    ctx.moveTo(-12, 0);
+    ctx.lineTo(-5, -165);
+    ctx.lineTo(7, -165);
+    ctx.lineTo(12, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    const dx = Math.sin(theta * 3 + 0.9) * 4;
+    ctx.fillStyle = '#527248';
+    ctx.beginPath();
+    ctx.ellipse(dx, -175, 110, 28, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#6f9158';
+    ctx.beginPath();
+    ctx.ellipse(dx + 6, -181, 88, 20, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMidRocksAndBushes(ctx, theta) {
+    // Rocas junto a la laguna y la pradera
+    const rocks = [
+      { x: 1275, y: 805, rx: 36, ry: 20, c1: '#7e7d71', c2: '#9a9687' },
+      { x: 1315, y: 818, rx: 22, ry: 13, c1: '#68685e', c2: '#858376' },
+      { x: 560, y: 710, rx: 32, ry: 17, c1: '#757468', c2: '#918e7f' }
+    ];
+    for (const r of rocks) {
+      ctx.fillStyle = r.c1;
+      ctx.beginPath();
+      ctx.ellipse(r.x, r.y, r.rx, r.ry, 0, Math.PI, TAU);
+      ctx.fill();
+      ctx.fillStyle = r.c2;
+      ctx.beginPath();
+      ctx.ellipse(r.x + 4, r.y - 3, r.rx * 0.72, r.ry * 0.65, 0, Math.PI, TAU);
+      ctx.fill();
+    }
+
+    // Arbustos redondeados con oscilación suave
+    const bushes = [
+      { x: 515, y: 712, r: 34, ph: 0.4, c1: '#496841', c2: '#688952' },
+      { x: 1235, y: 785, r: 38, ph: 1.9, c1: '#44633d', c2: '#62834d' },
+      { x: 1855, y: 735, r: 46, ph: 2.7, c1: '#476640', c2: '#6a8b54' }
+    ];
+    for (const b of bushes) {
+      const sway = Math.sin(theta * 3 + b.ph) * 3;
+      ctx.fillStyle = b.c1;
+      ctx.beginPath();
+      ctx.arc(b.x + sway, b.y, b.r, Math.PI, TAU);
+      ctx.arc(b.x - b.r * 0.65 + sway, b.y + 2, b.r * 0.7, Math.PI, TAU);
+      ctx.arc(b.x + b.r * 0.65 + sway, b.y + 2, b.r * 0.72, Math.PI, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = b.c2;
+      ctx.beginPath();
+      ctx.arc(b.x + 4 + sway, b.y - 5, b.r * 0.72, Math.PI, TAU);
+      ctx.fill();
+    }
+  }
+
+  // =========================================================================
+  // 7. RIGS ARTICULADOS DE FAUNA (5 ESPECIES, 11 INDIVIDUOS)
+  // =========================================================================
+
+  // -------------------------------------------------------------------------
+  // RIG 1: ELEFANTE AFRICANO (Caminata cuadrúpeda, orejas, trompa 5 segmentos)
+  // -------------------------------------------------------------------------
+  function drawElephant(ctx, cfg) {
+    const { x, y, scale, facing, theta, isBaby, cycleOffset } = cfg;
+    const t = theta + cycleOffset * TAU;
+
+    // Desplazamiento horizontal periódico suave (ida y vuelta continua sin saltos)
+    // En 20s da 1 ciclo completo de avance/pausa/regreso suave o patrulla circular
+    const walkCycles = isBaby ? 8 : 6; // múltiplos enteros para que las patas cierren exacto
+    const stridePhase = t * walkCycles;
+    const walkAmp = isBaby ? 42 : 55;
+    const posX = x + Math.sin(t) * walkAmp;
+    const posY = y + Math.cos(t) * 6;
+    const dir = Math.cos(t) >= -0.05 ? facing : -facing;
+
+    // Balanceo vertical del cuerpo (doble frecuencia del paso)
+    const bodyBob = Math.abs(Math.sin(stridePhase)) * (isBaby ? 4.5 : 5.5);
+    const bodyPitch = Math.sin(stridePhase * 2) * 0.022;
+
+    const cBody = isBaby ? '#8a8682' : '#797673';
+    const cDark = isBaby ? '#6c6865' : '#5d5a57';
+    const cLight = isBaby ? '#9e9a95' : '#8e8b87';
+
+    ctx.save();
+    ctx.translate(posX, posY);
+
+    // Sombra de contacto en el suelo
+    ctx.fillStyle = 'rgba(38, 46, 32, 0.30)';
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 86 * scale, 18 * scale, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.scale(scale * dir, scale);
+
+    // Función auxiliar de pata articulada en 2 segmentos (muslo + pierna/pie)
+    const drawLeg = (hipX, hipY, phaseAng, isBackLayer) => {
+      const swing = Math.sin(phaseAng) * 0.28;
+      const kneeBend = Math.max(0, Math.cos(phaseAng)) * 0.34;
+      ctx.save();
+      ctx.translate(hipX, hipY - bodyBob);
+      ctx.rotate(swing);
+      ctx.fillStyle = isBackLayer ? cDark : cBody;
+      // Muslo
+      ctx.beginPath();
+      ctx.roundRect(-14, -6, 28, 44, 12);
+      ctx.fill();
+      // Rodilla
+      ctx.translate(0, 34);
+      ctx.rotate(kneeBend);
+      ctx.beginPath();
+      ctx.roundRect(-12, -4, 24, 42, 10);
+      ctx.fill();
+      // Uñas características
+      ctx.fillStyle = '#d8d0c1';
+      for (let u = -6; u <= 6; u += 6) {
+        ctx.beginPath();
+        ctx.arc(u + 4, 36, 2.5, Math.PI, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    };
+
+    // Patas traseras (plano lejano)
+    drawLeg(-44, -72, stridePhase + Math.PI, true);
+    drawLeg(36, -72, stridePhase, true);
+
+    // Cuerpo principal y cola articulada
+    ctx.save();
+    ctx.translate(0, -104 - bodyBob);
+    ctx.rotate(bodyPitch);
+
+    // Cola con mechón oscilante
+    ctx.save();
+    ctx.translate(-74, -8);
+    ctx.rotate(0.25 + Math.sin(t * 7) * 0.22);
+    ctx.strokeStyle = cDark;
+    ctx.lineWidth = 4.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-10, 22, -6, 44);
+    ctx.stroke();
+    ctx.fillStyle = '#3c3936';
+    ctx.beginPath();
+    ctx.ellipse(-6, 47, 4, 7, 0.2, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Torso con lomo arqueado
+    ctx.fillStyle = cBody;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 78, 52, -0.04, 0, TAU);
+    ctx.fill();
+
+    // Iluminación dorsal cálida
+    ctx.fillStyle = cLight;
+    ctx.beginPath();
+    ctx.ellipse(-4, -18, 62, 26, -0.05, Math.PI, TAU);
+    ctx.fill();
+
+    // Patas delanteras (plano cercano)
+    ctx.restore();
+    drawLeg(-38, -72, stridePhase, false);
+    drawLeg(42, -72, stridePhase + Math.PI, false);
+
+    // Cabeza, trompa multisegmento, colmillos y oreja articulada
+    ctx.save();
+    ctx.translate(64, -114 - bodyBob + Math.sin(stridePhase) * 2.5);
+    ctx.rotate(Math.sin(t * 2) * 0.06);
+
+    // Cráneo y frente abombada
+    ctx.fillStyle = cBody;
+    ctx.beginPath();
+    ctx.arc(10, -4, 34, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = cLight;
+    ctx.beginPath();
+    ctx.arc(14, -12, 24, Math.PI, TAU);
+    ctx.fill();
+
+    // Colmillo de marfil (solo adulto)
+    if (!isBaby) {
+      ctx.fillStyle = '#f2ead9';
+      ctx.beginPath();
+      ctx.moveTo(26, 14);
+      ctx.quadraticCurveTo(54, 22, 68, 4);
+      ctx.quadraticCurveTo(50, 14, 28, 7);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Trompa articulada en 5 segmentos progresivos
+    ctx.save();
+    ctx.translate(34, 6);
+    const trunkBase = Math.sin(t * 3) * 0.28 + 0.15;
+    const trunkCurl = Math.sin(t * 3 - 0.8) * 0.35;
+    let segLen = isBaby ? 13 : 16;
+    let segW = isBaby ? 13 : 16;
+    for (let s = 0; s < 5; s++) {
+      const ang = (s === 0 ? trunkBase : trunkCurl * (0.45 + s * 0.14));
+      ctx.rotate(ang);
+      ctx.fillStyle = s % 2 === 0 ? cBody : cLight;
+      ctx.beginPath();
+      ctx.roundRect(-segW * 0.5, -2, segW, segLen + 4, segW * 0.45);
+      ctx.fill();
+      ctx.translate(0, segLen);
+      segW *= 0.84;
+      segLen *= 0.94;
+    }
+    ctx.restore();
+
+    // Ojo expresivo con párpado
+    ctx.fillStyle = '#252220';
+    ctx.beginPath();
+    ctx.arc(22, -8, 3.6, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(23, -9, 1.2, 0, TAU);
+    ctx.fill();
+
+    // Oreja grande con aleteo independiente
+    const earFlap = Math.sin(t * 4) * 0.18 + Math.sin(t * 9) * 0.05;
+    ctx.save();
+    ctx.translate(-4, -12);
+    ctx.rotate(earFlap);
+    ctx.fillStyle = cDark;
+    ctx.beginPath();
+    ctx.ellipse(-14, 14, 22, 32, 0.18, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#9c837c';
+    ctx.beginPath();
+    ctx.ellipse(-13, 14, 13, 21, 0.18, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // RIG 2: JIRAFA RETICULADA (Cuello largo articulado, ramoneo y masticación)
+  // -------------------------------------------------------------------------
+  function drawGiraffe(ctx, cfg) {
+    const { x, y, scale, facing, theta, phase, mode, cycleOffset } = cfg;
+    const t = theta + cycleOffset * TAU;
+    const p = frac(phase + cycleOffset);
+
+    // En modo 'browse': sube cuello hacia las hojas, mastica y vuelve suave
+    const browseAmount = mode === 'browse'
+      ? periodicWindow(p, 0.12, 0.28, 0.68, 0.86)
+      : Math.sin(t * 2) * 0.12 + 0.12;
+
+    const neckTilt = mode === 'browse'
+      ? lerp(0.18, -0.34, browseAmount) + Math.sin(t * 3) * 0.02
+      : 0.12 + Math.sin(t * 2) * 0.07;
+
+    const headTilt = mode === 'browse'
+      ? lerp(-0.12, 0.38, browseAmount) + Math.sin(t * 14) * 0.04 * browseAmount
+      : -0.08 + Math.sin(t * 3) * 0.08;
+
+    const jawChew = mode === 'browse'
+      ? Math.max(0, Math.sin(t * 26)) * 0.22 * browseAmount
+      : Math.max(0, Math.sin(t * 16)) * 0.06;
+
+    const breathe = Math.sin(t * 4) * 2.2;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Sombra en el suelo
+    ctx.fillStyle = 'rgba(38, 46, 32, 0.26)';
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 58 * scale, 13 * scale, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.scale(scale * facing, scale);
+
+    // Patas largas y esbeltas con pezuñas
+    const drawGiraffeLeg = (lx, ly, back, subtleShift) => {
+      ctx.save();
+      ctx.translate(lx, ly);
+      ctx.rotate(subtleShift);
+      ctx.fillStyle = back ? '#c58b45' : '#e0a458';
+      ctx.beginPath();
+      ctx.roundRect(-6, 0, 12, 118, 5);
+      ctx.fill();
+      // Pezuña oscura
+      ctx.fillStyle = '#3f2e22';
+      ctx.beginPath();
+      ctx.roundRect(-6.5, 110, 13, 10, 3);
+      ctx.fill();
+      ctx.restore();
+    };
+
+    drawGiraffeLeg(-26, -120, true, Math.sin(t * 2) * 0.015);
+    drawGiraffeLeg(22, -120, true, -Math.sin(t * 2) * 0.015);
+
+    // Torso inclinado característico
+    ctx.save();
+    ctx.translate(0, -135 + breathe * 0.5);
+
+    // Cola con mechón oscuro
+    ctx.save();
+    ctx.translate(-44, -6);
+    ctx.rotate(0.18 + Math.sin(t * 6) * 0.24);
+    ctx.strokeStyle = '#d4964c';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-4, 48);
+    ctx.stroke();
+    ctx.fillStyle = '#3b281c';
+    ctx.beginPath();
+    ctx.ellipse(-4, 52, 4, 8, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#e5aa5d';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 48, 30, -0.22, 0, TAU);
+    ctx.fill();
+
+    // Manchas poligonales reticuladas en el torso
+    ctx.fillStyle = '#8b4d24';
+    const spots = [
+      [-22, -6, 11, 9], [-4, -12, 12, 10], [16, -14, 11, 9],
+      [-14, 9, 10, 8], [6, 5, 12, 9], [24, 0, 9, 8]
+    ];
+    for (const [sx, sy, rw, rh] of spots) {
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, rw, rh, 0.2, 0, TAU);
+      ctx.fill();
+    }
+
+    // Patas delanteras
+    ctx.restore();
+    drawGiraffeLeg(-18, -118, false, 0);
+    drawGiraffeLeg(28, -120, false, Math.sin(t * 2) * 0.02);
+
+    // Cuello articulado en base + cabeza
+    ctx.save();
+    ctx.translate(32, -152 + breathe * 0.5);
+    ctx.rotate(neckTilt);
+
+    // Cuello con crin corta
+    ctx.fillStyle = '#e5aa5d';
+    ctx.beginPath();
+    ctx.moveTo(-14, 6);
+    ctx.lineTo(-8, -152);
+    ctx.lineTo(8, -152);
+    ctx.lineTo(15, 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crin dorsal
+    ctx.strokeStyle = '#6e3b1b';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(-11, -6);
+    ctx.lineTo(-7, -148);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Manchas a lo largo del cuello
+    ctx.fillStyle = '#8b4d24';
+    for (let ny = -24; ny >= -134; ny -= 26) {
+      ctx.beginPath();
+      ctx.ellipse(1, ny, 7.5, 9, 0.1, 0, TAU);
+      ctx.fill();
+    }
+
+    // Cabeza articulada en la cima del cuello
+    ctx.translate(0, -152);
+    ctx.rotate(headTilt);
+
+    // Osiconos (cuernitos)
+    ctx.strokeStyle = '#8b4d24';
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.moveTo(-4, -10);
+    ctx.lineTo(-6, -24);
+    ctx.moveTo(3, -10);
+    ctx.lineTo(3, -24);
+    ctx.stroke();
+    ctx.fillStyle = '#4a2915';
+    ctx.beginPath();
+    ctx.arc(-6, -25, 3, 0, TAU);
+    ctx.arc(3, -25, 3, 0, TAU);
+    ctx.fill();
+
+    // Oreja oscilante
+    ctx.save();
+    ctx.translate(-8, -8);
+    ctx.rotate(-0.4 + Math.sin(t * 5) * 0.18);
+    ctx.fillStyle = '#e5aa5d';
+    ctx.beginPath();
+    ctx.ellipse(-9, 0, 10, 4.5, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Cráneo y hocico superior
+    ctx.fillStyle = '#e8b065';
+    ctx.beginPath();
+    ctx.ellipse(8, -3, 21, 10.5, 0.12, 0, TAU);
+    ctx.fill();
+
+    // Mandíbula inferior articulada (masticación)
+    ctx.save();
+    ctx.translate(4, 3);
+    ctx.rotate(jawChew);
+    ctx.fillStyle = '#d4994f';
+    ctx.beginPath();
+    ctx.ellipse(11, 2, 15, 4.5, 0.08, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Ojo y pestañas
+    ctx.fillStyle = '#261a12';
+    ctx.beginPath();
+    ctx.arc(4, -5, 2.8, 0, TAU);
+    ctx.fill();
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // RIG 3: CEBRA DE LLANURA (Pastoreo cíclico, masticación, rayas y cola)
+  // -------------------------------------------------------------------------
+  function drawZebra(ctx, cfg) {
+    const { x, y, scale, facing, theta, mode, cycleOffset } = cfg;
+    const t = theta + cycleOffset * TAU;
+    const p = frac((theta / TAU) + cycleOffset);
+
+    // Ciclo de pastoreo: baja cuello suavemente, mastica hierba, levanta y observa
+    const graze = mode === 'graze'
+      ? periodicWindow(p, 0.08, 0.24, 0.66, 0.84)
+      : 0;
+
+    const neckAngle = mode === 'graze'
+      ? lerp(-0.48, 0.88, graze) + Math.sin(t * 4) * 0.03
+      : -0.58 + Math.sin(t * 2) * 0.08;
+
+    const headAngle = mode === 'graze'
+      ? lerp(0.55, 0.35, graze) + Math.sin(t * 18) * 0.06 * graze
+      : 0.62 + Math.sin(t * 3) * 0.09;
+
+    const jawAngle = mode === 'graze'
+      ? Math.max(0, Math.sin(t * 24)) * 0.25 * graze
+      : Math.max(0, Math.sin(t * 14)) * 0.05;
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Sombra en el suelo
+    ctx.fillStyle = 'rgba(38, 46, 32, 0.26)';
+    ctx.beginPath();
+    ctx.ellipse(0, 3, 52 * scale, 12 * scale, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.scale(scale * facing, scale);
+
+    // Patas
+    const drawZebraLeg = (lx, back, rotAng) => {
+      ctx.save();
+      ctx.translate(lx, -58);
+      ctx.rotate(rotAng);
+      ctx.fillStyle = back ? '#dcd9d0' : '#f4f1ea';
+      ctx.beginPath();
+      ctx.roundRect(-5.5, 0, 11, 56, 4);
+      ctx.fill();
+      // Bandas horizontales en patas
+      ctx.fillStyle = '#252422';
+      for (let sy = 8; sy < 46; sy += 9) {
+        ctx.fillRect(-5, sy, 10, 3.5);
+      }
+      // Casco
+      ctx.fillRect(-6, 51, 12, 7);
+      ctx.restore();
+    };
+
+    drawZebraLeg(-26, true, 0.04);
+    drawZebraLeg(22, true, -0.03);
+
+    // Cuerpo y cola
+    ctx.save();
+    ctx.translate(0, -68 + Math.sin(t * 3) * 1.4);
+
+    // Cola con espantamoscas
+    ctx.save();
+    ctx.translate(-40, -6);
+    ctx.rotate(0.22 + Math.sin(t * 7) * 0.34);
+    ctx.strokeStyle = '#f4f1ea';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-8, 18, -5, 34);
+    ctx.stroke();
+    ctx.fillStyle = '#252422';
+    ctx.beginPath();
+    ctx.ellipse(-5, 37, 4, 8, 0.1, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Torso blanco marfil
+    ctx.fillStyle = '#f6f3ec';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 42, 23, 0, 0, TAU);
+    ctx.fill();
+
+    // Rayas características verticales y oblicuas en grupa
+    ctx.fillStyle = '#252422';
+    const bodyStripes = [-26, -18, -10, -2, 6, 14, 22];
+    for (const sx of bodyStripes) {
+      ctx.beginPath();
+      ctx.ellipse(sx, -2, 2.6, 19, sx < -12 ? -0.25 : 0.05, 0, TAU);
+      ctx.fill();
+    }
+
+    ctx.restore();
+    drawZebraLeg(-20, false, -0.02);
+    drawZebraLeg(26, false, 0.05 * graze);
+
+    // Cuello y cabeza articulados
+    ctx.save();
+    ctx.translate(30, -76);
+    ctx.rotate(neckAngle);
+
+    // Cuello
+    ctx.fillStyle = '#f6f3ec';
+    ctx.beginPath();
+    ctx.moveTo(-11, 8);
+    ctx.lineTo(-8, -42);
+    ctx.lineTo(9, -42);
+    ctx.lineTo(13, 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crin erizada bicolora
+    ctx.fillStyle = '#252422';
+    ctx.fillRect(-13, -40, 5, 42);
+
+    // Rayas en el cuello
+    for (let ny = -34; ny <= -4; ny += 9) {
+      ctx.fillRect(-8, ny, 16, 3.5);
+    }
+
+    // Cabeza articulada
+    ctx.translate(1, -42);
+    ctx.rotate(headAngle);
+
+    // Oreja
+    ctx.save();
+    ctx.translate(-5, -8);
+    ctx.rotate(-0.3 + Math.sin(t * 6) * 0.16);
+    ctx.fillStyle = '#f6f3ec';
+    ctx.beginPath();
+    ctx.ellipse(-5, 0, 7, 3.5, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Cabeza y hocico oscuro
+    ctx.fillStyle = '#f6f3ec';
+    ctx.beginPath();
+    ctx.ellipse(8, -2, 17, 9, 0.1, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#2d2b29';
+    ctx.beginPath();
+    ctx.arc(21, 0, 6.5, 0, TAU);
+    ctx.fill();
+
+    // Mandíbula articulada
+    ctx.save();
+    ctx.translate(4, 3);
+    ctx.rotate(jawAngle);
+    ctx.fillStyle = '#3c3936';
+    ctx.beginPath();
+    ctx.ellipse(10, 2, 11, 3.5, 0.05, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Ojo
+    ctx.fillStyle = '#1d1c1a';
+    ctx.beginPath();
+    ctx.arc(4, -4, 2.3, 0, TAU);
+    ctx.fill();
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // RIG 4: MONOS EN RAMAS Y LIANAS (Braquiación y salto controlado)
+  // -------------------------------------------------------------------------
+  function drawMonkeyBrachiating(ctx, x, y, scale, theta) {
+    // Balanceo pendular suspendido de una rama con alternancia de brazos
+    const swing = Math.sin(theta * 3) * 0.55;
+    const pivotX = x + Math.sin(theta * 3) * 18;
+    const pivotY = y;
+
+    ctx.save();
+    ctx.translate(pivotX, pivotY);
+    ctx.scale(scale, scale);
+    ctx.rotate(swing);
+
+    // Brazo sujetando la rama
+    ctx.strokeStyle = '#5c4028';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-4, 34);
+    ctx.stroke();
+
+    // Cuerpo suspendido
+    ctx.translate(-4, 48);
+    ctx.fillStyle = '#6e4d30';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 14, 20, 0.08, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#c89e72';
+    ctx.beginPath();
+    ctx.ellipse(2, 2, 9, 14, 0.08, 0, TAU);
+    ctx.fill();
+
+    // Cola larga en espiral oscilante
+    ctx.save();
+    ctx.translate(-8, 16);
+    ctx.rotate(Math.sin(theta * 3 - 0.8) * 0.45);
+    ctx.strokeStyle = '#5c4028';
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-24, 18, -32, -8, -16, -16);
+    ctx.stroke();
+    ctx.restore();
+
+    // Piernas flexionadas
+    ctx.strokeStyle = '#5c4028';
+    ctx.lineWidth = 6.5;
+    ctx.beginPath();
+    ctx.moveTo(-4, 17);
+    ctx.lineTo(-10, 32);
+    ctx.lineTo(-2, 42);
+    ctx.moveTo(5, 17);
+    ctx.lineTo(12, 30);
+    ctx.lineTo(6, 40);
+    ctx.stroke();
+
+    // Segundo brazo libre balanceándose
+    ctx.save();
+    ctx.translate(8, -10);
+    ctx.rotate(-0.6 + Math.sin(theta * 6) * 0.4);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(22, -14);
+    ctx.stroke();
+    ctx.restore();
+
+    // Cabeza expresiva
+    ctx.translate(2, -23);
+    ctx.fillStyle = '#6e4d30';
+    ctx.beginPath();
+    ctx.arc(0, 0, 12, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#d8b288';
+    ctx.beginPath();
+    ctx.ellipse(2, 2, 8.5, 7, 0, 0, TAU);
+    ctx.fill();
+    // Orejas redondas
+    ctx.fillStyle = '#c89e72';
+    ctx.beginPath();
+    ctx.arc(-11, -1, 4.5, 0, TAU);
+    ctx.arc(11, -1, 4.5, 0, TAU);
+    ctx.fill();
+    // Ojos
+    ctx.fillStyle = '#231810';
+    ctx.beginPath();
+    ctx.arc(-2, -1, 1.8, 0, TAU);
+    ctx.arc(5, -1, 1.8, 0, TAU);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawMonkeyJumping(ctx, x, y, scale, theta) {
+    // Ciclo de agacharse, saltar en arco parabólico entre ramas y aterrizar (2 saltos por 20s)
+    const cycle = frac((theta / TAU) * 2 + 0.35);
+    let dx = 0, dy = 0, squash = 1, bodyRot = 0;
+
+    if (cycle < 0.14) {
+      // Anticipación (agachado)
+      const k = smoothstep(0, 0.14, cycle);
+      squash = 1 - k * 0.24;
+      dy = k * 8;
+    } else if (cycle < 0.44) {
+      // Salto hacia la derecha
+      const k = (cycle - 0.14) / 0.30;
+      dx = lerp(0, 68, k);
+      dy = -Math.sin(k * Math.PI) * 46;
+      squash = 1 + Math.sin(k * Math.PI) * 0.16;
+      bodyRot = Math.cos(k * Math.PI) * -0.35;
+    } else if (cycle < 0.62) {
+      // Pausa en rama derecha
+      dx = 68;
+      dy = Math.sin(theta * 6) * 2;
+    } else if (cycle < 0.90) {
+      // Salto de regreso
+      const k = (cycle - 0.62) / 0.28;
+      dx = lerp(68, 0, k);
+      dy = -Math.sin(k * Math.PI) * 42;
+      squash = 1 + Math.sin(k * Math.PI) * 0.15;
+      bodyRot = Math.cos(k * Math.PI) * 0.35;
+    }
+
+    ctx.save();
+    ctx.translate(x + dx, y + dy);
+    ctx.scale(scale, scale);
+    ctx.rotate(bodyRot);
+    ctx.scale(1 / Math.sqrt(squash), squash);
+
+    // Cola
+    ctx.strokeStyle = '#63442a';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-10, 6);
+    ctx.bezierCurveTo(-28, -4, -30, -24, -18, -26);
+    ctx.stroke();
+
+    // Piernas
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(-6, 10);
+    ctx.lineTo(-12, 24);
+    ctx.moveTo(6, 10);
+    ctx.lineTo(12, 24);
+    ctx.stroke();
+
+    // Torso
+    ctx.fillStyle = '#755233';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 13, 17, 0, 0, TAU);
+    ctx.fill();
+
+    // Brazos
+    ctx.beginPath();
+    ctx.moveTo(-10, -6);
+    ctx.lineTo(-20, 6);
+    ctx.moveTo(10, -6);
+    ctx.lineTo(20, 4);
+    ctx.stroke();
+
+    // Cabeza
+    ctx.translate(0, -21);
+    ctx.fillStyle = '#755233';
+    ctx.beginPath();
+    ctx.arc(0, 0, 11, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#d8b288';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 7.5, 6, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#231810';
+    ctx.beginPath();
+    ctx.arc(-3, -1, 1.7, 0, TAU);
+    ctx.arc(3, -1, 1.7, 0, TAU);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // RIG 5: FLAMENCOS EN LA LAGUNA (Caminata, cuello en S, equilibrio)
+  // -------------------------------------------------------------------------
+  function drawFlamingo(ctx, cfg) {
+    const { x, y, scale, facing, theta, mode, cycleOffset } = cfg;
+    const t = theta + cycleOffset * TAU;
+    const p = frac((theta / TAU) + cycleOffset);
+
+    let posX = x;
+    let stepAng1 = 0, stepAng2 = 0, lift2 = 0;
+    let neckDip = 0;
+
+    if (mode === 'walk') {
+      posX = x + Math.sin(t) * 34;
+      const walk = t * 6;
+      stepAng1 = Math.sin(walk) * 0.26;
+      stepAng2 = -Math.sin(walk) * 0.26;
+      lift2 = Math.max(0, Math.cos(walk)) * 12;
+    } else if (mode === 'balance') {
+      // Equilibrio elegante sobre una sola pata
+      lift2 = 26 + Math.sin(t * 2) * 3;
+    } else if (mode === 'feed') {
+      // Sumerge el cuello en S hacia el agua periódicamente
+      neckDip = periodicWindow(p, 0.15, 0.32, 0.62, 0.80);
+    }
+
+    const dir = mode === 'walk' ? (Math.cos(t) >= 0 ? facing : -facing) : facing;
+
+    ctx.save();
+    ctx.translate(posX, y);
+    ctx.scale(scale * dir, scale);
+
+    // Pata trasera / levantada
+    ctx.save();
+    ctx.translate(-3, -58);
+    ctx.rotate(stepAng2);
+    ctx.strokeStyle = '#d86c7a';
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    if (mode === 'balance') {
+      ctx.lineTo(-10, 26);
+      ctx.lineTo(6, 36);
+    } else {
+      ctx.lineTo(0, 58 - lift2);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Pata de apoyo en el agua
+    ctx.save();
+    ctx.translate(3, -58);
+    ctx.rotate(stepAng1);
+    ctx.strokeStyle = '#e87a88';
+    ctx.lineWidth = 3.4;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, 58);
+    ctx.stroke();
+    ctx.restore();
+
+    // Cuerpo plumoso coral-salmón
+    ctx.save();
+    ctx.translate(0, -68 + Math.sin(t * 3) * 1.8);
+    ctx.fillStyle = '#f28482';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 24, 14, -0.08, 0, TAU);
+    ctx.fill();
+
+    // Ala plegada con plumas más intensas
+    ctx.fillStyle = '#e0636b';
+    ctx.beginPath();
+    ctx.ellipse(-3, -1, 18, 9, -0.05, 0, TAU);
+    ctx.fill();
+
+    // Cuello flexible en curva Bézier en S
+    const headX = lerp(24, 34, neckDip) + Math.sin(t * 2) * 2.5;
+    const headY = lerp(-46, 56, neckDip);
+    const cp1X = lerp(38, 46, neckDip);
+    const cp1Y = lerp(-12, 16, neckDip);
+    const cp2X = lerp(8, 22, neckDip);
+    const cp2Y = lerp(-34, 48, neckDip);
+
+    ctx.strokeStyle = '#f4978e';
+    ctx.lineWidth = 5.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(18, -4);
+    ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, headX, headY);
+    ctx.stroke();
+
+    // Cabeza y pico curvo característico
+    ctx.translate(headX, headY);
+    ctx.rotate(lerp(0.1, 1.45, neckDip));
+    ctx.fillStyle = '#f4978e';
+    ctx.beginPath();
+    ctx.arc(0, 0, 5.5, 0, TAU);
+    ctx.fill();
+    // Pico bicolor (rosa claro + punta negra)
+    ctx.fillStyle = '#f8edeb';
+    ctx.beginPath();
+    ctx.moveTo(4, -2);
+    ctx.lineTo(13, 1);
+    ctx.lineTo(4, 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#252422';
+    ctx.beginPath();
+    ctx.moveTo(11, 0.5);
+    ctx.lineTo(16, 7);
+    ctx.lineTo(9, 3);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 8. CAPA 4: PRIMER PLANO (HIERBA VIVA, FOLLAJE DE MARCO, MARIPOSAS, POLEN)
+  // =========================================================================
+  function renderFront(ctx, theta, px, py) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.translate(px * 68, py * 38);
+
+    // Briznas de hierba con frecuencias y fases individuales de viento
+    for (const cl of grassClusters) {
+      const wind = Math.sin(theta * cl.freq + cl.phase) * cl.amp;
+      ctx.save();
+      ctx.translate(cl.x, cl.y);
+      ctx.scale(cl.scale, cl.scale);
+      ctx.strokeStyle = cl.hueShift > 0.5 ? '#5b7c46' : '#739152';
+      ctx.lineCap = 'round';
+      for (const b of cl.blades) {
+        ctx.lineWidth = b.w;
+        const tipX = Math.sin(b.lean + wind) * b.h;
+        const tipY = -Math.cos(b.lean + wind) * b.h;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(tipX * 0.45, tipY * 0.55, tipX, tipY);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 4 Mariposas en trayectorias cerradas de Lissajous con aleteo articulado
+    for (const bf of butterflies) {
+      const bx = bf.cx + Math.sin(theta * bf.kx + bf.ph) * bf.rx;
+      const by = bf.cy + Math.cos(theta * bf.ky + bf.ph * 1.3) * bf.ry;
+      const vx = Math.cos(theta * bf.kx + bf.ph) * bf.rx * bf.kx;
+      const dir = vx >= 0 ? 1 : -1;
+      const wingSpread = 0.25 + 0.75 * Math.abs(Math.sin(theta * bf.flap + bf.ph));
+      drawButterfly(ctx, bx, by, bf.scale, dir, wingSpread, bf.col1, bf.col2);
+    }
+
+    // Vegetación de primer plano enmarcando las esquinas inferiores
+    drawForegroundFramingFoliage(ctx, theta);
+
+    // Partículas de polen dorado flotando en ciclos cerrados
+    for (const pt of pollen) {
+      const x = pt.x0 + Math.sin(theta * pt.kx + pt.ph) * pt.rx;
+      const y = pt.y0 + Math.cos(theta * pt.ky + pt.ph) * pt.ry;
+      const twinkle = 0.55 + 0.45 * Math.sin(theta * 3 + pt.ph);
+      ctx.fillStyle = `rgba(255, 240, 185, ${pt.a * twinkle})`;
+      ctx.beginPath();
+      ctx.arc(x, y, pt.r, 0, TAU);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function drawButterfly(ctx, x, y, scale, dir, spread, col1, col2) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale * dir, scale);
+    ctx.rotate(-0.22);
+
+    // Ala posterior
+    ctx.save();
+    ctx.scale(1, spread);
+    ctx.fillStyle = col2;
+    ctx.beginPath();
+    ctx.ellipse(-4, -7, 8, 11, -0.35, 0, TAU);
+    ctx.fill();
+
+    // Ala anterior
+    ctx.fillStyle = col1;
+    ctx.beginPath();
+    ctx.ellipse(3, -11, 10, 14, 0.25, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Cuerpo fino
+    ctx.strokeStyle = '#2d241e';
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-7, 0);
+    ctx.lineTo(7, 0);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawForegroundFramingFoliage(ctx, theta) {
+    // Hojas tropicales en esquina inferior izquierda
+    const leftFronds = [
+      { x: -10, y: 1110, ang: -0.55, len: 240, freq: 2, ph: 0.1, col: '#2c422c' },
+      { x: 45, y: 1120, ang: -0.25, len: 210, freq: 3, ph: 1.2, col: '#385235' },
+      { x: 110, y: 1125, ang: 0.05, len: 175, freq: 2, ph: 2.3, col: '#44613d' }
+    ];
+    for (const f of leftFronds) {
+      drawPalmFrond(ctx, f.x, f.y, f.ang + Math.sin(theta * f.freq + f.ph) * 0.045, f.len, f.col);
+    }
+
+    // Juncos y helechos en esquina inferior derecha (borde de laguna)
+    const rightReeds = [
+      { x: 1840, y: 1110, h: 250, freq: 3, ph: 0.4, col: '#2e4730' },
+      { x: 1875, y: 1115, h: 295, freq: 2, ph: 1.6, col: '#3a5738' },
+      { x: 1915, y: 1110, h: 265, freq: 3, ph: 2.8, col: '#283d2a' }
+    ];
+    for (const rd of rightReeds) {
+      const sway = Math.sin(theta * rd.freq + rd.ph) * 18;
+      ctx.strokeStyle = rd.col;
+      ctx.lineWidth = 6.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(rd.x, rd.y);
+      ctx.quadraticCurveTo(rd.x - 12 + sway * 0.5, rd.y - rd.h * 0.55, rd.x - 24 + sway, rd.y - rd.h);
+      ctx.stroke();
+
+      // Espiga de totora
+      ctx.fillStyle = '#5a3d28';
+      ctx.beginPath();
+      ctx.ellipse(rd.x - 22 + sway * 0.9, rd.y - rd.h + 28, 6.5, 22, -0.08, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  function drawPalmFrond(ctx, x, y, ang, len, col) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang);
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(len * 0.25, -48, len * 0.72, -42, len, 0);
+    ctx.bezierCurveTo(len * 0.72, 34, len * 0.25, 38, 0, 0);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 9. BUCLE PRINCIPAL DE ANIMACIÓN Y VALIDACIÓN DE CONTINUIDAD (20.00s)
+  // =========================================================================
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function renderFrame(now) {
+    if (!paused) {
+      const elapsedSec = reducedMotion
+        ? 4.2
+        : ((now - startTime - pausedAccum) / 1000);
+
+      // Reloj global normalizado estricto [0..1) -> ciclo exacto de 20.00 segundos
+      const phase = ((elapsedSec % LOOP_SECONDS) + LOOP_SECONDS) % LOOP_SECONDS / LOOP_SECONDS;
+      const theta = phase * TAU;
+
+      // Suavizado exponencial del parallax 2.5D
+      pointer.x += (pointer.tx - pointer.x) * 0.06;
+      pointer.y += (pointer.ty - pointer.y) * 0.06;
+
+      renderSky(ctxs.sky, theta, pointer.x, pointer.y);
+      renderFar(ctxs.far, theta, phase, pointer.x, pointer.y);
+      renderMid(ctxs.mid, theta, phase, pointer.x, pointer.y);
+      renderFront(ctxs.front, theta, pointer.x, pointer.y);
+    }
+    requestAnimationFrame(renderFrame);
+  }
+
+  requestAnimationFrame(renderFrame);
+})();
+</script>
+</body>
+</html>
