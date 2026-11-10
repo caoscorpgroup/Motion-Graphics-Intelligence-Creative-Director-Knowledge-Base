@@ -125,3 +125,18 @@ No declarar rigging, separación, animación, reproducción o rendimiento como c
 ## 8. Regla de decisión
 
 Ante cada proyecto, el Director debe preguntarse primero: ¿se resuelve mejor como 2D, como 2.5D por capas o mediante una combinación de ambos? La opción predeterminada es la solución 2D/2.5D más sencilla que alcance la calidad solicitada. No escalar a 3D completo ni a herramientas de videojuegos por inercia.
+
+
+## 9. Ampliación: profundidad visual y tratamiento de capas
+
+La implementación por capas debe complementarse con una dirección visual específica para cada distancia. No basta con separar imágenes y asignarles distintas velocidades.
+
+- Diferenciar cromáticamente los planos: el fondo puede integrarse con tonos atmosféricos y menor saturación/contraste; los planos intermedios deben mantener una transición gradual; el sujeto y el primer plano deben conservar la jerarquía necesaria para la lectura.
+- Aplicar perspectiva atmosférica y detalle progresivo: los elementos lejanos suelen mostrar menos detalle fino, contraste local y saturación. Evitar desenfocar indiscriminadamente o aplicar filtros uniformes sin criterio artístico.
+- Inspeccionar los PNG con alfa antes de componer. La transparencia no garantiza bordes limpios: revisar halos, contaminación de color, matte, esquinas opacas, huecos y elementos fusionados.
+- Preparar derivados sobre copias, conservando los originales. Corregir máscaras, bordes y recortes solo después de inspeccionar y previsualizar; no ejecutar procesos destructivos en lote sin aprobación.
+- Validar primero una composición estática completa. No añadir cámara ni animación hasta que encuadre, perspectiva, color, oclusión e integración visual funcionen.
+- Configurar el paralaje por capa con pesos horizontales y verticales explícitos, asociados a una profundidad definida. Los pesos deben calibrarse para la cámara y la escena, no copiarse ciegamente de ejemplos de otro motor.
+- Probar el recorrido de cámara para detectar huecos, límites de imágenes, bordes residuales y oclusiones incorrectas.
+
+La secuencia ampliada de diagnóstico, preparación, tratamiento cromático, composición estática, aprobación, paralaje, animación y verificación se documenta en [PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md](PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md). La prueba del castillo se conserva como experimento fallido y no como validación del método; sus incidencias deben servir como controles preventivos.
