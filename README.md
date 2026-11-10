@@ -22,6 +22,10 @@ La producción puede ser completamente 2D. La perspectiva, la profundidad, el vo
 - [DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md](DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md): directrices de perspectiva 2D, profundidad longitudinal, surrealismo, libertad artística, calidad de ilustración, animación orgánica, composición por planos, continuidad, autonomía creativa y validación.
 - [IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md](IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md): alcance técnico prioritario 2D/2.5D, paralaje, producción por capas, uso de assets aportados por el usuario, preparación y rigging 2D, y criterios para una prueba de producción.
 
+## Ampliación vigente de profundidad y paralaje
+
+- [PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md](PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md): ampliación sobre jerarquía cromática, perspectiva atmosférica, detalle por distancia, paralaje controlado por cámara, inspección de assets y validación por etapas.
+
 ## Referencias y entregas
 
 - [entregas/](entregas/): materiales y pruebas que se conservan para revisión.
