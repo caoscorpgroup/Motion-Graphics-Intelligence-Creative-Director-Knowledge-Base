@@ -1,12 +1,8 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+# This repository contains browser-oriented JavaScript demonstrations, not a Deno application.
+# Keep this workflow focused on syntax validation without imposing Deno-specific lint rules
+# on browser globals or rewriting historical experiments.
 
-# This workflow will install Deno then run `deno lint` and `deno test`.
-# For more information see: https://github.com/denoland/setup-deno
-
-name: Deno
+name: JavaScript syntax validation
 
 on:
   push:
@@ -18,25 +14,20 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  syntax:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Setup repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Deno
-        # uses: denoland/setup-deno@v1
-        uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
-        with:
-          deno-version: v1.x
-
-      # Uncomment this step to verify the use of 'deno fmt' on each commit.
-      # - name: Verify formatting
-      #   run: deno fmt --check
-
-      - name: Run linter
-        run: deno lint
-
-      - name: Run tests
-        run: deno test -A
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=0
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            node --check "$file"
+            count=$((count + 1))
+          done < <(find entregas -type f -name '*.js' -print0)
+          echo "Validated $count JavaScript files."
