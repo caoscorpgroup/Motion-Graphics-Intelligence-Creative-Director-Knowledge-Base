@@ -21,7 +21,7 @@ Gemini debe construir una pieza de presentación gráfica basada en el concepto 
 - animación breve y continua de flotación, accesorio y núcleo óptico;
 - controles de reproducción, pausa, reinicio y velocidad cuando la arquitectura los permita;
 - controles de visibilidad de las tres capas;
-- adaptación a pantalla de escritorio y pantalla táctil.
+- adaptación a escritorio y a Safari en iPad, con controles táctiles y composición legible sin depender de hover.
 
 La geometría, el texto, la paleta, la escala, el encuadre, la duración y el comportamiento deben mantenerse iguales entre las versiones. No rediseñar el personaje para favorecer una tecnología.
 
@@ -100,7 +100,7 @@ En Canvas, esta información debe proceder del modelo de objetos y del orden de 
 
 Ejecutar las mismas comprobaciones en todas las versiones que soporten la función: carga inicial, composición, aislamiento de capas, reproducción, pausa, reinicio, velocidad, continuidad del bucle, cambio de tamaño, uso táctil, ausencia de recortes, exportación real cuando se anuncie.
 
-Para una función que no corresponda a una variante —por ejemplo, controles en un SVG puramente estático— marcar «no aplicable» y explicar por qué. No declarar que pasó una prueba que no se ejecutó.
+Ejecutar la prueba en un navegador de escritorio y en Safari para iPad. Comprobar orientación, viewport, densidad de píxeles, áreas táctiles, desplazamiento accidental de la página y controles sin hover. Para una función que no corresponda a una variante —por ejemplo, controles en un SVG puramente estático— marcar «no aplicable» y explicar por qué. No declarar que pasó una prueba que no se ejecutó.
 
 ## 7. Matriz de evaluación
 
