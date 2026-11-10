@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VULCANIAN THALASSO-HUMANOID — Concept Art Sheet</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #090b0e;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #concept-sheet {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 177.78vh;
+    max-height: 56.25vw;
+    aspect-ratio: 16 / 9;
+    background: #111419;
+    box-shadow: 0 35px 120px rgba(0,0,0,0.95), 0 0 0 1px rgba(215, 175, 110, 0.15);
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #grain-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.055;
+    mix-blend-mode: overlay;
+  }
+</style>
+</head>
+<body>
+<div id="concept-sheet">
+  <canvas id="art-canvas"></canvas>
+  <svg id="grain-overlay" xmlns="http://www.w3.org/2000/svg">
+    <filter id="studio-grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#studio-grain)"/>
+  </svg>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const W = 1920;
+  const H = 1080;
+  const TAU = Math.PI * 2;
+  const canvas = document.getElementById('art-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // =========================================================================
+  // AUXILIARES DE DIBUJO ILUSTRATIVO DE MANO ALZADA (FREE-HAND / RIBBON ENGINE)
+  // =========================================================================
+  
+  // Convierte un conjunto de puntos de control en una curva suave continua
+  function drawSmoothSpline(ctx, pts, closed = false) {
+    if (pts.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - (closed ? 0 : 1); i++) {
+      const p0 = pts[(i - 1 + pts.length) % pts.length];
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % pts.length];
+      const p3 = pts[(i + 2) % pts.length];
+      
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+    }
+    if (closed) ctx.closePath();
+  }
+
+  // Genera un trazo de presión variable (cinta muscular/fibrosa)
+  function drawRibbonStroke(ctx, pts, wStart, wMid, wEnd, fillStyle) {
+    if (pts.length < 3) return;
+    const leftPts = [];
+    const rightPts = [];
+
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      const prev = pts[Math.max(0, i - 1)];
+      const next = pts[Math.min(pts.length - 1, i + 1)];
+      const dx = next.x - prev.x;
+      const dy = next.y - prev.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+
+      const t = i / (pts.length - 1);
+      const w = t < 0.5 
+        ? wStart + (wMid - wStart) * (t * 2)
+        : wMid + (wEnd - wMid) * ((t - 0.5) * 2);
+
+      leftPts.push({ x: p.x + nx * w, y: p.y + ny * w });
+      rightPts.push({ x: p.x - nx * w, y: p.y - ny * w });
+    }
+
+    ctx.save();
+    ctx.fillStyle = fillStyle;
+    ctx.beginPath();
+    ctx.moveTo(leftPts[0].x, leftPts[0].y);
+    for (let i = 1; i < leftPts.length; i++) {
+      ctx.lineTo(leftPts[i].x, leftPts[i].y);
+    }
+    for (let i = rightPts.length - 1; i >= 0; i--) {
+      ctx.lineTo(rightPts[i].x, rightPts[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Genera ruido de microporosidad y textura orgánica en regiones seleccionadas
+  function applyOrganicTextureOverlay(ctx, x, y, w, h, opacity = 0.08) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, ' + opacity + ')';
+    for (let i = 0; i < 180; i++) {
+      const rx = x + Math.random() * w;
+      const ry = y + Math.random() * h;
+      const rad = 0.5 + Math.random() * 1.5;
+      ctx.beginPath();
+      ctx.arc(rx, ry, rad, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 1. FONDO DE ESTUDIO DE CONCEPT ART Y MAQUETACIÓN EDITORIAL
+  // =========================================================================
+  function renderStudioLayout(ctx) {
+    // Fondo de pared de estudio cálido-neutro pizarra con foco central cinematográfico
+    const bg = ctx.createRadialGradient(W * 0.48, H * 0.42, 100, W * 0.5, H * 0.5, W * 0.75);
+    bg.addColorStop(0.0, '#22262d');
+    bg.addColorStop(0.55, '#17191e');
+    bg.addColorStop(1.0, '#0c0e11');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid técnico suave de lámina editorial
+    ctx.save();
+    ctx.strokeStyle = 'rgba(215, 185, 135, 0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 60; x < W; x += 60) {
+      ctx.beginPath(); ctx.moveTo(x, 40); ctx.lineTo(x, H - 40); ctx.stroke();
+    }
+    for (let y = 60; y < H; y += 60) {
+      ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(W - 40, y); ctx.stroke();
+    }
+
+    // Marco exterior y líneas separadoras técnicas
+    ctx.strokeStyle = 'rgba(215, 185, 135, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(40, 40, W - 80, H - 80);
+
+    // Divisores de paneles
+    ctx.strokeStyle = 'rgba(215, 185, 135, 0.12)';
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(820, 60); ctx.lineTo(820, H - 60);
+    ctx.moveTo(1370, 60); ctx.lineTo(1370, H - 60);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Sombras pedestales de apoyo
+    drawPedestalShadow(ctx, 430, 960, 240, 36);
+
+    // Tipografía de título y taxonomía del alienígena
+    ctx.fillStyle = 'rgba(240, 225, 205, 0.92)';
+    ctx.font = '600 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('SPECIES DESIGN // THALASSORIN KEL-VATH', 64, 76);
+
+    ctx.fillStyle = 'rgba(215, 175, 110, 0.75)';
+    ctx.font = '500 12px monospace';
+    ctx.fillText('DESIGNACIÓN BIOLÓGICA: THALASSO-HUMANOIDE VULCÁNICO DE ABISMO REFRACCIONARIO', 64, 100);
+    ctx.fillText('CLAFISICACIÓN MORFOLÓGICA: QUAD-DIGIT / EXOSUPERFICIE SILÍCEA Y BRANQUIAS OPERCULARES', 64, 118);
+
+    // Paneles de ampliación
+    drawCalloutHeader(ctx, 840, 80, 500, 26, 'PANEL A — ANATOMÍA CRANEAL Y ESTRUCTURA OPERCULAR');
+    drawCalloutHeader(ctx, 840, 540, 500, 26, 'PANEL B — MANO TETRADÁCTILA Y MEMBRANAS DE RETRACCIÓN');
+    drawCalloutHeader(ctx, 1390, 80, 470, 26, 'PANEL C — MATRIZ DE MATERIALES Y BIOLUMINISCENCIA');
+
+    ctx.restore();
+  }
+
+  function drawPedestalShadow(ctx, cx, cy, rx, ry) {
+    ctx.save();
+    const sh = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx);
+    sh.addColorStop(0, 'rgba(0, 0, 0, 0.75)');
+    sh.addColorStop(0.6, 'rgba(0, 0, 0, 0.35)');
+    sh.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = sh;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCalloutHeader(ctx, x, y, w, h, title) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(16, 20, 26, 0.85)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(215, 175, 110, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = 'rgba(235, 215, 185, 0.85)';
+    ctx.font = '600 11px monospace';
+    ctx.fillText(title, x + 10, y + 17);
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 2. ILUSTRACIÓN DE CUERPO COMPLETO: THALASSORIN KEL-VATH
+  // =========================================================================
+  function renderFullBodyAlien(ctx, cx, cy, scale) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    // -----------------------------------------------------------------------
+    // A. PASADA 1: MASA DE SILUETA BASE Y OCLUSIÓN AMBIENTAL POSTERIOR
+    // -----------------------------------------------------------------------
+    // Silueta orgánica estirada asimétrica del torso, cadera y muslos musculosos
+    const spinePts = [
+      { x: 0, y: -260 },
+      { x: -18, y: -160 },
+      { x: -5, y: -40 },
+      { x: 12, y: 110 },
+      { x: 0, y: 280 }
+    ];
+
+    // Musculatura de la pierna izquierda (retrasa el peso)
+    drawRibbonStroke(ctx, [
+      { x: -35, y: 120 }, { x: -85, y: 240 }, { x: -95, y: 390 }, { x: -110, y: 520 }
+    ], 38, 28, 14, '#1b252b');
+
+    // Pierna derecha (adelantada con rodilla prominente y cresta dorsal)
+    drawRibbonStroke(ctx, [
+      { x: 35, y: 120 }, { x: 75, y: 235 }, { x: 65, y: 395 }, { x: 80, y: 530 }
+    ], 42, 30, 16, '#233038');
+
+    // -----------------------------------------------------------------------
+    // B. PASADA 2: ESCULPIDO DE MÚSCULOS DE LA PIERNA Y PIES TETRADÁCTILOS
+    // -----------------------------------------------------------------------
+    // Pie izquierdo y garras
+    drawAlienFoot(ctx, -110, 520, -1);
+    // Pie derecho y garras
+    drawAlienFoot(ctx, 80, 530, 1);
+
+    // Musculatura detallada con capas de sombra y luz en muslo derecho
+    ctx.save();
+    const thighGrad = ctx.createLinearGradient(10, 120, 110, 360);
+    thighGrad.addColorStop(0.0, '#3a505b');
+    thighGrad.addColorStop(0.4, '#273842');
+    thighGrad.addColorStop(0.8, '#18242b');
+    thighGrad.addColorStop(1.0, '#10171c');
+    ctx.fillStyle = thighGrad;
+
+    const rightThighPts = [
+      { x: 22, y: 120 }, { x: 92, y: 165 }, { x: 108, y: 245 },
+      { x: 85, y: 325 }, { x: 42, y: 340 }, { x: 25, y: 230 }
+    ];
+    drawSmoothSpline(ctx, rightThighPts, true);
+    ctx.fill();
+
+    // Placas minerales externas en muslos (exosuperficie de sílice calcificada)
+    drawSilicaPlatesOnLimb(ctx, 45, 180, 38, 75, 0.35);
+    ctx.restore();
+
+    // -----------------------------------------------------------------------
+    // C. TORSO ASIMÉTRICO, CAJA TORÁCICA ALARGADA Y RESPIRADEROS EXTERNOS
+    // -----------------------------------------------------------------------
+    ctx.save();
+    // Torso base estilizado
+    const torsoGrad = ctx.createLinearGradient(-80, -220, 80, 140);
+    torsoGrad.addColorStop(0.0, '#4a6573');
+    torsoGrad.addColorStop(0.35, '#2e424c');
+    torsoGrad.addColorStop(0.75, '#1e2c33');
+    torsoGrad.addColorStop(1.0, '#121b20');
+    ctx.fillStyle = torsoGrad;
+
+    const torsoOutline = [
+      { x: 0, y: -240 },
+      { x: -75, y: -210 },
+      { x: -95, y: -120 },
+      { x: -78, y: 10 },
+      { x: -48, y: 125 },
+      { x: 48, y: 125 },
+      { x: 82, y: 10 },
+      { x: 98, y: -120 },
+      { x: 78, y: -210 }
+    ];
+    drawSmoothSpline(ctx, torsoOutline, true);
+    ctx.fill();
+
+    // Sombras de oclusión profunda pectoral e intercostal (capa 'multiply')
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(8, 14, 18, 0.75)';
+    ctx.beginPath();
+    ctx.moveTo(-75, -180);
+    ctx.bezierCurveTo(-30, -120, 30, -120, 75, -180);
+    ctx.bezierCurveTo(45, -60, -45, -60, -75, -180);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+
+    // Fibras musculares intercostales dibujadas mediante trazos fluidos
+    ctx.strokeStyle = 'rgba(145, 195, 215, 0.38)';
+    ctx.lineWidth = 2.2;
+    for (let i = 0; i < 5; i++) {
+      const yOff = -150 + i * 28;
+      ctx.beginPath();
+      ctx.moveTo(-65 + i * 3, yOff);
+      ctx.quadraticCurveTo(0, yOff + 22, 65 - i * 3, yOff);
+      ctx.stroke();
+    }
+
+    // Branquias respiratorias laterales pectorales con brillo bioluminiscente cian
+    for (const side of [-1, 1]) {
+      for (let g = 0; g < 4; g++) {
+        const gx = side * (58 + g * 3);
+        const gy = -130 + g * 22;
+        
+        ctx.fillStyle = '#101c22';
+        ctx.beginPath();
+        ctx.ellipse(gx, gy, 14, 6, side * 0.45, 0, TAU);
+        ctx.fill();
+
+        const ventGlow = ctx.createRadialGradient(gx, gy, 1, gx, gy, 8);
+        ventGlow.addColorStop(0, '#7bf4ff');
+        ventGlow.addColorStop(0.6, 'rgba(65, 185, 225, 0.6)');
+        ventGlow.addColorStop(1, 'rgba(20, 60, 90, 0)');
+        ctx.fillStyle = ventGlow;
+        ctx.beginPath();
+        ctx.ellipse(gx, gy, 10, 4, side * 0.45, 0, TAU);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // -----------------------------------------------------------------------
+    // D. EXTREMIDADES SUPERIORES (BRAZOS ALARGADOS TETRADÁCTILOS)
+    // -----------------------------------------------------------------------
+    // Brazo izquierdo (cae con flexión ligera, extendiendo la mano de 4 dedos)
+    drawAlienArmLeft(ctx, -78, -195);
+
+    // Brazo derecho (articulado hacia adelante mostrando gesto anatómico)
+    drawAlienArmRight(ctx, 78, -195);
+
+    // -----------------------------------------------------------------------
+    // E. CUELLO ESTIRADO Y CABEZA CRANEAL CEREBRIFORME
+    // -----------------------------------------------------------------------
+    drawAlienHeadAndNeck(ctx, 0, -235, 1.0);
+
+    ctx.restore();
+  }
+
+  // Subrutina para extremidad inferior (pie de 4 dedos opuestos)
+  function drawAlienFoot(ctx, x, y, side) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(side, 1);
+
+    ctx.fillStyle = '#1a262c';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-15, 25, -28, 45, -45, 55);
+    ctx.lineTo(-25, 62);
+    ctx.lineTo(5, 65);
+    ctx.lineTo(35, 60);
+    ctx.lineTo(20, 35);
+    ctx.closePath();
+    ctx.fill();
+
+    // 4 Dedos alargados con garras de bio-silicio
+    const toes = [
+      { x: -35, y: 55, w: 7, l: 24, ang: -0.5 },
+      { x: -12, y: 62, w: 8, l: 28, ang: -0.15 },
+      { x: 12, y: 64, w: 8, l: 26, ang: 0.15 },
+      { x: 32, y: 58, w: 6.5, l: 20, ang: 0.45 }
+    ];
+
+    for (const t of toes) {
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      ctx.rotate(t.ang);
+
+      const toeGrad = ctx.createLinearGradient(0, 0, 0, t.l);
+      toeGrad.addColorStop(0, '#2d414b');
+      toeGrad.addColorStop(1, '#152026');
+      ctx.fillStyle = toeGrad;
+      ctx.beginPath();
+      ctx.roundRect(-t.w * 0.5, 0, t.w, t.l, 3);
+      ctx.fill();
+
+      // Garra de cuarzo acuminada
+      ctx.fillStyle = '#d8f6ff';
+      ctx.beginPath();
+      ctx.moveTo(-t.w * 0.4, t.l);
+      ctx.lineTo(0, t.l + 12);
+      ctx.lineTo(t.w * 0.4, t.l);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawSilicaPlatesOnLimb(ctx, x, y, rx, ry, rot) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+
+    ctx.fillStyle = 'rgba(185, 225, 240, 0.28)';
+    ctx.strokeStyle = 'rgba(215, 245, 255, 0.65)';
+    ctx.lineWidth = 1.2;
+
+    for (let i = 0; i < 5; i++) {
+      const px = (i - 2) * 12;
+      const py = Math.sin(i * 1.5) * 8;
+      ctx.beginPath();
+      ctx.moveTo(px, py - 14);
+      ctx.lineTo(px + 10, py);
+      ctx.lineTo(px, py + 14);
+      ctx.lineTo(px - 10, py);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawAlienArmLeft(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Hombro amplio con crestas minerales
+    drawRibbonStroke(ctx, [
+      { x: 0, y: 0 }, { x: -42, y: 65 }, { x: -65, y: 165 }, { x: -85, y: 275 }
+    ], 26, 18, 10, '#24343d');
+
+    // Antebrazo y mano tetradáctila relajada
+    drawAlienHand(ctx, -85, 275, -0.2, false);
+    ctx.restore();
+  }
+
+  function drawAlienArmRight(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Hombro y bíceps flexionados
+    drawRibbonStroke(ctx, [
+      { x: 0, y: 0 }, { x: 48, y: 60 }, { x: 75, y: 155 }, { x: 92, y: 260 }
+    ], 28, 20, 11, '#2c3f4a');
+
+    // Placas minerales dorsales en el antebrazo
+    drawSilicaPlatesOnLimb(ctx, 62, 110, 25, 50, 0.4);
+
+    // Mano tetradáctila extendida en gesto anatómico
+    drawAlienHand(ctx, 92, 260, 0.35, true);
+    ctx.restore();
+  }
+
+  function drawAlienHand(ctx, x, y, rot, openHand) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+
+    // Palma muscular
+    ctx.fillStyle = '#22323a';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 14, 18, 0, 0, TAU);
+    ctx.fill();
+
+    // 4 Dedos alargados con doble articulación e hiper-flexibilidad
+    const fingers = openHand
+      ? [
+          { x: -14, y: 10, len: 42, ang: -0.65 },
+          { x: -5, y: 16, len: 52, ang: -0.2 },
+          { x: 5, y: 16, len: 48, ang: 0.18 },
+          { x: 14, y: 10, len: 38, ang: 0.58 }
+        ]
+      : [
+          { x: -12, y: 10, len: 36, ang: -0.4 },
+          { x: -4, y: 14, len: 44, ang: -0.1 },
+          { x: 4, y: 14, len: 40, ang: 0.15 },
+          { x: 12, y: 10, len: 32, ang: 0.45 }
+        ];
+
+    for (const f of fingers) {
+      ctx.save();
+      ctx.translate(f.x, f.y);
+      ctx.rotate(f.ang);
+
+      // Segmentos de dedo envueltos por trazo muscular
+      drawRibbonStroke(ctx, [
+        { x: 0, y: 0 }, { x: 0, y: f.len * 0.5 }, { x: 0, y: f.len }
+      ], 4.5, 3.5, 2.0, '#364d57');
+
+      // Membrana interdigital de retracción
+      ctx.fillStyle = 'rgba(105, 185, 210, 0.22)';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(8, f.len * 0.4, 0, f.len * 0.7);
+      ctx.fill();
+
+      // Uña / Garra silícea refractaria
+      ctx.fillStyle = '#e0f7ff';
+      ctx.beginPath();
+      ctx.moveTo(-2, f.len);
+      ctx.lineTo(0, f.len + 10);
+      ctx.lineTo(2, f.len);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // F. CABEZA Y CRÁNEO CEREBRIFORME (ANATOMÍA FACIAL EXTRATERRESTRE)
+  // -------------------------------------------------------------------------
+  function drawAlienHeadAndNeck(ctx, hx, hy, scale) {
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.scale(scale, scale);
+
+    // Cuello alargado con haces musculosos visibles y membranas branquiales
+    const neckGrad = ctx.createLinearGradient(-35, 0, 35, 65);
+    neckGrad.addColorStop(0, '#364c57');
+    neckGrad.addColorStop(1, '#1b272d');
+    ctx.fillStyle = neckGrad;
+    ctx.beginPath();
+    ctx.moveTo(-32, 60);
+    ctx.bezierCurveTo(-38, 20, -28, -10, -22, -35);
+    ctx.lineTo(22, -35);
+    ctx.bezierCurveTo(28, -10, 38, 20, 32, 60);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cráneo alargado occipital estilo cresta (sin cabello, con placas de cuarzo)
+    const craniumGrad = ctx.createRadialGradient(-15, -95, 15, 0, -60, 110);
+    craniumGrad.addColorStop(0.0, '#5f8091');
+    craniumGrad.addColorStop(0.4, '#395361');
+    craniumGrad.addColorStop(0.8, '#21333d');
+    craniumGrad.addColorStop(1.0, '#131e24');
+    ctx.fillStyle = craniumGrad;
+
+    const craniumPath = [
+      { x: 0, y: -135 },
+      { x: -48, y: -115 },
+      { x: -62, y: -65 },
+      { x: -45, y: -15 },
+      { x: -28, y: 15 },
+      { x: 0, y: 28 },
+      { x: 28, y: 15 },
+      { x: 45, y: -15 },
+      { x: 62, y: -65 },
+      { x: 48, y: -115 }
+    ];
+    drawSmoothSpline(ctx, craniumPath, true);
+    ctx.fill();
+
+    // Crestas sagitales de cuarzo incrustadas en el cráneo
+    ctx.strokeStyle = 'rgba(215, 245, 255, 0.72)';
+    ctx.lineWidth = 1.6;
+    for (let c = -2; c <= 2; c++) {
+      const cxOff = c * 14;
+      ctx.beginPath();
+      ctx.moveTo(cxOff, -130);
+      ctx.quadraticCurveTo(cxOff * 1.3, -75, cxOff * 0.8, -25);
+      ctx.stroke();
+    }
+
+    // Cuatro ojos compuestos fotosensibles (2 principales + 2 secundarios fotoreceptores)
+    // Ojos principales centrales
+    for (const side of [-1, 1]) {
+      const ex = side * 20;
+      const ey = -48;
+
+      // Cuenca ocular hundida
+      ctx.fillStyle = '#0b1216';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 13, 9, side * 0.2, 0, TAU);
+      ctx.fill();
+
+      // Esclerótica bioluminiscente cian-dorada
+      const eyeGlow = ctx.createRadialGradient(ex - 2, ey - 2, 1, ex, ey, 11);
+      eyeGlow.addColorStop(0.0, '#ffffff');
+      eyeGlow.addColorStop(0.35, '#6ee5ff');
+      eyeGlow.addColorStop(0.75, '#2393b5');
+      eyeGlow.addColorStop(1.0, '#093c4e');
+      ctx.fillStyle = eyeGlow;
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 10.5, 7, side * 0.2, 0, TAU);
+      ctx.fill();
+
+      // Pupila vertical hendida de reptil/cefalópodo
+      ctx.fillStyle = '#05090b';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 2.5, 6.5, 0, 0, TAU);
+      ctx.fill();
+
+      // Ojos secundarios inferiores (infrarrojos)
+      const sex = side * 34;
+      const sey = -36;
+      ctx.fillStyle = '#ff7bda';
+      ctx.beginPath();
+      ctx.arc(sex, sey, 4, 0, TAU);
+      ctx.fill();
+    }
+
+    // Apéndice nasal vestigial (dos orificios verticales filtradores)
+    ctx.fillStyle = '#141f24';
+    ctx.fillRect(-4, -32, 2.5, 7);
+    ctx.fillRect(1.5, -32, 2.5, 7);
+
+    // Estructura bucal: hendidura articulada con mandíbulas secundarias internas
+    ctx.strokeStyle = '#18252c';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-18, -12);
+    ctx.quadraticCurveTo(0, -4, 18, -12);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(125, 205, 230, 0.55)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-14, -11);
+    ctx.quadraticCurveTo(0, -6, 14, -11);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 3. VISTAS DE AMPLIACIÓN Y DETALLE (CALLOUTS EDITORIALES)
+  // =========================================================================
+  function renderConceptCallouts(ctx) {
+    // -----------------------------------------------------------------------
+    // PANEL A: ROSTRO Y ESTRUCTURA CRANEAL AMPLIADA
+    // -----------------------------------------------------------------------
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(840, 115, 500, 400, 6);
+    ctx.clip();
+    
+    // Fondo neutro del panel A
+    ctx.fillStyle = '#16191f';
+    ctx.fillRect(840, 115, 500, 400);
+
+    // Retícula secundaria
+    ctx.strokeStyle = 'rgba(215, 175, 110, 0.05)';
+    ctx.lineWidth = 1;
+    for (let x = 860; x < 1340; x += 30) {
+      ctx.beginPath(); ctx.moveTo(x, 115); ctx.lineTo(x, 515); ctx.stroke();
+    }
+
+    // Rostro en primer plano ampliado
+    drawAlienHeadAndNeck(ctx, 1090, 360, 2.3);
+
+    // Anotaciones vectoriales con líneas de cota
+    drawAnnotationPointer(ctx, 1090, 220, 1220, 180, 'CRESTAS SILÍCEAS DE CUARZO');
+    drawAnnotationPointer(ctx, 1135, 250, 1240, 270, 'SISTEMA OCULAR CUÁDRUPLE (VISIÓN IR/UV)');
+    drawAnnotationPointer(ctx, 1020, 350, 910, 380, 'OPÉRCULOS RESPIRATORIOS LATERALES');
+    ctx.restore();
+
+    // -----------------------------------------------------------------------
+    // PANEL B: DETALLE DE MANO TETRADÁCTILA Y MEMBRANAS
+    // -----------------------------------------------------------------------
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(840, 575, 500, 420, 6);
+    ctx.clip();
+
+    ctx.fillStyle = '#16191f';
+    ctx.fillRect(840, 575, 500, 420);
+
+    // Mano articulada en gran formato
+    drawAlienHand(ctx, 1090, 750, 0, true);
+
+    drawAnnotationPointer(ctx, 1070, 760, 930, 710, 'PALMA MUSCULAR FLEXIBLE');
+    drawAnnotationPointer(ctx, 1130, 710, 1230, 670, '4 DEDOS HIPER-ARTICULADOS');
+    drawAnnotationPointer(ctx, 1120, 830, 1220, 870, 'GARRAS ACUMINADAS DE BIO-SILICIO');
+    ctx.restore();
+
+    // -----------------------------------------------------------------------
+    // PANEL C: MATRIZ DE MATERIALES Y PALETA CROMÁTICA
+    // -----------------------------------------------------------------------
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(1390, 115, 470, 880, 6);
+    ctx.clip();
+
+    ctx.fillStyle = '#14171d';
+    ctx.fillRect(1390, 115, 470, 880);
+
+    // Muestras de material
+    drawMaterialSwatches(ctx, 1420, 160);
+    drawBioluminescenceDiagram(ctx, 1420, 520);
+    ctx.restore();
+  }
+
+  function drawAnnotationPointer(ctx, x0, y0, x1, y1, text) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(215, 175, 110, 0.65)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(x0, y0, 3, 0, TAU);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1 - (x1 > x0 ? 20 : -20), y1);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(235, 215, 185, 0.9)';
+    ctx.font = '600 10px monospace';
+    ctx.fillText(text, x1 + (x1 > x0 ? 8 : -190), y1 - 4);
+    ctx.restore();
+  }
+
+  function drawMaterialSwatches(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    ctx.fillStyle = 'rgba(215, 175, 110, 0.85)';
+    ctx.font = '600 12px monospace';
+    ctx.fillText('MATRIZ DE MATERIALES BIOLÓGICOS', 0, 0);
+
+    const swatches = [
+      { title: '01. TEJIDO DÉRMICO BASE', sub: 'Epidermis pigmentada con queratina marina', col1: '#4a6573', col2: '#121b20' },
+      { title: '02. CRISTALES DE BIO-SILICIO', sub: 'Exosuperficie calcificada mineral de cuarzo', col1: '#d8f6ff', col2: '#395361' },
+      { title: '03. FLUIDO BIOLUMINISCENTE', sub: 'Plasma foto-emisor para comunicación abisal', col1: '#7bf4ff', col2: '#093c4e' },
+      { title: '04. MEMBRANA DE RETRACCIÓN', sub: 'Tejido elástico interdigital translúcido', col1: '#ff7bda', col2: '#22323a' }
+    ];
+
+    let yOff = 30;
+    for (const sw of swatches) {
+      // Esfera de muestra de material con renderizado volumétrico
+      const g = ctx.createRadialGradient(25, yOff + 18, 2, 30, yOff + 25, 28);
+      g.addColorStop(0, sw.col1);
+      g.addColorStop(1, sw.col2);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(30, yOff + 25, 24, 0, TAU);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#e5d5be';
+      ctx.font = '600 11px monospace';
+      ctx.fillText(sw.title, 70, yOff + 18);
+      ctx.fillStyle = 'rgba(215, 175, 110, 0.65)';
+      ctx.font = '500 10px sans-serif';
+      ctx.fillText(sw.sub, 70, yOff + 34);
+
+      yOff += 75;
+    }
+    ctx.restore();
+  }
+
+  function drawBioluminescenceDiagram(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    ctx.fillStyle = 'rgba(215, 175, 110, 0.85)';
+    ctx.font = '600 12px monospace';
+    ctx.fillText('DIAGRAMA DE EMISIÓN BIOLUMINISCENTE', 0, 0);
+
+    // Caja de simulación de brillo en la oscuridad
+    ctx.fillStyle = '#080c10';
+    ctx.beginPath();
+    ctx.roundRect(0, 20, 410, 280, 8);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(123, 244, 255, 0.3)';
+    ctx.stroke();
+
+    // Silueta oscura con luces emisivas encendidas
+    ctx.save();
+    ctx.translate(205, 160);
+    ctx.scale(0.55, 0.55);
+
+    // Silueta tenue
+    ctx.fillStyle = 'rgba(15, 24, 30, 0.9)';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 80, 140, 0, 0, TAU);
+    ctx.fill();
+
+    // Luces bioluminiscentes activas en la oscuridad
+    for (const side of [-1, 1]) {
+      // Ojos brillantes
+      ctx.fillStyle = '#7bf4ff';
+      ctx.beginPath();
+      ctx.arc(side * 22, -80, 8, 0, TAU);
+      ctx.fill();
+
+      // Branquias encendidas
+      for (let g = 0; g < 4; g++) {
+        ctx.fillStyle = '#56e2ff';
+        ctx.beginPath();
+        ctx.ellipse(side * 45, -30 + g * 25, 12, 5, side * 0.3, 0, TAU);
+        ctx.fill();
+      }
+    }
+
+    // Núcleo visceral emisor
+    const coreG = ctx.createRadialGradient(0, 30, 2, 0, 30, 45);
+    coreG.addColorStop(0, '#ffffff');
+    coreG.addColorStop(0.4, '#ff7bda');
+    coreG.addColorStop(1, 'rgba(255, 123, 218, 0)');
+    ctx.fillStyle = coreG;
+    ctx.beginPath();
+    ctx.arc(0, 30, 45, 0, TAU);
+    ctx.fill();
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // EJECUCIÓN MAESTRA DE RENDERIZADO
+  // =========================================================================
+  function renderConceptSheet() {
+    ctx.clearRect(0, 0, W, H);
+    renderStudioLayout(ctx);
+    renderFullBodyAlien(ctx, 430, 490, 0.95);
+    renderConceptCallouts(ctx);
+  }
+
+  renderConceptSheet();
+  window.addEventListener('resize', renderConceptSheet);
+})();
+</script>
+</body>
+</html>
