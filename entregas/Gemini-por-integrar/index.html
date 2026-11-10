@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ninja Train Motion Graphics - Full Technical Delivery</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    <header>
+      <div class="title-group">
+        <h1>NINJA TRAIN MOTION GRAPHICS</h1>
+        <p>Motor Vectorial SVG + IK Procedural & FX</p>
+      </div>
+      <div class="btn-group">
+        <button id="btn-jump" class="primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Salto 360° + Corte Nave
+        </button>
+        <button id="btn-download-svg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar SVG Instantáneo
+        </button>
+      </div>
+    </header>
+
+    <main id="viewport">
+      <svg id="ninja-svg" viewBox="0 0 1200 600" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="sky-bg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#120c24"/>
+      <stop offset="60%" stop-color="#080411"/>
+      <stop offset="100%" stop-color="#020105"/>
+    </radialGradient>
+    <radialGradient id="moon-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff2a8d" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#9a00ff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#080411" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="train-metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2a2e3d"/>
+      <stop offset="50%" stop-color="#151821"/>
+      <stop offset="100%" stop-color="#0b0d12"/>
+    </linearGradient>
+    <linearGradient id="blade-glow-lightning" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#0044ff"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Group: Background -->
+  <g id="layer-sky">
+    <rect width="1200" height="600" fill="url(#sky-bg)"/>
+    <circle cx="950" cy="180" r="140" fill="url(#moon-glow)"/>
+    <circle cx="950" cy="180" r="70" fill="#ffeaf5" opacity="0.9" filter="url(#glow)"/>
+  </g>
+
+  <!-- Group: City & Mountains (Parallax Layer 1) -->
+  <g id="layer-mountains" transform="translate(0,0)">
+    <path d="M0,420 L120,340 L250,390 L400,310 L580,410 L750,330 L900,400 L1080,300 L1200,380 L1200,500 L0,500 Z" fill="#0d091a" opacity="0.8"/>
+    <path d="M0,450 L180,380 L320,430 L500,360 L680,440 L850,370 L1020,440 L1200,360 L1200,500 L0,500 Z" fill="#07040d"/>
+  </g>
+
+  <!-- Group: Poles & City Structures (Parallax Layer 2) -->
+  <g id="layer-poles">
+    <!-- Generated dynamically via JS -->
+  </g>
+
+  <!-- Group: Train Cars (Parallax Layer 3) -->
+  <g id="layer-train">
+    <!-- Main Roof Surface -->
+    <rect x="-100" y="440" width="1400" height="160" fill="url(#train-metal)" rx="6"/>
+    <rect x="-100" y="440" width="1400" height="8" fill="#00f0ff" opacity="0.6" filter="url(#glow)"/>
+    <!-- Panels / Seams -->
+    <line x1="0" y1="448" x2="1200" y2="448" stroke="#11151c" stroke-width="3"/>
+    <line x1="150" y1="448" x2="150" y2="600" stroke="#090b0e" stroke-width="4"/>
+    <line x1="500" y1="448" x2="500" y2="600" stroke="#090b0e" stroke-width="4"/>
+    <line x1="850" y1="448" x2="850" y2="600" stroke="#090b0e" stroke-width="4"/>
+  </g>
+
+  <!-- Group: Flying Enemy Drone Ship -->
+  <g id="layer-drone" transform="translate(850, 180)">
+    <!-- Top Half -->
+    <g id="drone-top">
+      <path d="M-60,-10 L0,-40 L60,-10 L40,0 L-40,0 Z" fill="#1f2330" stroke="#ff0055" stroke-width="2"/>
+      <circle cx="0" cy="-15" r="8" fill="#ff0055" filter="url(#glow)"/>
+    </g>
+    <!-- Bottom Half -->
+    <g id="drone-bottom">
+      <path d="M-40,0 L40,0 L60,15 L0,35 L-60,15 Z" fill="#151821" stroke="#ff0055" stroke-width="1.5"/>
+      <rect x="-20" y="5" width="40" height="4" fill="#00f0ff" filter="url(#glow)"/>
+    </g>
+    <!-- Slash Cut Energy Line (Visible when sliced) -->
+    <line id="drone-slash-line" x1="-70" y1="30" x2="70" y2="-40" stroke="#ffffff" stroke-width="4" opacity="0" filter="url(#glow)"/>
+  </g>
+
+  <!-- Group: Blade Trails & Particle FX -->
+  <g id="layer-fx">
+    <path id="katana-trail" d="M 0 0" fill="none" stroke="url(#blade-glow-lightning)" stroke-width="12" stroke-linecap="round" opacity="0.85" filter="url(#glow)"/>
+    <g id="sparks-container"></g>
+  </g>
+
+  <!-- Group: Ninja Character Rig -->
+  <g id="layer-ninja" transform="translate(450, 440)">
+    <!-- Scarf / Bandana -->
+    <path id="ninja-scarf" d="M -10 -85 Q -30 -80 -60 -95 Q -40 -75 -10 -75 Z" fill="#ff0055" filter="url(#glow)"/>
+    
+    <!-- Back Arm & Katana 2 -->
+    <g id="ninja-arm-back">
+      <line id="bone-arm-back-1" x1="-5" y1="-65" x2="-25" y2="-50" stroke="#101217" stroke-width="9" stroke-linecap="round"/>
+      <line id="bone-arm-back-2" x1="-25" y1="-50" x2="-40" y2="-35" stroke="#101217" stroke-width="7" stroke-linecap="round"/>
+      <!-- Sword 2 -->
+      <line id="katana-2" x1="-40" y1="-35" x2="-75" y2="-65" stroke="#e0e0e0" stroke-width="3" filter="url(#glow)"/>
+    </g>
+
+    <!-- Back Leg -->
+    <g id="ninja-leg-back">
+      <line id="bone-thigh-back" x1="0" y1="-35" x2="-20" y2="-15" stroke="#161921" stroke-width="11" stroke-linecap="round"/>
+      <line id="bone-shin-back" x1="-20" y1="-15" x2="-35" y2="0" stroke="#11131a" stroke-width="9" stroke-linecap="round"/>
+    </g>
+
+    <!-- Torso -->
+    <path id="ninja-torso" d="M -12 -70 L 10 -68 L 5 -35 L -10 -35 Z" fill="#1a1d26"/>
+    <!-- Armor Plate / Belt -->
+    <rect x="-11" y="-45" width="20" height="6" fill="#ff0055"/>
+
+    <!-- Front Leg -->
+    <g id="ninja-leg-front">
+      <line id="bone-thigh-front" x1="0" y1="-35" x2="20" y2="-15" stroke="#222733" stroke-width="12" stroke-linecap="round"/>
+      <line id="bone-shin-front" x1="20" y1="-15" x2="35" y2="0" stroke="#1a1e28" stroke-width="10" stroke-linecap="round"/>
+    </g>
+
+    <!-- Head & Mask -->
+    <g id="ninja-head" transform="translate(0, -75)">
+      <circle cx="0" cy="0" r="14" fill="#1a1d26"/>
+      <!-- Visor / Eye slot -->
+      <path d="M 2 -4 L 12 -2 L 10 2 L 2 1 Z" fill="#00f0ff" filter="url(#glow)"/>
+    </g>
+
+    <!-- Front Arm & Primary Katana -->
+    <g id="ninja-arm-front">
+      <line id="bone-arm-front-1" x1="0" y1="-65" x2="25" y2="-55" stroke="#222733" stroke-width="10" stroke-linecap="round"/>
+      <line id="bone-arm-front-2" x1="25" y1="-55" x2="45" y2="-45" stroke="#1a1e28" stroke-width="8" stroke-linecap="round"/>
+      <!-- Main Blade -->
+      <line id="katana-main" x1="45" y1="-45" x2="95" y2="-80" stroke="#ffffff" stroke-width="3.5" filter="url(#glow)"/>
+    </g>
+  </g>
+</svg>
+    </main>
+
+    <footer id="controls-bar">
+      <div class="control-item">
+        <label for="speed-control">Velocidad Parallax & Carrera:</label>
+        <input type="range" id="speed-control" min="0.2" max="2.5" step="0.1" value="1.0">
+      </div>
+      <div class="control-item">
+        <label for="style-select">Efecto de Sable:</label>
+        <select id="style-select">
+          <option value="lightning">Rayo / Cyberspace (Azul)</option>
+          <option value="inferno">Fuego / Inferno (Rojo)</option>
+          <option value="shadow">Sombra / Neón (Púrpura)</option>
+        </select>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
