@@ -21,7 +21,8 @@ def test_checkerboard_has_contrasting_tiles():
 def test_inspect_reports_alpha_and_content_bounds(tmp_path):
     source = tmp_path / "synthetic.png"
     image = Image.new("RGBA", (4, 3), (20, 40, 60, 255))
-    image.putpixel((0, 0), (255, 0, 0, 0))
+    for y in range(3):
+        image.putpixel((0, y), (255, 0, 0, 0))
     image.putpixel((1, 0), (0, 255, 0, 128))
     image.save(source)
 
@@ -32,9 +33,9 @@ def test_inspect_reports_alpha_and_content_bounds(tmp_path):
     assert record["has_alpha_channel"] is True
     assert record["alpha_min"] == 0
     assert record["alpha_max"] == 255
-    assert record["transparent_pixel_count"] == 1
+    assert record["transparent_pixel_count"] == 3
     assert record["partial_alpha_pixel_count"] == 1
-    assert record["opaque_pixel_count"] == 10
+    assert record["opaque_pixel_count"] == 8
     assert record["alpha_bbox"] == [1, 0, 4, 3]
     assert record["corner_rgba"][0] == [255, 0, 0, 0]
     assert preview.mode == "RGB"
