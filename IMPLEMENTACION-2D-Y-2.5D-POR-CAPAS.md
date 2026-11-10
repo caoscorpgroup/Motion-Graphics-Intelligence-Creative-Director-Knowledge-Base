@@ -8,15 +8,15 @@
 
 El núcleo del Director Creativo será:
 
-1. **2D gráfico:** ilustraciones, personajes, objetos y escenarios diseñados para verse principalmente de frente o en el plano de la composición.
+1. **2D gráfico:** ilustraciones, personajes, objetos, tipografía, interfaces, publicidad, infografías y escenarios construidos para una composición bidimensional.
 2. **2.5D por capas:** composición de recursos 2D separados en planos con profundidad aparente, paralaje y cámara simulada.
-3. **3D completo:** no es una prioridad ni un requisito del flujo habitual. No introducir Blender, modelado 3D, rigs tridimensionales o motores de juego por defecto. Solo considerar una herramienta 3D si el usuario lo solicita expresamente o si existe una necesidad concreta que no pueda resolverse razonablemente en 2D/2.5D.
+3. **Modelado y producción 3D:** quedan fuera del alcance. No introducir Blender, mallas tridimensionales, escenarios 3D, rigs 3D ni motores de producción tridimensional. No convertir una necesidad de perspectiva o volumen en una propuesta de modelado. Resolver esos efectos con técnicas 2D.
 
 El resultado puede tener apariencia cinematográfica o recordar visualmente a un escenario de videojuego, pero el objetivo sigue siendo una pieza de motion graphics o animación gráfica, no un videojuego interactivo.
 
 ## 2. 2D: diseño y animación gráfica
 
-Trabajar con recursos y técnicas como SVG, Canvas 2D, HTML/CSS, JavaScript, imágenes rasterizadas y herramientas/bibliotecas existentes.
+Trabajar con SVG, HTML, CSS/SCSS, Canvas 2D, JavaScript, imágenes rasterizadas y herramientas/bibliotecas existentes. Elegir cada tecnología por su función: estructura, estilo, dibujo vectorial, rasterización, lógica, animación o exportación. No confundir un archivo HTML con un motor gráfico ni JavaScript con un formato de imagen.
 
 Capacidades relevantes:
 - Composición de formas, siluetas, curvas, color, textura y tipografía.
@@ -124,7 +124,7 @@ No declarar rigging, separación, animación, reproducción o rendimiento como c
 
 ## 8. Regla de decisión
 
-Ante cada proyecto, el Director debe preguntarse primero: ¿se resuelve mejor como 2D, como 2.5D por capas o mediante una combinación de ambos? La opción predeterminada es la solución 2D/2.5D más sencilla que alcance la calidad solicitada. No escalar a 3D completo ni a herramientas de videojuegos por inercia.
+Ante cada proyecto, el Director debe preguntarse primero: ¿se resuelve mejor como 2D, como 2.5D por capas o mediante una combinación de ambos? La opción predeterminada es la solución 2D/2.5D más sencilla que alcance la calidad solicitada. No escalar a modelado 3D ni a herramientas de videojuegos. La regla de alcance es absoluta: la producción se mantiene en 2D/2.5D por capas.
 
 
 ## 9. Ampliación: profundidad visual y tratamiento de capas
@@ -140,3 +140,10 @@ La implementación por capas debe complementarse con una dirección visual espec
 - Probar el recorrido de cámara para detectar huecos, límites de imágenes, bordes residuales y oclusiones incorrectas.
 
 La secuencia ampliada de diagnóstico, preparación, tratamiento cromático, composición estática, aprobación, paralaje, animación y verificación se documenta en [PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md](PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md). La prueba del castillo se conserva como experimento fallido y no como validación del método; sus incidencias deben servir como controles preventivos.
+
+
+## 10. Selección de tecnologías y capas programáticas
+
+No tratar HTML, CSS, SCSS, SVG, Canvas 2D y JavaScript como formatos equivalentes. HTML organiza la estructura; CSS presenta; SCSS se compila a CSS; SVG mantiene elementos vectoriales editables; Canvas 2D dibuja sobre un lienzo; JavaScript controla lógica, estado, tiempo e interacción. Una capa visual, una capa de renderizado y un módulo de código son conceptos diferentes.
+
+Consultar [Matriz de selección de tecnologías y capas programáticas](docs/MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md) antes de elegir la arquitectura. Para comparar métodos con el mismo encargo, seguir el [Protocolo de prueba comparativa](docs/PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md).
