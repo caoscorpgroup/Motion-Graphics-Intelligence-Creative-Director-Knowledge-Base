@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico de Extracción de Recursos - Rig 2D</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #0f111a;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: #88c0d0;
+      letter-spacing: 0.5px;
+    }
+    canvas {
+      background: #181b28;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>INSPECCIÓN VISUAL DE RECURSOS - VISTA DE DIAGNÓSTICO</h1>
+<canvas id="diagnosticCanvas" width="1150" height="380"></canvas>
+
+<script>
+const canvas = document.getElementById('diagnosticCanvas');
+const ctx = canvas.getContext('2d');
+
+const charImg = new Image();
+charImg.src = 'watermarked_img_2084642056169506536.jpg';
+
+// Definición de las 5 piezas requeridas con sus coordenadas originales verificadas
+const items = [
+  { name: '1. Cabeza',      sx: 348, sy: 50,  sw: 105, sh: 130 },
+  { name: '2. Torso',       sx: 345, sy: 215, sw: 120, sh: 165 },
+  { name: '3. Brazo Sup.',  sx: 372, sy: 162, sw: 50,  sh: 75  },
+  { name: '4. Antebrazo',   sx: 375, sy: 225, sw: 45,  sh: 70  },
+  { name: '5. Mano',        sx: 368, sy: 290, sw: 45,  sh: 55  }
+];
+
+charImg.onload = () => {
+  // Fondo neutro
+  ctx.fillStyle = '#181b28';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  let startX = 40;
+  const yPos = 50;
+  const targetHeight = 200; // Altura estándar visual para comparar proporciones
+
+  items.forEach((item, index) => {
+    // Mantener proporciones originales escalando uniformemente según la altura de visualización
+    const scale = targetHeight / item.sh;
+    const dw = item.sw * scale;
+    const dh = item.sh * scale;
+
+    // Panel contenedor individual para separar visualmente cada pieza
+    ctx.fillStyle = '#222638';
+    ctx.strokeStyle = '#3b4252';
+    ctx.lineWidth = 2;
+    ctx.fillRect(startX - 15, yPos - 15, dw + 30, targetHeight + 90);
+    ctx.strokeRect(startX - 15, yPos - 15, dw + 30, targetHeight + 90);
+
+    // Dibujar recorte original exacto (sin transformaciones, rotaciones ni filtros)
+    ctx.drawImage(
+      charImg,
+      item.sx, item.sy, item.sw, item.sh,
+      startX, yPos, dw, dh
+    );
+
+    // Identificación de la pieza
+    ctx.fillStyle = '#eceff4';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(item.name, startX, yPos + targetHeight + 15);
+
+    // Coordenadas técnicas sx, sy, sw, sh
+    ctx.fillStyle = '#8fbcbb';
+    ctx.font = '11px monospace';
+    ctx.fillText(`sx: ${item.sx} | sy: ${item.sy}`, startX, yPos + targetHeight + 38);
+    ctx.fillText(`sw: ${item.sw} | sh: ${item.sh}`, startX, yPos + targetHeight + 54);
+
+    // Espaciado dinámico horizontal para el siguiente elemento
+    startX += dw + 45;
+  });
+};
+
+charImg.onerror = () => {
+  ctx.fillStyle = '#bf616a';
+  ctx.font = '16px sans-serif';
+  ctx.fillText('Error al cargar la imagen de referencia.', 40, 50);
+};
+</script>
+
+</body>
+</html>
