@@ -1,0 +1,156 @@
+# Matriz de selección de tecnologías y capas programáticas 2D
+
+**Estado:** directriz vigente  
+**Ámbito:** diseño gráfico, ilustración, interfaces, publicidad y motion graphics 2D  
+**Regla de alcance:** no modelado 3D. La profundidad aparente se resuelve con recursos y transformaciones bidimensionales.
+
+## 1. Propósito
+
+El Director Creativo debe seleccionar la tecnología que mejor resuelva cada encargo. No debe tratar HTML, CSS, SCSS, SVG, Canvas y JavaScript como si fueran seis formatos de dibujo equivalentes.
+
+La selección depende de qué se necesita producir: una composición editorial, un gráfico vectorial, una interfaz, una ilustración procedural, una animación, una pieza interactiva o una combinación de estas.
+
+## 2. Qué hace realmente cada tecnología
+
+| Tecnología | Función principal | Ventajas | Límites y precauciones |
+|---|---|---|---|
+| **HTML** | Estructura y semántica de una página o presentación | Organiza títulos, paneles, controles, contenido y regiones | No es por sí mismo un motor de ilustración |
+| **CSS** | Estilos, disposición, tipografía, transformaciones y animaciones de elementos DOM | Muy eficaz para interfaces, composición tipográfica, formas simples, transiciones y movimiento de paneles | No sustituye un sistema de dibujo vectorial complejo ni una escena de Canvas |
+| **SCSS** | Sintaxis de autoría que se compila a CSS | Variables, funciones, anidamiento y organización de estilos extensos | El navegador no ejecuta SCSS directamente; se debe compilar a CSS |
+| **SVG** | Gráficos vectoriales mediante elementos y trazados editables | Nitidez a cualquier escala, grupos identificables, paths, máscaras, gradientes, filtros y transformación individual | Muchos elementos y filtros complejos pueden aumentar el coste de renderizado; una estructura SVG desordenada dificulta la edición |
+| **Canvas 2D** | Dibujo programático sobre un lienzo rasterizado | Excelente para ilustración procedural, partículas, pinceladas, texturas, escenas densas y renderizado continuo | Los elementos dibujados no quedan como nodos independientes; se necesita mantener un modelo de objetos y redibujar |
+| **JavaScript** | Lógica, datos, eventos, tiempo, interacción, cálculo y coordinación | Controla animaciones, estados, generación procedural, controles y exportación | No es un formato gráfico independiente: necesita DOM/CSS, SVG, Canvas u otro destino de renderizado |
+| **PNG/JPEG/WebP** | Recursos rasterizados | Texturas, pintura, fotografía, ilustraciones complejas y assets ya terminados | No son vectoriales; revisar resolución, recortes, alfa, halos y escalado |
+
+## 3. Reglas de selección
+
+### Elegir SVG cuando
+
+- Se necesitan formas vectoriales nítidas y editables.
+- Cada parte debe tener un identificador y transformarse por separado.
+- Se construyen logotipos, iconos, diagramas, personajes modulares, ilustraciones geométricas o gráficos con trazados precisos.
+- La exportación vectorial es importante.
+
+### Elegir HTML + CSS cuando
+
+- El resultado es una página, ficha, panel, presentación, anuncio digital o entorno interactivo.
+- Predominan la tipografía, las cajas, la retícula, los botones, las tarjetas y las transiciones de interfaz.
+- Las formas visuales pueden resolverse con elementos DOM y propiedades CSS sin forzar una ilustración compleja.
+
+### Elegir Canvas 2D + JavaScript cuando
+
+- La imagen se genera mediante dibujo procedural o muchas operaciones por fotograma.
+- Se necesitan partículas, pinceladas, ruido, texturas, vegetación, agua, humo o movimiento orgánico.
+- Hay una escena con muchos elementos que se redibujan continuamente.
+- El equipo de producción puede mantener un modelo de objetos, coordenadas, orden de dibujo y controles de depuración.
+
+### Elegir JavaScript con SVG cuando
+
+- Se necesita conservar cada elemento vectorial como objeto identificable.
+- La lógica debe cambiar atributos, transformaciones, trazados, estados o visibilidad de grupos.
+- Se requieren controles de animación y manipulación individual de componentes.
+
+### Elegir una arquitectura híbrida cuando
+
+- Hay una interfaz HTML/CSS alrededor de una ilustración SVG o una escena Canvas.
+- Se necesitan controles, paneles de inspección, timeline, capas y un área principal de renderizado.
+- Cada tecnología tiene una responsabilidad clara y no se duplican sistemas sin necesidad.
+
+### Utilizar SCSS solo cuando aporte valor
+
+SCSS es una herramienta de organización del CSS, no un motor de dibujo ni un formato de salida independiente. Si la hoja de estilos es pequeña, CSS directo puede ser suficiente. Si crece, SCSS puede facilitar variables, funciones, módulos y mantenimiento, siempre que se incluya el CSS compilado y no se dependa de que el navegador interprete SCSS.
+
+## 4. Capas programáticas: qué significa y qué no significa
+
+Una capa programática es una unidad lógica de composición o renderizado que puede tener una función, orden, estado, transformación o comportamiento propio. No tiene por qué ser una fotografía ni un archivo independiente.
+
+Hay que distinguir tres conceptos:
+
+1. **Capa visual o de composición:** fondo, plano medio, sujeto, accesorios, tipografía, partículas, primer plano o interfaz.
+2. **Capa de renderizado:** grupo SVG, grupo de elementos DOM, canvas independiente o conjunto de objetos dibujados en un orden definido.
+3. **Módulo de código:** archivo o función JavaScript que controla una responsabilidad, como geometría, animación, cámara, interacción o exportación.
+
+Un archivo JavaScript no se convierte automáticamente en una capa visual. Un grupo SVG puede ser una capa visual aunque todo el SVG esté en un solo archivo. En Canvas, los elementos necesitan una representación lógica propia porque el lienzo no conserva nodos editables individuales.
+
+### Correspondencia según la tecnología
+
+| Tecnología | Cómo representar una capa programática |
+|---|---|
+| SVG | Un grupo `<g>` con identificador, orden y transformaciones propias |
+| HTML/CSS | Un contenedor DOM con posición, orden de apilamiento y estado visual definidos |
+| Canvas 2D | Un grupo de objetos dentro del modelo de escena, una pasada de dibujo o un canvas separado cuando se necesite aislamiento real |
+| JavaScript | Un módulo/controlador que gestiona una o varias capas; no es una capa visual por sí mismo |
+| Arquitectura híbrida | La interfaz DOM, el render SVG/Canvas y el controlador se mantienen separados y se comunican mediante una API clara |
+
+### Contrato lógico recomendado
+
+Cuando el proyecto requiera capas controlables, cada una debe poder describirse con los campos pertinentes:
+
+- `id`: identificador estable.
+- `purpose`: función visual o narrativa.
+- `renderer`: SVG, DOM/CSS, Canvas o raster.
+- `drawOrder`: orden de composición.
+- `visible` y `opacity`: visibilidad y opacidad.
+- `transform`: posición, escala, rotación y deformación permitidas.
+- `pivot`: punto de transformación cuando corresponda.
+- `depth` y `parallaxWeight`: profundidad y peso de paralaje si la escena los utiliza.
+- `animationController`: comportamiento o timeline asignado.
+- `interaction`: área y tipo de interacción.
+- `debug`: posibilidad de mostrar límites, nombres, pivotes y valores.
+
+No exigir todos los campos a todas las capas. Utilizar una estructura proporcionada al proyecto y evitar construir un framework propio.
+
+## 5. Errores típicos que deben poder localizarse
+
+- **Estructura:** el elemento no existe, está duplicado o no se encuentra por su identificador.
+- **Geometría:** coordenadas, paths, pivotes, escala o relación de aspecto incorrectos.
+- **Apilamiento:** orden de dibujo, `z-index`, contexto de apilamiento u oclusión equivocados.
+- **Transformación:** origen de transformación, matriz, escala o rotación incorrectos.
+- **Renderizado:** estilos, filtros, gradientes, antialias o límites del canvas.
+- **Animación:** reloj, duración, interpolación, aceleración, sincronización o continuidad del bucle.
+- **Interacción:** eventos, áreas táctiles, hit testing o controles que no modifican el estado real.
+- **Adaptación:** desbordamiento, recorte, pixel ratio o diseño defectuoso en otro tamaño de pantalla.
+- **Exportación:** archivo incompleto, dependencias externas, estilos no incorporados o estado dinámico no incluido.
+
+La depuración debe poder mostrar, cuando corresponda, nombre de capa, límites, pivote, orden, transformaciones, visibilidad, tiempo actual y estado del controlador. No añadir overlays de depuración a la entrega final salvo que se soliciten.
+
+## 6. Caso de referencia: OCCULTUM MOTION
+
+El HTML compartido por el usuario el 10 de noviembre de 2026 es una referencia de una arquitectura híbrida:
+
+- HTML organiza el estudio, los paneles, las pestañas y los controles.
+- Tailwind CSS y CSS personalizado definen la interfaz, la paleta, la tipografía y las animaciones.
+- SVG construye el personaje Vexel Mirmidon mediante paths, formas, gradientes, filtros y tres grupos principales: accesorios, cabeza y cuerpo.
+- JavaScript cambia pestañas, aísla grupos, alterna animaciones y presenta notificaciones.
+
+### Aprendizajes que sí se pueden reutilizar
+
+- Separar la interfaz de presentación del área de ilustración.
+- Construir el personaje con grupos SVG que tengan responsabilidades claras.
+- Mantener identificadores estables para poder inspeccionar y animar partes.
+- Diseñar una paleta, tipografía y sistema de paneles coherentes con la dirección artística.
+- Incorporar controles para inspeccionar componentes sin modificar el arte original.
+- Presentar decisiones de diseño y técnicas junto con la pieza gráfica.
+
+### Limitaciones que no deben heredarse
+
+- «Exportar JSON» solo muestra una notificación; no exporta datos.
+- «Validar estándares» solo muestra una notificación; no ejecuta una validación.
+- El botón de parpadeo produce una compresión puntual del ojo, no un ciclo de parpadeo.
+- La indicación de hacer clic directamente sobre las capas no coincide con el mecanismo real, que utiliza casillas.
+- El conteo anunciado de nodos Bézier no se mide ni se demuestra en el código.
+
+La referencia debe clasificarse como una presentación interactiva de ilustración vectorial, no como un rig avanzado ni como un exportador completo.
+
+## 7. Regla de decisión
+
+Primero identificar el tipo de producto visual y las operaciones que debe soportar. Después seleccionar el renderizador y, por último, la estructura de código. No seleccionar una tecnología solo porque ya se utilizó en otro proyecto.
+
+La calidad artística, la claridad de las capas y el funcionamiento real son criterios independientes: una tecnología adecuada no compensa una ilustración débil ni una interfaz cuyos controles no hacen lo que anuncian.
+
+## 8. Documentación relacionada
+
+- [Dirección creativa multidisciplinaria](../DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md)
+- [Implementación 2D y 2.5D por capas](../IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md)
+- [Protocolo de prueba comparativa](PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md)
+- [Auditoría del repositorio](AUDITORIA-REPOSITORIO-2026-11-10.md)
