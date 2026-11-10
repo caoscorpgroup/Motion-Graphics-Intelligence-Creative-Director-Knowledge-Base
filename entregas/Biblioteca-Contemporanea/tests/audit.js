@@ -1,9 +1,40 @@
-
+// Estado de auditoría basado en la inspección estática del prototipo.
+// Este archivo contiene datos de referencia; no es una suite de pruebas automatizadas.
 const auditData = [
-    { module: "4 Personajes Diferenciados", status: "Implementado y Probado", evidence: "Diseños únicos SVG con proporciones y siluetas propias." },
-    { module: "Rigging de Cuerpo Completo", status: "Implementado y Probado", evidence: "Estructura jerárquica FK desde pelvis hasta tobillos." },
-    { module: "Cinemática Inversa (IK)", status: "Implementado y Probado", evidence: "Resolución trigonométrica analítica para el alcance de libros." },
-    { module: "Ciclos de Caminata", status: "Implementado y Probado", evidence: "Sincronización de zancada con rebote vertical (bounce)." },
-    { module: "X-Ray Dinámico", status: "Implementado y Probado", evidence: "Visualización en tiempo real de huesos y pivotes." }
+    {
+        module: "Cuatro personajes",
+        status: "Prototipos SVG básicos; no integrados",
+        evidence: "Los grupos del escenario están vacíos y los SVG externos no se insertan en index.html."
+    },
+    {
+        module: "Rigging FK",
+        status: "No validado como sistema",
+        evidence: "CharacterRig solo almacena referencias; applyFK aplica una rotación aislada."
+    },
+    {
+        module: "Cinemática inversa IK",
+        status: "Cálculo aislado",
+        evidence: "solveIK2Joints devuelve ángulos, pero no está conectado a articulaciones o personajes."
+    },
+    {
+        module: "Ciclo de caminata",
+        status: "Cálculo aislado",
+        evidence: "calculateWalkCycle devuelve valores que no se aplican a una animación integrada."
+    },
+    {
+        module: "X-Ray",
+        status: "Utilidad no integrada",
+        evidence: "toggleXRayMode busca elementos con prefijo xray-; no hay integración funcional demostrada."
+    },
+    {
+        module: "Timeline",
+        status: "Clase no conectada a la interfaz",
+        evidence: "CentralTimeline existe, pero los controles de reproducción no la utilizan."
+    },
+    {
+        module: "Interacción con objetos",
+        status: "Utilidad aislada",
+        evidence: "transferBook mueve un nodo DOM, pero no hay eventos de escena conectados."
+    }
 ];
-window.auditData = auditData;
+globalThis.auditData = auditData;
