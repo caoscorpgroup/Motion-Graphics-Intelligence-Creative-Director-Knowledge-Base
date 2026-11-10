@@ -122,7 +122,7 @@ En el commit de referencia, los dos workflows automáticos estaban fallando:
 - El workflow Deno ejecutaba un linter sobre JavaScript de navegador y marcaba usos de `window`, variables no utilizadas y variables que podían ser constantes. El repositorio no es una aplicación Deno.
 - El workflow Python ejecutaba `pytest`, pero no había pruebas Python descubiertas: se recogían cero pruebas y el job terminaba con error.
 
-Se preparó una corrección proporcional: comprobación de sintaxis JavaScript con Node y pruebas reales para la inspección de PNG mediante Pillow. El resultado posterior debe verificarse en GitHub Actions; el cambio de configuración por sí solo no demuestra que el workflow haya pasado.
+Se sustituyó el linter Deno, inadecuado para estas demostraciones de navegador, por comprobación de sintaxis con Node. En el commit `b1e29c1ebf339ec6c99445e00a5c3a323db17d41`, el workflow de JavaScript validó 15 archivos y terminó correctamente. El workflow Python ejecutó compilación, comprobación estática y dos pruebas reales de inspección alfa con Pillow; terminó con `2 passed`. Ambos checks de GitHub Actions finalizaron en `success`.
 
 ## 4. Correcciones documentales realizadas
 
@@ -131,7 +131,7 @@ Se preparó una corrección proporcional: comprobación de sintaxis JavaScript c
 - Se incorpora una matriz que diferencia HTML, CSS, SCSS, SVG, Canvas 2D y JavaScript por su función real.
 - Se documenta la diferencia entre capas visuales, capas de renderizado y módulos de código.
 - Se incorpora un protocolo de comparación con el mismo encargo visual para todas las tecnologías.
-- Se corrigen las afirmaciones no respaldadas sobre el rigging y las pruebas de Biblioteca Contemporánea.
+- Se corrigen las afirmaciones no respaldadas sobre el rigging, la arquitectura y las pruebas de Biblioteca Contemporánea.
 - Se conserva todo el material original y el historial de Git.
 
 ## 5. Límites de esta auditoría
