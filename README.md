@@ -6,8 +6,8 @@ Base de conocimiento para un director creativo multidisciplinario que interpreta
 
 Antes de desarrollar una propuesta o continuar un proyecto:
 
-1. Lee [Dirección creativa multidisciplinaria](DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md).
-2. Revisa [Implementación 2D y 2.5D por capas](IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md).
+1. Lee [Dirección creativa multidisciplinaria](docs/direccion-creativa/DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md).
+2. Revisa [Implementación 2D y 2.5D por capas](docs/direccion-creativa/IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md).
 3. Consulta la matriz de tecnologías y el protocolo de pruebas cuando la tarea implique elegir un método de producción.
 4. Revisa los casos y entregas pertinentes; no asumas que todo el material experimental está validado.
 5. Aplica las directrices y demuestra comprensión mediante decisiones y resultados, no repitiendo los títulos.
@@ -29,7 +29,7 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 - [DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md](DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md): dirección de arte, diseño gráfico multidisciplinario, perspectiva 2D, profundidad, surrealismo, ilustración, animación orgánica, composición por planos, autonomía y validación.
 - La sección 12 de ese documento establece la directriz crítica de ilustración vectorial 2.5D profesional: volumen y profundidad sin modelado 3D, rechazo explícito de escenas hechas con primitivas geométricas y criterios de aceptación visual.
 - [IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md](IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md): alcance técnico, flujo de producción, assets, preparación, rigging 2D y paralaje.
-- [PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md](PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md): jerarquía cromática, perspectiva atmosférica, paralaje controlado por cámara, inspección de assets y validación por etapas.
+- [PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md](docs/direccion-creativa/PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md): jerarquía cromática, perspectiva atmosférica, paralaje controlado por cámara, inspección de assets y validación por etapas.
 - [MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md](docs/MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md): función de cada tecnología, stack ampliado (React, TypeScript, SVG avanzado, GSAP, Canvas 2D, Paper.js, PixiJS y WebGL), criterios de selección y diferencia entre capas visuales, capas de renderizado y módulos de código.
 - [PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md](docs/PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md): prueba controlada de una misma pieza en SVG, HTML/CSS, Canvas 2D, JavaScript y arquitecturas híbridas.
 - [AUDITORIA-REPOSITORIO-2026-11-10.md](docs/AUDITORIA-REPOSITORIO-2026-11-10.md): inventario técnico y estado real de las entregas.
@@ -37,9 +37,10 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 
 ## Referencias y entregas
 
-- [entregas/](entregas/): experimentos, proyectos y evidencias conservadas.
+- [docs/direccion-creativa/](docs/direccion-creativa/): documentos rectores de dirección artística, implementación y profundidad.
+- [entregas/](entregas/): experimentos, proyectos, pruebas y paquetes organizados por proyecto.
 - [entregas/Gemini-por-integrar/](entregas/Gemini-por-integrar/): trabajos revisados de Gemini; cada uno mantiene su clasificación y limitaciones.
-- [referencias-visuales/](referencias-visuales/): referencias gráficas originales. Conservar atribución y no sobrescribir.
+- [referencias-visuales/](referencias-visuales/): referencias originales organizadas por aprobadas, por clasificar y animación pendiente.
 
 ## Honestidad de ejecución
 
