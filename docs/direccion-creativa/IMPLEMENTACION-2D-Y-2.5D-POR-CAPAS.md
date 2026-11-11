@@ -147,3 +147,34 @@ La secuencia ampliada de diagnóstico, preparación, tratamiento cromático, com
 No tratar HTML, CSS, SCSS, SVG, Canvas 2D y JavaScript como formatos equivalentes. HTML organiza la estructura; CSS presenta; SCSS se compila a CSS; SVG mantiene elementos vectoriales editables; Canvas 2D dibuja sobre un lienzo; JavaScript controla lógica, estado, tiempo e interacción. Una capa visual, una capa de renderizado y un módulo de código son conceptos diferentes.
 
 Consultar [Matriz de selección de tecnologías y capas programáticas](../MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md) antes de elegir la arquitectura. Para comparar métodos con el mismo encargo, seguir el [Protocolo de prueba comparativa](../PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md).
+
+
+## 11. Metodología de producción con aprobación por etapas
+
+La implementación no debe comenzar con la construcción de toda la pieza de una sola vez. Aplicar la metodología completa de [dirección creativa, ilustración y motion 2D](METODOLOGIA-INTEGRAL-DE-DISENO-ILUSTRACION-Y-MOTION.md).
+
+Orden operativo:
+1. Concepto y dirección inicial.
+2. Diseño y aprobación de personajes.
+3. Diseño y aprobación de escenarios.
+4. Diseño y aprobación de objetos.
+5. Definición y aprobación de necesidades de animación; pruebas de movimiento y rigging solo cuando corresponda.
+6. Dirección y composición final: escenas, planos, storyboard/Design Board, cámara, continuidad y ritmo.
+7. Implementación, inspección visual, corrección, pruebas técnicas y entrega.
+
+Cada etapa debe mostrarse al usuario y esperar aprobación antes de avanzar. Si hay problemas, corregir la etapa actual. No modificar silenciosamente componentes aprobados ni producir la pieza completa mientras sigan abiertas decisiones fundamentales.
+
+Los thumbnails exploratorios pueden utilizarse desde el desarrollo conceptual para comparar encuadres o direcciones. El storyboard y el Design Board definitivos deben organizar la secuencia de los componentes ya definidos. Así se permite explorar temprano sin saltarse las etapas de diseño.
+
+### 11.1 Dos modalidades de entrada
+
+- **Creación desde cero:** diseñar los componentes siguiendo las etapas y solicitar aprobación en cada una.
+- **Assets proporcionados:** inventariar e inspeccionar personajes, escenarios y objetos aportados por el usuario; preservar originales; identificar necesidades de separación, limpieza, capas y rigging; no rediseñar ni sustituir recursos aprobados sin autorización.
+
+### 11.2 Puerta de calidad antes de animar
+
+Antes de animar, validar la composición estática: diseño, siluetas, perspectiva, escala, oclusión, paleta, valores, materiales, iluminación y coherencia del espacio. Una escena estática deficiente no se corrige añadiendo movimiento.
+
+### 11.3 Prueba del método
+
+Para una evaluación controlada de la capacidad de ilustración, narrativa, animación y validación, utilizar el [Protocolo de prueba del Director Creativo](../PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md). No considerar aprobada una prueba por el número de nodos, complejidad del código o descripción de las herramientas; inspeccionar el resultado visual y funcional.
