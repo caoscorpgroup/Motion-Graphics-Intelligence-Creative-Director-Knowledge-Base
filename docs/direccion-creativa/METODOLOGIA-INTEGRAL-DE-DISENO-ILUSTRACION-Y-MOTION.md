@@ -259,3 +259,10 @@ Verificar licencias antes de reutilizar código o recursos. Extraer principios y
 Cuando la imagen esté mal diseñada, no intentar salvarla con más código, más polígonos, más efectos, más capas o más animación. Volver a concepto, silueta, composición, dibujo, perspectiva, valor, material e iluminación. Corregir la causa visual antes de continuar.
 
 **Primero diseñar y dirigir. Después dibujar y preparar. Luego animar e implementar. Finalmente inspeccionar y validar.**
+
+
+## 16. Base de conocimiento y procedencia
+
+Esta metodología sintetiza y adapta principios estudiados de composición, valor, contraste, color, profundidad, cinematografía, desarrollo conceptual, herramientas de diseño, compositing, matte painting, tipografía, diseño táctil, personajes e ilustración de *Design for Motion*, de Austin Shaw (2.ª edición), junto con las entrevistas profesionales analizadas durante la investigación. También integra aprendizajes técnicos propios derivados del estudio de line-art-animation, Mesh Avatar Studio, swarm-cursors y Stickman Video Director.
+
+La documentación expresa criterios y procedimientos originales para este skill; no pretende reproducir capítulos, ejercicios ni textos del libro. Las referencias técnicas se utilizan para identificar principios transferibles y limitaciones, no para copiar código, diseños o estéticas.
