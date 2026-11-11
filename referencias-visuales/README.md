@@ -1,15 +1,18 @@
 # Referencias visuales
 
-Carpeta destinada a reunir imágenes de referencia de diseño gráfico, ilustración, concept art, diseño de personajes y criaturas, escenarios, pintura, técnicas visuales y motion graphics.
+Esta carpeta contiene recursos originales para estudiar ilustración, diseño gráfico, concept art, escenarios, personajes, materiales y motion graphics. No todas las referencias tienen el mismo estado ni deben tratarse como modelos aprobados.
 
-## Uso
+## Estructura
 
-- Añadir aquí imágenes de referencia seleccionadas por el usuario.
-- Conservar, cuando se conozcan, el autor, la fuente y el enlace original.
-- No modificar ni sobrescribir las referencias originales.
-- La clasificación por estilos, disciplinas y técnicas se realizará cuando exista una colección suficiente.
-- Las referencias sirven para estudiar principios visuales y ampliar el repertorio creativo; no para copiar obras ni reproducir exactamente el estilo de un artista.
+- `aprobadas/`: referencias seleccionadas por el usuario como guía visual principal. La imagen editorial 2.5D aprobada se conserva aquí.
+- `por-clasificar/`: imágenes cuyo contenido y utilidad deben revisarse antes de incorporarlas como directriz.
+- `animacion-pendiente/`: GIF aportados como referencias de movimiento. Están conservados, pero todavía no se ha validado individualmente qué enseñan ni si son relevantes para el objetivo actual.
 
-## Formatos
+## Criterios de uso
 
-Se pueden incorporar imágenes en formatos comunes como PNG, JPG, JPEG, WEBP y SVG. Para cada referencia, conservar la atribución y las condiciones de uso aplicables.
+- Una referencia de movimiento puede enseñar timing, easing, ciclos, transiciones, composición temporal, parallax o interacción; no necesariamente enseña ilustración o dirección de arte.
+- No convertir automáticamente los GIF en reglas del skill. Primero identificar qué principio técnico o visual aporta cada uno.
+- Una referencia solo pasa a `aprobadas/` cuando su función y utilidad están identificadas.
+- Conservar autor, fuente y enlace cuando se conozcan.
+- No copiar una obra ni reproducir exactamente el estilo de un artista.
+- No modificar ni sobrescribir originales.
