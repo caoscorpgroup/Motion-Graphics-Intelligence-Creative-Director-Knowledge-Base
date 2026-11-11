@@ -40,7 +40,7 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 - [docs/direccion-creativa/](docs/direccion-creativa/): documentos rectores de dirección artística, implementación y profundidad.
 - [entregas/](entregas/): experimentos, proyectos, pruebas y paquetes organizados por proyecto.
 - [entregas/Gemini-por-integrar/](entregas/Gemini-por-integrar/): trabajos revisados de Gemini; cada uno mantiene su clasificación y limitaciones.
-- [referencias-visuales/](referencias-visuales/): referencias originales organizadas por aprobadas, por clasificar y animación pendiente.
+- [referencias-visuales/](referencias-visuales/): referencias originales organizadas por aprobadas, por clasificar y animación seleccionada.
 
 ## Honestidad de ejecución
 
