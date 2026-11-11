@@ -146,4 +146,4 @@ La secuencia ampliada de diagnóstico, preparación, tratamiento cromático, com
 
 No tratar HTML, CSS, SCSS, SVG, Canvas 2D y JavaScript como formatos equivalentes. HTML organiza la estructura; CSS presenta; SCSS se compila a CSS; SVG mantiene elementos vectoriales editables; Canvas 2D dibuja sobre un lienzo; JavaScript controla lógica, estado, tiempo e interacción. Una capa visual, una capa de renderizado y un módulo de código son conceptos diferentes.
 
-Consultar [Matriz de selección de tecnologías y capas programáticas](docs/MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md) antes de elegir la arquitectura. Para comparar métodos con el mismo encargo, seguir el [Protocolo de prueba comparativa](docs/PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md).
+Consultar [Matriz de selección de tecnologías y capas programáticas](../MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md) antes de elegir la arquitectura. Para comparar métodos con el mismo encargo, seguir el [Protocolo de prueba comparativa](../PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md).
