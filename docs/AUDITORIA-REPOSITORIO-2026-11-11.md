@@ -59,3 +59,27 @@ Los archivos eliminados ya no aparecen en el árbol actual de `main`, pero puede
 Cuando se comparta la nueva prueba de tienda de gatos, inspeccionar el HTML real y el renderizado para determinar si el problema procede de la dirección artística, la estrategia de dibujo, la interpretación del prompt o la ejecución del stack. No asumir que añadir bibliotecas resuelve automáticamente el diseño.
 
 **Criterio permanente:** conservar únicamente instrucciones, decisiones, herramientas, fuentes y referencias que tengan una función identificable. Mantener todos los archivos organizados dentro de carpetas temáticas y evitar duplicados o colecciones sin propósito.
+
+
+## 8. Organización adicional de recursos visuales
+
+En una revisión posterior se movieron ocho imágenes que estaban mezcladas con los archivos de trabajo:
+- Seis PNG de escenario se agruparon en `entregas/prueba-castillo-dracula/assets/`.
+- Dos WEBP se agruparon en `entregas/Gemini-por-integrar/referencias/`.
+
+Los archivos se movieron mediante sus mismos blobs de Git; no se crearon copias ni se alteraron las imágenes. Una comprobación posterior del árbol confirmó que `README.md` es el único archivo de la raíz.
+
+## 9. Revisión técnica de React Artifact 3
+
+El archivo `entregas/pruebas-react/react-artifact-3.html` contiene una escena SVG de cat café. La etiqueta accesible anuncia doce gatos, pero el SVG contiene once grupos principales identificables de gatos.
+
+Conteo del SVG principal:
+- 317 elementos `path`, 152 `ellipse`, 95 `circle` y 49 `rect`.
+- 10 definiciones de gradiente.
+- Sin `filter`, `mask` ni `clipPath` dentro del SVG principal.
+- Sin Canvas 2D, Paper.js, PixiJS ni GSAP.
+- CSS con animaciones de respiración, cola, parpadeo, balanceo, vapor, polvo, mosca, caminar, salto, ovillo, lamido y bostezo.
+
+La prueba demuestra un repertorio de animación CSS relativamente variado, pero la construcción de la ilustración sigue concentrada en SVG y muchas formas elementales. La cantidad de nodos no equivale a calidad de dibujo. Para valorar el acabado final se requiere inspección visual del renderizado, no solo del código.
+
+Los GIF seleccionados se consideran referencias auxiliares de movimiento, no material de entrenamiento de dibujo ni solución al problema de ilustración.
