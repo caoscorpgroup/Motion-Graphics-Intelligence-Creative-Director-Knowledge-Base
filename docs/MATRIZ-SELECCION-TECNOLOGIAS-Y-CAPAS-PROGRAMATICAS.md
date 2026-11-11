@@ -154,3 +154,52 @@ La calidad artística, la claridad de las capas y el funcionamiento real son cri
 - [Implementación 2D y 2.5D por capas](../IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md)
 - [Protocolo de prueba comparativa](PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md)
 - [Auditoría del repositorio](AUDITORIA-REPOSITORIO-2026-11-10.md)
+
+## 9. Stack ampliado de producción gráfica programática
+
+El Director Creativo debe conocer y poder seleccionar React, TypeScript, SVG avanzado, GSAP, Canvas 2D, Paper.js, PixiJS y WebGL, además de HTML, CSS y JavaScript. No son sustitutos entre sí: cada uno resuelve una responsabilidad distinta.
+
+| Tecnología | Tipo | Responsabilidad | No confundir con |
+|---|---|---|---|
+| React | Biblioteca de interfaz | Componentes, estados, controles y estructura de una aplicación/escena | Un motor de dibujo o garantía de calidad visual |
+| TypeScript | Lenguaje tipado que compila a JavaScript | Modelos, tipos, contratos y mantenimiento del código | Un lenguaje ejecutado directamente por el navegador |
+| SVG avanzado | Formato vectorial y modelo de renderizado | Paths complejos, grupos, máscaras, filtros, gradientes, patrones y edición por elemento | Una estética minimalista de primitivas |
+| GSAP | Biblioteca de animación | Timelines, secuencias, easing, sincronización y control temporal | Un motor de ilustración |
+| Canvas 2D | API de dibujo rasterizado | Pinceladas simuladas, texturas, partículas y dibujo procedural | Un documento vectorial con nodos editables |
+| Paper.js | Biblioteca vectorial | Creación, edición, selección y operaciones sobre paths y curvas | Un motor de pintura raster o director artístico |
+| PixiJS | Motor/renderizador 2D acelerado | Escenas, sprites, filtros, máscaras y partículas en GPU | Una herramienta de modelado 3D |
+| WebGL | API GPU de bajo nivel | Shaders y efectos personalizados | Una solución obligatoria para toda escena 2D |
+| HTML/CSS | Estructura y estilos | Interfaz, tipografía, disposición y controles DOM | Un sustituto universal de SVG/Canvas |
+| JavaScript | Lenguaje de programación | Lógica, eventos, estados, geometría e integración | Un formato de dibujo |
+
+### 9.1 Arquitectura híbrida recomendada
+
+Cuando el proyecto lo justifique, una aplicación puede organizarse con React + TypeScript y combinar capas de renderizado independientes:
+
+- DOM/HTML/CSS para interfaz y controles.
+- SVG avanzado para ilustración vectorial editable.
+- Paper.js para construir y manipular trazados complejos.
+- GSAP para timelines y coordinación de animación.
+- Canvas 2D para texturas, trazos, partículas y efectos rasterizados.
+- PixiJS para escenas 2D densas y renderizado acelerado.
+- WebGL para shaders o efectos GPU específicos no cubiertos adecuadamente por una biblioteca de nivel superior.
+
+Definir coordenadas, resolución, orden de capas, cámara y comunicación entre renderizadores. Mantener una única autoridad temporal para propiedades animadas compartidas. No duplicar sistemas ni introducir una biblioteca si no aporta una ventaja concreta.
+
+### 9.2 Disponibilidad no significa instalación automática
+
+El stack se incorpora a la capacidad del skill como caja de herramientas. No se deben instalar o cargar todas las dependencias en todos los proyectos. Antes de utilizarlas, comprobar compatibilidad de versiones, entorno, empaquetador, dispositivo, exportación y funcionamiento sin conexión. Declarar dependencias y pasos de ejecución. No afirmar que una biblioteca se ejecutó si solo se escribió código que la importa.
+
+### 9.3 Criterio de calidad independiente
+
+React organiza; TypeScript estructura; SVG representa; Paper.js manipula trazados; GSAP anima; Canvas dibuja; PixiJS/WebGL renderizan efectos acelerados. Ninguno decide por sí mismo la calidad artística.
+
+No confundir cantidad de código, nodos, polígonos o elementos con calidad de ilustración. Para objetos y sujetos principales se requieren siluetas individualizadas, curvas y superficies deliberadas, volumen, materiales, texturas, iluminación y composición. Las primitivas geométricas se permiten cuando sean una decisión estilística consciente o una parte secundaria, no como sustituto automático de ilustración profesional.
+
+### 9.4 Interactividad real
+
+Los controles deben cambiar el estado y la apariencia de la escena. Por ejemplo, un interruptor de lámpara debe modificar la emisión de luz y sus efectos visuales; el humo debe tener animación real; los objetos deben responder a controles y acciones. Los botones decorativos o las notificaciones que no realizan la acción anunciada no cuentan como funcionalidad.
+
+### 9.5 Validación
+
+Comprobar instalación/carga, compilación, renderizado, estados, controles, sincronización de animaciones, adaptación al dispositivo y calidad visual por separado. La funcionalidad técnica no compensa una ilustración deficiente, y una buena imagen no demuestra que la interacción funcione.
