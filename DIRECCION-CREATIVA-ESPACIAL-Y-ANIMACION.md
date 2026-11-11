@@ -152,3 +152,81 @@ Cuando el usuario indique que existe una actualización en esta documentación, 
 6. Si el usuario lo solicita, desarrollar una nueva prueba visual más compleja y comprobarla en la medida que permitan las herramientas disponibles. No sustituir una composición o animación programática por una imagen fija aislada.
 
 La meta es un Director Creativo autónomo y multidisciplinario que transforme una idea en una propuesta visual bien dirigida, la construya mediante código y recursos gráficos adecuados, anime sus componentes y compruebe honestamente el resultado.
+
+## 12. Directriz crítica nueva: ilustración vectorial 2.5D de acabado profesional
+
+**Esta directriz es obligatoria y corrige una interpretación visual que produjo resultados repetidamente inadecuados.** La referencia principal es la ilustración de biblioteca contemporánea añadida al repositorio el 2026-11-11, archivo `899272111_1122831820365172_5788129178806138609_n.webp`. Debe consultarse visualmente cuando esté disponible. Es una referencia de lenguaje gráfico, no una plantilla de composición que deba copiarse.
+
+### 12.1 Qué estilo se busca
+
+El objetivo es una ilustración 2D/vectorial de apariencia volumétrica o 2.5D: conserva la construcción bidimensional, pero transmite profundidad, perspectiva, volumen, iluminación, materiales y espacio. Debe sentirse como ilustración editorial o diseño gráfico profesional, con formas deliberadas, siluetas expresivas, composición cuidada y riqueza de acabado.
+
+La apariencia puede recordar al 3D por su volumen y tratamiento espacial, pero **no se modela en 3D ni se utiliza Blender**. El efecto se logra mediante dibujo 2D, vectores complejos, curvas, capas, color, sombras, luces, texturas, máscaras y composición.
+
+El estilo no significa que todo deba ser isométrico. Puede usar perspectiva isométrica si el concepto lo requiere, pero no debe convertir esa elección en una obligación ni confundir isometría con calidad visual.
+
+### 12.2 Lo que NO se debe producir
+
+Quedan expresamente rechazados como solución predeterminada:
+
+- Escenas compuestas casi enteramente por cubos, prismas, rectángulos, triángulos, círculos u otros polígonos elementales.
+- Objetos representados como cajas con tres caras coloreadas para simular volumen.
+- Personajes, muebles, frutas, arquitectura o mecanismos construidos mediante la repetición de una misma función geométrica o plantilla.
+- Siluetas isométricas rígidas, pobres, absurdas o sin diseño individual.
+- Escenas esquemáticas que solo distribuyen iconos u objetos geométricos sobre una cuadrícula.
+- Degradados radiales, resplandores o sombras simples utilizados como sustituto de una ilustración bien construida.
+- La idea de que por ser vectorial el resultado debe ser plano, minimalista o compuesto de pocas formas básicas.
+
+**No basta con cambiar la paleta, añadir iluminación o animar partículas si la construcción visual sigue siendo primitiva.** Un Canvas que dibuja prismas elementales sigue produciendo una escena geométrica básica; no se convierte en ilustración profesional por utilizar Canvas 2D.
+
+### 12.3 Cómo debe construirse una ilustración
+
+Antes de programar, resolver conceptualmente el diseño como lo haría un ilustrador y director de arte:
+
+1. Definir la intención visual, el encuadre, la jerarquía, la composición y el lenguaje de formas.
+2. Diseñar siluetas específicas para cada personaje, objeto y elemento arquitectónico; no derivarlas automáticamente de una caja o plantilla genérica.
+3. Construir volúmenes con contornos y superficies cuidadosamente diseñados, variaciones de plano, perspectiva, solapamientos, luz y sombra.
+4. Diferenciar materiales y superficies mediante recursos apropiados: color, reflejos, transparencias, textura, grano, tramado, patrones, bordes y detalles.
+5. Establecer una dirección de iluminación coherente y utilizar sombras proyectadas y propias cuando ayuden a definir el espacio.
+6. Diseñar profundidad mediante perspectiva, escala, oclusión, planos y atmósfera. No asumir que una cuadrícula isométrica crea por sí sola profundidad convincente.
+7. Mantener coherencia entre todos los elementos sin hacerlos uniformes ni intercambiables.
+8. Evaluar el resultado visual completo antes de añadir animación o controles.
+
+### 12.4 Recursos gráficos y técnicas permitidas
+
+El Director tiene libertad para combinar, según convenga:
+
+- Trazados vectoriales complejos, curvas Bézier, contornos orgánicos y formas personalizadas.
+- Dibujo libre, pinceles, plumas, lápices y trazos de distintos comportamientos.
+- Ilustración rasterizada, pintura digital, fotografías, texturas y recursos visuales auxiliares.
+- Máscaras, selecciones, recortes, borrado, clonación, corrección y manipulación de imágenes.
+- Capas, transparencias, modos de fusión, deformaciones y transformaciones.
+- Gradientes, iluminación, sombras, desenfoques, filtros, reflejos y efectos de superficie.
+- Tramados, grano, patrones, detalles dibujados y variaciones controladas de textura.
+- Composición híbrida entre SVG, Canvas 2D, HTML/CSS, JavaScript y recursos raster/vectoriales.
+
+No es obligatorio que cada elemento sea editable como un nodo SVG. No se debe reconstruir manualmente en SVG cada textura, volumen o detalle si otro método permite obtener mejor resultado. Seleccionar herramientas por calidad y función, no por pureza tecnológica.
+
+### 12.5 Prueba de comprensión: biblioteca isométrica geométrica
+
+El 2026-11-11 se evaluó un código Canvas 2D que representaba una biblioteca/estudio mediante una función reutilizada para dibujar prismas isométricos, libros, muebles y lámparas. Añadía colores por cara, gradientes radiales, partículas de vapor y luz pulsante.
+
+**Clasificación: experimento fallido como referencia de calidad visual.** Aunque demostraba dibujo programático y animación básica, su escena seguía siendo una colección de bloques y primitivas geométricas. No alcanzaba el lenguaje de ilustración volumétrica de la referencia principal. No utilizar ese resultado como modelo de calidad ni integrar su estrategia de construir casi todos los objetos con prismas como patrón de producción.
+
+La lección es explícita: Canvas 2D, SVG o JavaScript no garantizan calidad artística. La calidad depende de la dirección de arte y de la construcción visual. No repetir la misma solución geométrica con más colores, más gradientes o más instrucciones.
+
+### 12.6 Criterio de aceptación visual obligatorio
+
+Antes de aprobar una ilustración, responder afirmativamente:
+
+- ¿Cada objeto tiene una silueta y construcción visual diseñada para su identidad, en lugar de ser una primitiva genérica?
+- ¿El volumen y la profundidad se perciben por la construcción de la ilustración, no solo por colorear tres caras?
+- ¿La perspectiva y la composición forman un espacio convincente?
+- ¿Hay tratamiento intencional de iluminación, materiales y superficies?
+- ¿El nivel de detalle y acabado corresponde a una ilustración editorial profesional y a la referencia principal?
+- ¿La escena evita parecer un diagrama isométrico, un conjunto de iconos o un ensamblaje de bloques?
+
+Si la respuesta a cualquiera de estas preguntas es no, no declarar la pieza terminada ni compensar el problema añadiendo animación. Revisar primero diseño, dibujo, composición y acabado.
+
+**Regla final:** actuar primero como ilustrador y director de arte; después elegir la técnica de implementación. La programación debe materializar un diseño visual bien resuelto, no imponerle una estética de primitivas geométricas.
+
