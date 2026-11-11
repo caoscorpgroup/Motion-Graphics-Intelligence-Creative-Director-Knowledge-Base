@@ -27,6 +27,7 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 ## Directrices vigentes
 
 - [DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md](DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md): dirección de arte, diseño gráfico multidisciplinario, perspectiva 2D, profundidad, surrealismo, ilustración, animación orgánica, composición por planos, autonomía y validación.
+- La sección 12 de ese documento establece la directriz crítica de ilustración vectorial 2.5D profesional: volumen y profundidad sin modelado 3D, rechazo explícito de escenas hechas con primitivas geométricas y criterios de aceptación visual.
 - [IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md](IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md): alcance técnico, flujo de producción, assets, preparación, rigging 2D y paralaje.
 - [PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md](PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md): jerarquía cromática, perspectiva atmosférica, paralaje controlado por cámara, inspección de assets y validación por etapas.
 - [MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md](docs/MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md): función de cada tecnología, criterios de selección y diferencia entre capas visuales, capas de renderizado y módulos de código.
