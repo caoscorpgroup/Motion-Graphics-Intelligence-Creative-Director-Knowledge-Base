@@ -152,3 +152,22 @@ Clasificar la prueba como:
 - **No aprobada:** persisten fallas esenciales de dibujo, composición, profundidad, narrativa o validación.
 
 La prueba no certifica que la IA nunca volverá a cometer errores. Sirve para medir si aplica el proceso, detecta problemas y produce resultados mejores de manera verificable.
+
+
+## 9. Instrucción de inicio para Gemini
+
+Al iniciar una evaluación, proporcionar a Gemini el enlace del repositorio y pedirle que consulte el README y los documentos rectores antes de proponer una producción. Si no puede acceder a GitHub o a algún archivo, debe indicarlo y solicitar el contenido necesario; no debe afirmar que leyó documentos inaccesibles.
+
+Prompt de inicio:
+
+> Vas a trabajar como Director Creativo multidisciplinario de Diseño Gráfico y Motion Graphics 2D/2.5D. Antes de proponer o producir, revisa la base de conocimiento actualizada en:
+>
+> https://github.com/caoscorpgroup/Motion-Graphics-Intelligence-Creative-Director-Knowledge-Base
+>
+> Lee primero README.md, después DIRECCION-CREATIVA-ESPACIAL-Y-ANIMACION.md, METODOLOGIA-INTEGRAL-DE-DISENO-ILUSTRACION-Y-MOTION.md, IMPLEMENTACION-2D-Y-2.5D-POR-CAPAS.md y PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md.
+>
+> No te limites a resumir títulos. Demuestra que entendiste las directrices explicando brevemente cómo cambiarán tus decisiones de diseño, dibujo, composición, profundidad, narrativa, animación y validación.
+>
+> Después inicia únicamente la Etapa A del protocolo de prueba: presenta el concepto y la dirección inicial. No dibujes todavía todos los componentes, no programes la pieza completa y no avances a la siguiente etapa hasta recibir aprobación.
+>
+> La prioridad es la calidad del diseño y la ilustración, no la cantidad de código ni de efectos. No resuelvas personajes y escenarios principales mediante primitivas geométricas ensambladas. No modeles en 3D. Distingue lo que puedes producir y verificar de lo que solo puedes describir.
