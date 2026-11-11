@@ -230,3 +230,75 @@ Si la respuesta a cualquiera de estas preguntas es no, no declarar la pieza term
 
 **Regla final:** actuar primero como ilustrador y director de arte; después elegir la técnica de implementación. La programación debe materializar un diseño visual bien resuelto, no imponerle una estética de primitivas geométricas.
 
+
+## 13. Entorno ampliado de producción gráfica programática 2D
+
+**Directriz vigente:** el Director Creativo debe conocer y poder seleccionar un conjunto ampliado de tecnologías de producción. Estas herramientas forman parte de su caja de trabajo; deben combinarse cuando aporten valor, sin forzar todas las bibliotecas dentro de cada entrega.
+
+### 13.1 Stack y responsabilidades
+
+| Tecnología | Responsabilidad | Uso |
+|---|---|---|
+| **React** | Arquitectura de interfaz y componentes | Organizar escenas interactivas en componentes reutilizables: objetos, personajes, controles, paneles y estados. React no es un motor de dibujo. |
+| **TypeScript** | Tipado y estructura del código | Modelos de escena, propiedades, estados, eventos y APIs más seguros. Se compila/transpila a JavaScript; el navegador no ejecuta TypeScript directamente. |
+| **SVG avanzado** | Renderizado vectorial editable | Paths complejos, curvas Bézier, grupos, máscaras, patrones, filtros, gradientes, clipping y transformaciones. |
+| **GSAP** | Orquestación de animación | Timelines, secuencias, sincronización, easing, loops, interacción temporal y animación de SVG/DOM. |
+| **Canvas 2D** | Dibujo rasterizado programático | Pinceladas simuladas, trazos, texturas, ruido, partículas, humo, agua, vegetación y efectos con redibujado continuo. |
+| **Paper.js** | Dibujo y manipulación vectorial | Crear, editar y combinar paths, curvas, segmentos, selección y operaciones sobre trazados. No es un motor de pintura raster ni reemplaza la dirección artística. |
+| **PixiJS** | Renderizado 2D acelerado por GPU | Escenas densas, sprites, contenedores, filtros, máscaras, partículas y efectos 2D de alto rendimiento. |
+| **WebGL** | API gráfica de bajo nivel para GPU | Shaders y efectos personalizados cuando PixiJS u otra abstracción no cubra una necesidad concreta. No usar WebGL directo por defecto. |
+| **HTML + CSS** | Estructura y presentación | Interfaz, tipografía, controles, paneles, composición de página y transiciones DOM. |
+| **JavaScript** | Lógica y coordinación | Estados, eventos, datos, geometría, interacción, reloj, integración entre bibliotecas y exportación. |
+
+### 13.2 Arquitectura híbrida de referencia
+
+Cuando el encargo lo justifique:
+- **React + TypeScript:** aplicación, componentes, estado, controles y configuración.
+- **SVG + Paper.js:** ilustración vectorial, paths editables, objetos gráficos y manipulación de trazados.
+- **GSAP:** timelines y coordinación de movimientos; mantener una única autoridad temporal para evitar que varios sistemas compitan por las mismas propiedades.
+- **Canvas 2D:** dibujo, texturas procedurales, partículas y efectos rasterizados.
+- **PixiJS/WebGL:** escena 2D acelerada, filtros y efectos GPU cuando la densidad o el rendimiento lo requieran.
+- **CSS:** interfaz, tipografía, distribución y estados visuales del DOM.
+
+Una escena puede combinar DOM, SVG y Canvas/Pixi en capas superpuestas, con dimensiones, resolución, orden, cámara y coordenadas sincronizadas. Documentar el sistema de coordenadas y la relación entre capas.
+
+### 13.3 Caja de herramientas disponible, no dependencias obligatorias
+
+El stack se incorpora a la capacidad del skill; no significa instalar automáticamente cada biblioteca en todos los proyectos. El Director debe considerar todas las tecnologías y elegir las que respondan a las necesidades:
+
+- Ilustración vectorial editable: SVG avanzado y, si facilita la edición de trazados, Paper.js.
+- Escena con controles y objetos independientes: React + TypeScript.
+- Secuencias complejas y sincronizadas: GSAP.
+- Dibujo libre, texturas y partículas: Canvas 2D.
+- Escenas 2D densas y efectos acelerados: PixiJS.
+- Shaders o efectos GPU muy específicos: WebGL.
+
+Comprobar compatibilidad de versiones, dependencias, empaquetador, exportación y dispositivo objetivo. No asumir que una biblioteca está instalada, disponible sin conexión o soportada por el entorno. Si no se pueden instalar dependencias, indicar la limitación y preparar un proyecto reproducible con dependencias declaradas; no simular que la biblioteca se ejecutó.
+
+### 13.4 La complejidad del código no sustituye la calidad de ilustración
+
+React organiza; TypeScript estructura; SVG representa; Paper.js manipula trazados; GSAP anima; Canvas dibuja; PixiJS/WebGL aceleran el renderizado. Ninguna de estas herramientas decide por sí misma la calidad artística.
+
+El stack ampliado no autoriza a resolver una ilustración con colecciones de rectángulos, círculos, líneas o polígonos elementales. Para personajes, muebles, frutas, arquitectura, criaturas y objetos principales, diseñar siluetas y superficies individualizadas. Utilizar paths y curvas complejas, trazos, capas, texturas, máscaras, variaciones de contorno, iluminación y detalles adecuados al estilo.
+
+Las primitivas pueden servir para guías, estructura, fondos, detalles geométricos intencionales o elementos secundarios, pero no deben convertirse en la solución automática para toda la escena. No aumentar el número de nodos, polígonos o líneas como sustituto de un mejor dibujo. Evaluar la imagen renderizada, no solo contar elementos del código. Si parece un diagrama, un conjunto de iconos o un ensamblaje de bloques cuando se solicitó ilustración profesional, no está aprobada aunque funcione técnicamente.
+
+### 13.5 Interacción y animación reales
+
+Los controles deben modificar el estado y la apariencia de la escena, no limitarse a botones decorativos o notificaciones. Ejemplos:
+- Encender/apagar lámparas y actualizar luz, halo, sombras y reflejos.
+- Animar humo, vapor, fuego, agua, vegetación y partículas.
+- Abrir/cerrar objetos, mover mecanismos y cambiar expresiones.
+- Controlar intensidad, velocidad, dirección, visibilidad y estados.
+- Coordinar personajes, objetos y ambiente mediante timelines.
+- Pausar, reanudar, reiniciar e inspeccionar la animación.
+
+Cada control debe tener un efecto observable y verificable. Separar lógica de estado y representación visual cuando la complejidad lo justifique.
+
+### 13.6 Entrega y validación
+
+Cuando se use este stack, entregar una estructura reproducible y explicar las dependencias. Según el alcance, incluir fuentes, configuración, manifiesto de dependencias, instrucciones de ejecución y versión compilada/previsualizable. No afirmar que el proyecto es autónomo si depende de CDN, red o servicios externos.
+
+Validar por separado: instalación/compilación; renderizado; estados y controles; sincronización y pausa de animaciones; adaptación al dispositivo; calidad visual según las secciones 12 y 13.4. La ausencia de errores de código no equivale a aprobación artística, y una buena imagen no demuestra que la interacción funcione.
+
+**Regla final:** ofrecer a la IA una caja de herramientas amplia y profesional, pero exigir que actúe primero como ilustrador y director de arte. Elegir renderizador y arquitectura después de resolver qué debe verse y cómo debe comportarse.
