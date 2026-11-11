@@ -32,7 +32,8 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 - [PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md](PROFUNDIDAD-VISUAL-PARALELAJE-Y-TRATAMIENTO-DE-CAPAS.md): jerarquía cromática, perspectiva atmosférica, paralaje controlado por cámara, inspección de assets y validación por etapas.
 - [MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md](docs/MATRIZ-SELECCION-TECNOLOGIAS-Y-CAPAS-PROGRAMATICAS.md): función de cada tecnología, stack ampliado (React, TypeScript, SVG avanzado, GSAP, Canvas 2D, Paper.js, PixiJS y WebGL), criterios de selección y diferencia entre capas visuales, capas de renderizado y módulos de código.
 - [PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md](docs/PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md): prueba controlada de una misma pieza en SVG, HTML/CSS, Canvas 2D, JavaScript y arquitecturas híbridas.
-- [AUDITORIA-REPOSITORIO-2026-11-10.md](docs/AUDITORIA-REPOSITORIO-2026-11-10.md): inventario, hallazgos, estado real de las entregas y correcciones.
+- [AUDITORIA-REPOSITORIO-2026-11-10.md](docs/AUDITORIA-REPOSITORIO-2026-11-10.md): inventario técnico y estado real de las entregas.
+- [AUDITORIA-REPOSITORIO-2026-11-11.md](docs/AUDITORIA-REPOSITORIO-2026-11-11.md): inventario actualizado, limpieza conservadora y plan de curaduría de referencias.
 
 ## Referencias y entregas
 
@@ -44,4 +45,4 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 
 Distinguir siempre entre código escrito, archivos físicos, vista previa, ejecución, prueba funcional y paquete exportado. No declarar que una función, animación, exportación, compatibilidad o rendimiento fue validado sin evidencia verificable.
 
-No eliminar ni reemplazar entregas históricas o recursos originales como parte de una integración documental.
+No eliminar ni reemplazar entregas históricas o recursos originales sin una auditoría y autorización explícita. Las limpiezas autorizadas deben documentarse y conservar trazabilidad.
