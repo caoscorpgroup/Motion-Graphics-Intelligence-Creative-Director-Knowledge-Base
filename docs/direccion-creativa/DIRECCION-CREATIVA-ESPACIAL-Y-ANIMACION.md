@@ -302,3 +302,27 @@ Cuando se use este stack, entregar una estructura reproducible y explicar las de
 Validar por separado: instalación/compilación; renderizado; estados y controles; sincronización y pausa de animaciones; adaptación al dispositivo; calidad visual según las secciones 12 y 13.4. La ausencia de errores de código no equivale a aprobación artística, y una buena imagen no demuestra que la interacción funcione.
 
 **Regla final:** ofrecer a la IA una caja de herramientas amplia y profesional, pero exigir que actúe primero como ilustrador y director de arte. Elegir renderizador y arquitectura después de resolver qué debe verse y cómo debe comportarse.
+
+
+## 14. Metodología operativa de ilustración y dirección visual
+
+La directriz crítica de calidad visual de la sección 12 debe aplicarse junto con la [Metodología integral de dirección creativa, ilustración y motion graphics 2D](METODOLOGIA-INTEGRAL-DE-DISENO-ILUSTRACION-Y-MOTION.md). Este documento desarrolla el proceso desde el concepto hasta la inspección final: desarrollo conceptual, dibujo mediante trazos y superficies, personajes, escenarios, objetos, composición, perspectiva, materiales, narrativa cinematográfica, preparación, animación y control de calidad.
+
+Reglas operativas obligatorias:
+
+1. Resolver concepto, intención, audiencia y lenguaje visual antes de elegir tecnología.
+2. Diseñar siluetas y superficies individualizadas para personajes, objetos y escenarios; no sustituir ilustración por primitivas ensambladas.
+3. Construir volumen y profundidad mediante dibujo, perspectiva, valores, oclusión, luz, color, materiales y detalle; no depender solo de capas, blur o paralaje.
+4. Explorar thumbnails y alternativas sin convertir bocetos en entregables finales.
+5. Distinguir thumbnail, storyboard, Style Frame, Design Board y Process Book; utilizarlos según la etapa y el propósito.
+6. Conservar una identidad visual coherente sin imponer un único estilo a todos los proyectos.
+7. Separar calidad visual de calidad técnica y validar ambas con evidencia.
+8. Corregir la causa de un defecto visual antes de añadir efectos o animación.
+
+La producción se realiza por etapas con aprobación del usuario. Los thumbnails exploratorios pueden comenzar durante el concepto; los componentes finales y la secuencia definitiva deben resolverse y aprobarse antes de la implementación completa. No avanzar automáticamente ni modificar diseños aprobados.
+
+## 15. Evaluación práctica del skill
+
+Para comprobar que la IA aplica estas directrices, seguir el [Protocolo de prueba del Director Creativo: ilustración, narrativa y motion 2D](../PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md). La evaluación debe observar decisiones y resultados reales: concepto, dibujo, composición, profundidad, materiales, personaje, narrativa, animación, integración y validación.
+
+Una explicación que repite la documentación no demuestra competencia. Tampoco la demuestra un código técnicamente correcto si la imagen sigue siendo visualmente débil. Conservar evidencias de cada etapa y registrar defectos y correcciones.
