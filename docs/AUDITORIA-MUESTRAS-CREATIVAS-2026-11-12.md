@@ -63,3 +63,16 @@ La eliminación no reescribe el historial Git; el archivo puede seguir existiend
 5. La muestra de fauna aporta una referencia de escena viva con varios animales, vegetación y movimiento ambiental.
 6. Mantener separadas las pruebas de ilustración, animación, geometría procedural, dirección artística y rigging.
 7. La validación visual sigue siendo obligatoria. Un código largo, minificado o técnicamente sofisticado no demuestra por sí solo un resultado visual profesional.
+
+
+## Ampliación: Procedural Particle Systems
+
+Se incorporó una revisión técnica de la muestra `referencias-visuales/por-clasificar/Procedural Particle Systems.html`.
+
+**Clasificación:** referencia técnica de alto valor para simulación y gráficos procedurales 2D. Aporta búsqueda espacial por cuadrícula, comportamiento tipo Boids, ruido 3D de valores interpolados, composición de fuerzas, delta time, colecciones especializadas, interacción táctil, persistencia luminosa y densidad adaptativa.
+
+La revisión distingue las implementaciones funcionales de sus aproximaciones: el plasma es una polilínea con desviaciones aleatorias, no ramificación recursiva; las explosiones son ondas y fuerzas, no fragmentación física; las estelas se producen mediante persistencia del lienzo; y la bruma por capas no demuestra paralaje de cámara completo.
+
+**Límite:** análisis estático. No se ha ejecutado la muestra ni validado su apariencia, fluidez o rendimiento en navegador/iPad.
+
+El análisis detallado y los criterios propuestos para el Director Creativo están en [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md).
