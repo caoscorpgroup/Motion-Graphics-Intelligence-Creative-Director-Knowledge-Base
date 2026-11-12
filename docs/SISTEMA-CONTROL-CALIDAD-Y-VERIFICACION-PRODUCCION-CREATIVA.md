@@ -19,7 +19,7 @@ El control de calidad (QA) es una fase de producción, no una corrección opcion
 4. **Reproducir estados y tiempos.** Cuando la tecnología lo permita, poder solicitar un instante concreto de la animación y obtener el mismo estado de escena.
 5. **Usar pruebas proporcionales.** No ejecutar pruebas 3D en un cartel estático ni exigir colisiones físicas a una animación tipográfica.
 6. **Registrar evidencia y límites.** Cada conclusión debe indicar qué se probó, en qué entorno y qué sigue sin comprobarse.
-7. **No fingir validación.** Si no se pudo ejecutar el proyecto, registrar la revisión como estática o pendiente; no marcarla como prueba funcional.
+7. **No fingir validación.** Si no se pudo ejecutar el proyecto, registrar la revisión como estática o pendiente; no marcarla como prueba funcional. Un informe QA redactado por el mismo modelo que produjo la pieza es una autodeclaración, no una verificación independiente. Sus estados PASS solo se aceptan cuando están respaldados por evidencia reproducible (capturas, fotogramas, registros, mediciones o pasos de prueba) y se identifica el entorno en que se obtuvieron.
 8. **Corregir la causa.** No ocultar un defecto de composición, dibujo o animación añadiendo efectos decorativos.
 
 ## 3. Selección de pruebas según la producción
