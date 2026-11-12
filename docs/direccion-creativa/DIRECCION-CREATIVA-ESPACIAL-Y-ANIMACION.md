@@ -326,3 +326,59 @@ La producción se realiza por etapas con aprobación del usuario. Los thumbnails
 Para comprobar que la IA aplica estas directrices, seguir el [Protocolo de prueba del Director Creativo: ilustración, narrativa y motion 2D](../PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md). La evaluación debe observar decisiones y resultados reales: concepto, dibujo, composición, profundidad, materiales, personaje, narrativa, animación, integración y validación.
 
 Una explicación que repite la documentación no demuestra competencia. Tampoco la demuestra un código técnicamente correcto si la imagen sigue siendo visualmente débil. Conservar evidencias de cada etapa y registrar defectos y correcciones.
+
+
+## 13. Directriz operativa: sistemas gráficos y animación procedural
+
+El Director puede diseñar sistemas procedurales cuando aporten una ventaja real a la composición, la ilustración o el movimiento. No debe convertir automáticamente cada encargo en una simulación de partículas. La técnica debe responder a la intención artística: geometría generativa, redes, patrones, atmósferas, partículas, comportamiento colectivo, ondas, energía, vegetación, agua, tipografía reactiva u otros elementos.
+
+### 13.1 Diseñar el comportamiento antes del efecto
+
+Antes de programar, definir qué genera el sistema, qué función visual cumple, qué parámetros lo gobiernan, cómo evoluciona y qué relación tiene con el resto de la escena. Distinguir entre un efecto decorativo, un comportamiento simulado y una interacción real. No anunciar física, ramificación, colisiones, fluidos, paralaje o comportamiento colectivo si el código solo dibuja una aproximación visual.
+
+### 13.2 Separar responsabilidades
+
+Cuando la complejidad lo justifique, mantener separadas:
+- interfaz y controles;
+- estado y parámetros;
+- modelo de objetos y colecciones;
+- reglas de simulación y campos de influencia;
+- actualización temporal;
+- renderizado y composición;
+- interacción y diagnóstico.
+
+No construir un framework propio. Utilizar una estructura proporcionada al proyecto y tecnologías existentes. React puede coordinar interfaz y estado; Canvas 2D puede dibujar escenas densas y dinámicas; SVG puede conservar elementos vectoriales identificables; JavaScript coordina datos, tiempo, fuerzas y eventos.
+
+### 13.3 Sistemas de comportamiento
+
+Si se solicita un comportamiento colectivo, implementar reglas reconocibles como separación, alineación y cohesión, y optimizar la búsqueda de vecinos mediante una estructura espacial cuando el volumen lo requiera. Si se necesitan campos orgánicos, utilizar ruido coherente espacial y temporal, identificando correctamente la variante aplicada. Si se combinan fuerzas, definir radios, intensidades, límites, amortiguación y mapa de influencias.
+
+Separar colecciones por comportamiento cuando las reglas o estados sean distintos. Definir inicialización, actualización, reinicio y estados transitorios. Evitar que todos los objetos compartan una única lógica genérica por conveniencia.
+
+### 13.4 Tiempo, interacción y adaptación
+
+La simulación debe utilizar delta time para no depender de una frecuencia fija de fotogramas. Separar velocidad de reproducción y tiempo transcurrido cuando existan pausa, cámara lenta o aceleración. Los controles y el puntero deben modificar el modelo real, no limitarse a cambiar la interfaz. Las interacciones táctiles deben funcionar sin hover.
+
+En escenas costosas, medir actualización y renderizado, evitar trabajo innecesario por fotograma y considerar caché, reutilización de objetos o densidad adaptativa cuando exista una mejora medible. Un cambio de tamaño no debe reiniciar toda la escena salvo que sea una decisión intencional.
+
+### 13.5 Dirección visual del procedimiento
+
+Un sistema procedural sigue necesitando dirección artística. Controlar paleta, jerarquía, escala, densidad, contraste, ritmo, profundidad aparente, orden de composición y acumulación luminosa. Utilizar persistencia del lienzo, modos de composición, gradientes y capas con intención; distinguir esas técnicas de sistemas autónomos de partículas o estelas.
+
+La profundidad debe permanecer dentro del alcance 2D: escala, opacidad, desenfoque, oclusión, perspectiva, capas y movimiento diferencial. No introducir modelado 3D.
+
+### 13.6 Criterios de aceptación
+
+Antes de declarar funcional un sistema, comprobar las pruebas aplicables:
+1. Los sistemas pueden aislarse y activarse sin romper los demás.
+2. Los parámetros modifican el comportamiento anunciado.
+3. La interacción cambia el modelo de simulación.
+4. Existe al menos una interacción verificable entre sistemas cuando se anuncie integración.
+5. La velocidad se mantiene razonablemente coherente con distintas frecuencias de fotograma.
+6. Pausa, reinicio y reproducción producen estados definidos.
+7. El cambio de tamaño y orientación conserva la escena o aplica un reinicio deliberado.
+8. El rendimiento se mide en el dispositivo objetivo cuando sea relevante.
+9. La composición mantiene legibilidad con densidad alta.
+10. Se distingue lo implementado, aproximado y pendiente de validación.
+
+Consultar [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](../ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md) para los patrones técnicos y las limitaciones identificadas en la referencia. El análisis de código no sustituye la ejecución ni la validación visual.
