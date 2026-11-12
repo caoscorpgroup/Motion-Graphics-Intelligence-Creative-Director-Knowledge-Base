@@ -1,8 +1,8 @@
-# Matriz de selección de tecnologías y capas programáticas 2D
+# Matriz de selección de tecnologías y capas programáticas
 
 **Estado:** directriz vigente  
-**Ámbito:** diseño gráfico, ilustración, interfaces, publicidad y motion graphics 2D  
-**Regla de alcance:** no modelado 3D. La profundidad aparente se resuelve con recursos y transformaciones bidimensionales.
+**Ámbito:** diseño gráfico, ilustración, interfaces, publicidad y motion graphics 2D, 2.5D y 3D cuando el encargo lo requiera.  
+**Regla de alcance:** enfoque 2D-first, no 2D-only. La profundidad aparente puede resolverse con capas 2D/2.5D; cuando se necesite volumen, cámara, iluminación o geometría tridimensional real, se permite incorporar 3D mediante tecnologías existentes.
 
 ## 1. Propósito
 
@@ -222,3 +222,49 @@ No confundir:
 - varios efectos simultáneos con sistemas realmente acoplados.
 
 Los criterios de diseño, interacción, tiempo, diagnóstico y aceptación están detallados en [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md). Esta referencia amplía el criterio de selección; no obliga a utilizar partículas ni Canvas en encargos que se resuelvan mejor con SVG, CSS, ilustración raster o técnicas mixtas.
+
+
+## 11. Extensión selectiva a 2.5D y 3D
+
+El Director Creativo trabaja con una caja de herramientas multidimensional. No debe imponer 3D a todos los encargos ni prohibirlo cuando sea la solución correcta. La decisión se toma a partir del resultado visual y de las operaciones necesarias.
+
+### 11.1 Cuándo mantener una solución 2D/2.5D
+
+Preferir HTML/CSS, SVG, Canvas 2D, PixiJS y composición por capas cuando la pieza necesite ilustración plana o estilizada, personajes 2D, tipografía, diagramas, partículas, atmósferas, profundidad por planos, paralaje, máscaras o movimiento gráfico. La perspectiva y el volumen aparente pueden construirse con dibujo, escala, oclusión, gradientes, sombras y desplazamiento diferencial.
+
+### 11.2 Cuándo incorporar 3D/WebGL
+
+Considerar Three.js u otra biblioteca 3D existente cuando la dirección artística o la interacción necesite geometría tridimensional real, cámara con perspectiva, navegación espacial, iluminación y materiales en volumen, reflejos, refracción, profundidad de campo o interacción entre objetos en el espacio. WebGL permite renderizado acelerado por GPU y shaders personalizados; Three.js ofrece una capa de mayor nivel para organizar escenas, cámaras, luces, materiales y geometrías.
+
+No elegir WebGL por moda ni porque haya muchas partículas. Una escena 2D procedural compleja puede funcionar muy bien con Canvas 2D o PixiJS. La complejidad visual no demuestra por sí sola que se requiera 3D.
+
+### 11.3 Arquitectura híbrida 2D + 3D
+
+Una misma producción puede combinar:
+- DOM/HTML/CSS para interfaz y tipografía.
+- SVG para gráficos vectoriales, iconos y elementos editables.
+- Canvas 2D o PixiJS para partículas, texturas y capas 2D.
+- Three.js/WebGL para entorno, geometría, materiales, cámara o efectos espaciales.
+- GSAP o un reloj central para coordinar timelines y transiciones entre capas.
+
+Definir una sola autoridad temporal, coordenadas y unidades coherentes, orden de composición, resolución, cámara, transparencia y comunicación entre renderizadores. No duplicar elementos ni mantener dos sistemas de animación compitiendo por las mismas propiedades.
+
+### 11.4 JSON como formato de datos, no como renderizador
+
+JSON puede describir escenas, capas, objetos, parámetros, presets, estados, rutas de animación, cámaras, materiales y relaciones entre sistemas. No dibuja ni anima por sí mismo. El Director debe diseñar esquemas legibles y validados, separar datos de lógica y renderizado, y evitar convertir JSON en un formato propietario innecesariamente complejo.
+
+### 11.5 Referencia comparativa: Mundo luminoso, Face.html
+
+La muestra guardada en `referencias-visuales/por-clasificar/Mundo luminoso, Face.html` utiliza React para la interfaz y Canvas 2D para la escena. Su implementación observada incluye cinco planos de profundidad/paralaje, vegetación procedural ramificada, flores, hongos, raíces luminosas, charcas, atmósfera e interacciones, además de poblaciones diferenciadas de partículas.
+
+La muestra demuestra que Canvas 2D puede sostener una escena procedural rica y con múltiples subsistemas. No demuestra que React sea un motor gráfico ni que se necesite WebGL. Tampoco prueba geometría 3D real: los planos y el paralaje son una composición 2D.
+
+**Estado de evidencia:** análisis estático del código. No se ha validado todavía su render final, rendimiento o controles en Safari/iPad. Véase [ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md](ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md).
+
+### 11.6 Regla de decisión
+
+1. Definir el objetivo artístico y la interacción requerida.
+2. Determinar si la profundidad necesaria es aparente (2D/2.5D) o geométrica real (3D).
+3. Seleccionar el renderizador mínimo que cumpla el objetivo con calidad.
+4. Añadir capas o tecnologías híbridas solo cuando resuelvan una necesidad demostrable.
+5. Validar por separado calidad visual, funcionamiento, rendimiento y compatibilidad en el dispositivo objetivo.
