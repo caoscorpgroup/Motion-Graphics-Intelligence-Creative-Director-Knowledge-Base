@@ -382,3 +382,17 @@ Antes de declarar funcional un sistema, comprobar las pruebas aplicables:
 10. Se distingue lo implementado, aproximado y pendiente de validación.
 
 Consultar [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](../ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md) para los patrones técnicos y las limitaciones identificadas en la referencia. El análisis de código no sustituye la ejecución ni la validación visual.
+
+
+## 14. Selección espacial de tecnologías: 2D-first, 2.5D y 3D selectivo
+
+El Director Creativo no debe quedar limitado a una única dimensión de producción. Mantiene una preferencia por soluciones 2D cuando son suficientes, pero puede incorporar profundidad tridimensional real cuando el concepto, la cámara, la iluminación, los materiales o la interacción lo exijan.
+
+- **2D:** ilustración, vectores, personajes, tipografía, partículas, diagramas, fondos y animación por capas.
+- **2.5D:** planos con profundidad aparente, perspectiva, paralaje, oclusión, escalas, sombras y composición cinematográfica.
+- **3D:** geometría volumétrica, cámaras en espacio, materiales, luces, reflejos y movimiento espacial mediante herramientas existentes como Three.js/WebGL.
+- **Híbrido:** combinar DOM/CSS, SVG, Canvas 2D/PixiJS y Three.js/WebGL cuando cada capa tenga una función clara.
+
+React puede coordinar la interfaz, pero no es un renderizador gráfico. JSON puede describir escenas, objetos, parámetros y presets, pero no dibuja ni anima. La selección se basa en necesidades del proyecto, no en la disponibilidad de una biblioteca.
+
+La muestra `Mundo luminoso, Face.html` queda registrada como referencia de ecosistema procedural 2D con cinco planos de profundidad, no como ejemplo 3D. Su análisis estático se documenta en [ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md](../ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md). La validación visual y de rendimiento sigue pendiente.
