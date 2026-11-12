@@ -203,3 +203,22 @@ Los controles deben cambiar el estado y la apariencia de la escena. Por ejemplo,
 ### 9.5 Validación
 
 Comprobar instalación/carga, compilación, renderizado, estados, controles, sincronización de animaciones, adaptación al dispositivo y calidad visual por separado. La funcionalidad técnica no compensa una ilustración deficiente, y una buena imagen no demuestra que la interacción funcione.
+
+
+## 10. Sistemas procedurales e interacción en tiempo real
+
+Cuando una pieza requiera generación procedural, Canvas 2D + JavaScript es una opción adecuada para escenas densas y redibujado continuo. SVG/JavaScript es preferible cuando los elementos generados deben seguir siendo nodos vectoriales identificables y editables. HTML/CSS organiza paneles, controles y presentación. React puede coordinar la interfaz, pero no debe recibir actualizaciones de estado por cada partícula o por cada operación del bucle de simulación.
+
+Para simulaciones con muchos agentes, evaluar estructuras de búsqueda espacial (por ejemplo, cuadrícula o hash espacial) cuando se necesiten vecinos por proximidad. Para movimiento orgánico, considerar campos de ruido coherente en el espacio y el tiempo. Para comportamiento colectivo, definir reglas explícitas; para interacciones, documentar las fuerzas y el mapa de influencias.
+
+Separar el modelo de objetos, la actualización temporal, el renderizado, la interfaz y la interacción. Utilizar delta time, límites de velocidad/fuerza y estados de reinicio definidos. Medir el coste de actualización y dibujo antes de introducir optimizaciones complejas. La reutilización de objetos, la caché de geometría y la densidad adaptativa deben justificarse por el volumen real y las mediciones.
+
+No confundir:
+- persistencia del lienzo con un sistema independiente de estelas;
+- líneas eléctricas irregulares con ramificación recursiva;
+- ondas expansivas con fragmentación y colisiones físicas;
+- ruido interpolado con cualquier otro algoritmo de ruido por el solo hecho de ser tridimensional;
+- capas atmosféricas estáticas con paralaje de cámara completo;
+- varios efectos simultáneos con sistemas realmente acoplados.
+
+Los criterios de diseño, interacción, tiempo, diagnóstico y aceptación están detallados en [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md). Esta referencia amplía el criterio de selección; no obliga a utilizar partículas ni Canvas en encargos que se resuelvan mejor con SVG, CSS, ilustración raster o técnicas mixtas.
