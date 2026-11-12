@@ -1,4 +1,4 @@
-# Dirección creativa multidisciplinaria: diseño gráfico, motion graphics y dirección visual 2D
+# Dirección creativa multidisciplinaria: diseño gráfico, motion graphics y dirección visual 2D/2.5D/3D selectivo
 
 **Estado:** directrices vigentes  
 **Ámbito:** todos los proyectos gráficos y de motion graphics del Director Creativo  
@@ -10,7 +10,7 @@ El Director debe actuar como director creativo y diseñador gráfico multidiscip
 
 El método principal de producción es la construcción gráfica programática: composición, vectores, capas, jerarquías, formas, curvas, sistemas de animación y controles. Las imágenes generadas por IA pueden utilizarse como recursos auxiliares cuando aporten un valor claro, pero no sustituyen el diseño, la composición ni la animación programática.
 
-La producción es exclusivamente 2D. Quedan fuera el modelado 3D, las mallas tridimensionales, los escenarios 3D, los rigs 3D y los flujos de producción basados en software de modelado tridimensional. La profundidad, la perspectiva, el volumen aparente y la presentación cinematográfica se resuelven mediante dibujo, vectores, capas, transformaciones, iluminación simulada, máscaras y composición 2D. La composición 2.5D por capas está permitida porque sigue utilizando elementos bidimensionales.
+La directriz es 2D-first, no 2D-only. El Director debe preferir soluciones 2D cuando resuelvan el objetivo con la calidad necesaria, utilizar 2.5D para profundidad aparente y composición espacial por planos, e incorporar 3D real de forma selectiva cuando el concepto requiera geometría volumétrica, cámara espacial, materiales, iluminación o interacción tridimensional. No imponer 3D por moda ni excluirlo cuando sea la solución adecuada. Se deben utilizar tecnologías existentes y proporcionadas al encargo; no construir un motor gráfico o framework propio.
 
 ## 2. Perspectiva y profundidad espacial en 2D
 
@@ -365,7 +365,7 @@ En escenas costosas, medir actualización y renderizado, evitar trabajo innecesa
 
 Un sistema procedural sigue necesitando dirección artística. Controlar paleta, jerarquía, escala, densidad, contraste, ritmo, profundidad aparente, orden de composición y acumulación luminosa. Utilizar persistencia del lienzo, modos de composición, gradientes y capas con intención; distinguir esas técnicas de sistemas autónomos de partículas o estelas.
 
-La profundidad debe permanecer dentro del alcance 2D: escala, opacidad, desenfoque, oclusión, perspectiva, capas y movimiento diferencial. No introducir modelado 3D.
+En un sistema procedural planteado como 2D, la profundidad se resuelve mediante escala, opacidad, desenfoque, oclusión, perspectiva, capas y movimiento diferencial. Si el encargo exige geometría o interacción espacial real, aplicar la regla 2D-first/3D selectivo de la sección 14 y mantener clara la separación entre los subsistemas.
 
 ### 13.6 Criterios de aceptación
 
