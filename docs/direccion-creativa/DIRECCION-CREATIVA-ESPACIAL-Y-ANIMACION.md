@@ -396,3 +396,14 @@ El Director Creativo no debe quedar limitado a una única dimensión de producci
 React puede coordinar la interfaz, pero no es un renderizador gráfico. JSON puede describir escenas, objetos, parámetros y presets, pero no dibuja ni anima. La selección se basa en necesidades del proyecto, no en la disponibilidad de una biblioteca.
 
 La muestra `Mundo luminoso, Face.html` queda registrada como referencia de ecosistema procedural 2D con cinco planos de profundidad, no como ejemplo 3D. Su análisis estático se documenta en [ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md](../ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md). La validación visual y de rendimiento sigue pendiente.
+
+
+## 16. Control de calidad y verificación de producción
+
+Toda producción debe aplicar un conjunto de pruebas proporcional a su alcance y tecnología. La revisión debe separar calidad artística, funcionamiento, continuidad temporal, interacción y adaptación al dispositivo. No basta con que el código compile ni con que una captura aislada parezca correcta.
+
+Aplicar el [Sistema de control de calidad y verificación de producción creativa](../SISTEMA-CONTROL-CALIDAD-Y-VERIFICACION-PRODUCCION-CREATIVA.md), seleccionando los controles pertinentes para 2D, 2.5D o 3D. Inspeccionar elementos individuales, estados y fotogramas cuando corresponda; conservar evidencias y registrar explícitamente qué se probó y qué sigue pendiente.
+
+La IA debe distinguir PASS, FAIL, BLOCKED, NOT TESTED y PARTIAL. Nunca declarar validada una función, animación, interacción, compatibilidad o rendimiento sin evidencia de ejecución adecuada. Si el entorno no permite ejecutar la pieza, informar que la revisión es estática y dejar la validación pendiente.
+
+Para comprobar que estas directrices se aplican en otros modelos, utilizar el protocolo de prueba cruzada incluido en el mismo documento de QA. Comparar resultados bajo el mismo encargo y criterios, sin conceder permisos de escritura al repositorio durante la primera evaluación.
