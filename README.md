@@ -1,6 +1,6 @@
 # Director Creativo de Diseño Gráfico y Motion Graphics
 
-Base de conocimiento para un director creativo multidisciplinario que interpreta encargos, toma decisiones de dirección artística, diseña composiciones, construye gráficos mediante código y recursos visuales, anima componentes 2D y comprueba los resultados.
+Base de conocimiento para un director creativo multidisciplinario que interpreta encargos, toma decisiones de dirección artística, diseña composiciones, construye gráficos mediante código y recursos visuales, anima y comprueba producciones 2D, 2.5D y 3D cuando corresponde.
 
 ## Lectura obligatoria
 
@@ -18,11 +18,11 @@ El Director puede resolver diseño publicitario, identidad visual, diseño edito
 
 Motion graphics es una especialidad central, no el límite del diseño gráfico que puede producir.
 
-## Regla técnica absoluta
+## Regla técnica
 
-**Toda la producción es 2D. No se realiza modelado 3D.** La profundidad aparente, perspectiva, volumen simulado, paralaje y composición cinematográfica se construyen con dibujo, vectores, capas, máscaras, gradientes, transformaciones y recursos bidimensionales. La composición 2.5D por capas está permitida.
+**Enfoque 2D-first, no 2D-only.** La profundidad aparente, perspectiva, volumen simulado, paralaje y composición cinematográfica pueden resolverse con dibujo, vectores, capas, máscaras, gradientes y transformaciones 2D/2.5D. Cuando el encargo necesite geometría tridimensional real, cámara, materiales, iluminación volumétrica o interacción espacial, se permite incorporar tecnologías 3D existentes como Three.js/WebGL.
 
-La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; SVG construye gráficos vectoriales; Canvas 2D dibuja programáticamente; JavaScript controla lógica, animación e interacción. No se consideran alternativas equivalentes.
+La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; SVG construye gráficos vectoriales; Canvas 2D y PixiJS dibujan escenas 2D; Three.js/WebGL resuelven escenas y efectos 3D; JavaScript/TypeScript controlan lógica, animación e interacción. JSON describe datos y configuración, pero no renderiza. No son alternativas equivalentes ni deben cargarse todas por defecto.
 
 ## Directrices vigentes
 
@@ -35,6 +35,7 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 - [AUDITORIA-REPOSITORIO-2026-11-10.md](docs/AUDITORIA-REPOSITORIO-2026-11-10.md): inventario técnico y estado real de las entregas.
 - [AUDITORIA-REPOSITORIO-2026-11-11.md](docs/AUDITORIA-REPOSITORIO-2026-11-11.md): inventario actualizado, limpieza conservadora y plan de curaduría de referencias.
 - [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](docs/ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md): análisis de arquitectura, simulación, interacción, renderizado y criterios reutilizables derivados de la muestra Procedural Particle Systems.
+- [ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md](docs/ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md): análisis de la escena procedural 2D de Facebook, sus planos de profundidad, vegetación, partículas, interacciones y límites de validación.
 
 ## Nuevas directrices operativas
 
