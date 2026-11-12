@@ -41,6 +41,7 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 
 - [METODOLOGIA-INTEGRAL-DE-DISENO-ILUSTRACION-Y-MOTION.md](docs/direccion-creativa/METODOLOGIA-INTEGRAL-DE-DISENO-ILUSTRACION-Y-MOTION.md): metodología operativa de concepto, dirección de arte, dibujo, ilustración, personajes, escenarios, composición, narrativa, animación y validación.
 - [PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md](docs/PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md): prueba controlada para medir si la IA aplica las directrices mediante resultados reales.
+- [SISTEMA-CONTROL-CALIDAD-Y-VERIFICACION-PRODUCCION-CREATIVA.md](docs/SISTEMA-CONTROL-CALIDAD-Y-VERIFICACION-PRODUCCION-CREATIVA.md): sistema modular de QA para 2D, 2.5D y 3D, con inspección individual, pruebas temporales, evidencias y protocolo de evaluación cruzada con otras IA.
 
 ## Referencias y entregas
 
