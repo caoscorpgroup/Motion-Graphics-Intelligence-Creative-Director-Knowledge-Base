@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAR INTERGALÁCTICO — Character Design Sheet: Xylar "The Bartender"</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 100vw;
+    height: 100vh;
+    background: #0c0d12;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #sheet-container {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    max-width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: 16 / 9;
+    background: #14161c;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div id="sheet-container">
+  <canvas id="c" width="1920" height="1080"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const TAU = Math.PI * 2;
+
+// Fondo de la lámina de diseño editorial de concept art
+ctx.fillStyle = '#12141a';
+ctx.fillRect(0, 0, 1920, 1080);
+
+// Grid técnico estético estilo Mignola / Moebius
+ctx.strokeStyle = 'rgba(215, 175, 120, 0.04)';
+ctx.lineWidth = 1;
+for (let x = 60; x < 1920; x += 60) {
+  ctx.beginPath(); ctx.moveTo(x, 40); ctx.lineTo(x, 1040); ctx.stroke();
+}
+for (let y = 60; y < 1080; y += 60) {
+  ctx.beginPath(); ctx.moveTo(40, y); ctx.lineTo(1880, y); ctx.stroke();
+}
+
+// Marco exterior de la lámina
+ctx.strokeStyle = 'rgba(215, 175, 120, 0.25)';
+ctx.lineWidth = 2;
+ctx.strokeRect(40, 40, 1840, 1000);
+
+// Divisores de paneles de la hoja de personaje
+ctx.strokeStyle = 'rgba(215, 175, 120, 0.15)';
+ctx.setLineDash([4, 4]);
+ctx.beginPath();
+ctx.moveTo(720, 40); ctx.lineTo(720, 1040); // Columna principal de vistas
+ctx.moveTo(1380, 40); ctx.lineTo(1380, 1040); // Columna de expresiones y anatomía
+ctx.stroke();
+ctx.setLineDash([]);
+
+// Cabecera tipográfica de la hoja
+ctx.fillStyle = '#f0e6d2';
+ctx.font = '700 20px monospace';
+ctx.fillText('CHARACTER DESIGN SHEET // PROJECT: "THE NEBULA LOUNGE"', 64, 80);
+
+ctx.fillStyle = 'rgba(215, 175, 120, 0.75)';
+ctx.font = '500 12px monospace';
+ctx.fillText('ESPECIE: VECTOLIVIANO ANÓMALO // ROL: BARTENDER PRINCIPAL ("XYLAR")', 64, 105);
+ctx.fillText('INSPIRACIÓN MORFOLÓGICA: MOEBIUS (LÍNEA PURA) + MIGNOLA (GEOMETRÍA/SOMBRAS) + CHUNG (ESTILIZACIÓN)', 64, 125);
+
+// =========================================================================
+// FUNCIONES AUXILIARES DE DIBUJO ESTILO TINTA Y SOMBRA (Mignola / Moebius)
+// =========================================================================
+
+function drawPanelHeader(x, y, w, h, title) {
+  ctx.save();
+  ctx.fillStyle = '#1b1e26';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(215, 175, 120, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = '#f0e6d2';
+  ctx.font = '700 12px monospace';
+  ctx.fillText(title, x + 12, y + 18);
+  ctx.restore();
+}
+
+// Panel 1: Vista Frontal (Cuerpo completo)
+drawPanelHeader(60, 150, 630, 30, '01. VISTA PRINCIPAL // CUERPO COMPLETO');
+// Sombra de pie
+ctx.save();
+const sh1 = ctx.createRadialGradient(375, 960, 10, 375, 960, 140);
+sh1.addColorStop(0, 'rgba(0,0,0,0.85)');
+sh1.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = sh1;
+ctx.beginPath(); ctx.ellipse(375, 960, 140, 32, 0, 0, TAU); ctx.fill();
+ctx.restore();
+
+// Dibujo de Xylar (Frontal) - Estilización de Peter Chung + Masas angulares Mignola
+ctx.save();
+ctx.translate(375, 620);
+
+// Capa de abrigo / delantal estilo bar intergaláctico (Geometría pesada Mignola)
+ctx.fillStyle = '#222834';
+ctx.strokeStyle = '#0d0f14';
+ctx.lineWidth = 3.5;
+ctx.beginPath();
+ctx.moveTo(-65, -80);
+ctx.lineTo(-95, 140);
+ctx.lineTo(-115, 300);
+ctx.lineTo(-45, 310);
+ctx.lineTo(0, 240);
+ctx.lineTo(45, 310);
+ctx.lineTo(115, 300);
+ctx.lineTo(95, 140);
+ctx.lineTo(65, -80);
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+// Detalles del delantal (arneses de cuero y bolsillos para coctelería exótica)
+ctx.strokeStyle = '#c88c38';
+ctx.lineWidth = 2.5;
+ctx.beginPath();
+ctx.moveTo(-35, -40); ctx.lineTo(-65, 180);
+ctx.moveTo(35, -40); ctx.lineTo(65, 180);
+ctx.moveTo(-75, 100); ctx.lineTo(75, 100);
+ctx.stroke();
+
+// Cuello alargado y erguido (Estilo Peter Chung)
+ctx.fillStyle = '#3a5870';
+ctx.beginPath();
+ctx.moveTo(-35, -80);
+ctx.lineTo(-25, -180);
+ctx.lineTo(25, -180);
+ctx.lineTo(35, -80);
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+// Cabeza angular y casco cefálico sensorial transparente (Moebius / Línea clara)
+ctx.fillStyle = '#1c2430';
+ctx.beginPath();
+ctx.moveTo(-50, -180);
+ctx.bezierCurveTo(-75, -240, -45, -310, 0, -325);
+ctx.bezierCurveTo(45, -310, 75, -240, 50, -180);
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+// Cúpula de cristal translúcida con reflejos
+ctx.fillStyle = 'rgba(120, 220, 240, 0.18)';
+ctx.beginPath();
+ctx.ellipse(0, -250, 42, 55, 0, 0, TAU);
+ctx.fill();
+ctx.strokeStyle = 'rgba(180, 250, 255, 0.7)';
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Ojos múltiples flotantes dentro de la cúpula (3 ojos esféricos bioluminiscentes)
+const eyeCols = ['#ff4a85', '#4affd0', '#ffd24a'];
+const eyeX = [-14, 0, 14];
+const eyeY = [-255, -270, -255];
+for(let i=0; i<3; i++) {
+  ctx.fillStyle = eyeCols[i];
+  ctx.beginPath(); ctx.arc(eyeX[i], eyeY[i], 6.5, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
+  // Brillo
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(eyeX[i]-2, eyeY[i]-2, 2, 0, TAU); ctx.fill();
+}
+
+// Brazos múltiples (4 brazos simétricos para coctelería avanzada estilo camarero alien)
+// Par superior (sosteniendo vaso agitador / coctelera)
+ctx.strokeStyle = '#3a5870'; ctx.lineWidth = 16; ctx.lineCap = 'round';
+ctx.beginPath();
+ctx.moveTo(-65, -120); ctx.lineTo(-140, -70); ctx.lineTo(-110, 10);
+ctx.stroke();
+ctx.strokeStyle = '#0d0f14'; ctx.lineWidth = 3.5; ctx.beginPath();
+ctx.moveTo(-65, -120); ctx.lineTo(-140, -70); ctx.lineTo(-110, 10);
+ctx.stroke();
+
+// Mano superior izquierda sosteniendo vaso exótico
+ctx.fillStyle = '#3a5870'; ctx.beginPath(); ctx.arc(-110, 15, 10, 0, TAU); ctx.fill();
+ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 2; ctx.strokeRect(-120, 10, 20, 35); // Vaso coctel
+
+// Par inferior (apoyados en la cintura, postura relajada de barman veterano)
+ctx.beginPath();
+ctx.moveTo(-65, -80); ctx.lineTo(-120, -10); ctx.lineTo(-65, 40);
+ctx.moveTo(65, -80); ctx.lineTo(120, -10); ctx.lineTo(65, 40);
+ctx.stroke();
+
+// Piernas estilizadas y botas de gravedad pesadas (Estilo Mignola)
+ctx.fillStyle = '#1c222b';
+ctx.fillRect(-55, 310, 40, 260);
+ctx.fillRect(15, 310, 40, 260);
+ctx.strokeRect(-55, 310, 40, 260);
+ctx.strokeRect(15, 310, 40, 260);
+
+// Botas magnéticas anchas
+ctx.fillStyle = '#2b3442';
+ctx.beginPath();
+ctx.roundRect(-70, 540, 65, 45, 8);
+ctx.roundRect(5, 540, 65, 45, 8);
+ctx.fill(); ctx.stroke();
+
+ctx.restore();
+
+
+// =========================================================================
+// Panel 2: Vistas Laterales y Tres Cuartos
+// =========================================================================
+drawPanelHeader(740, 150, 630, 30, '02. VISTAS DE TRES CUARTOS Y PERFIL');
+
+// Sombra tres cuartos
+ctx.save();
+const sh2 = ctx.createRadialGradient(950, 550, 5, 950, 550, 90);
+sh2.addColorStop(0, 'rgba(0,0,0,0.8)'); sh2.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = sh2; ctx.beginPath(); ctx.ellipse(950, 550, 90, 22, 0, 0, TAU); ctx.fill();
+ctx.restore();
+
+// Dibujo Tres Cuartos (Xylar atendiendo barra)
+ctx.save();
+ctx.translate(950, 350);
+// Cuerpo rotado 35 grados
+ctx.fillStyle = '#222834'; ctx.strokeStyle = '#0d0f14'; ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.moveTo(-40, -60); ctx.lineTo(-70, 100); ctx.lineTo(-30, 220); ctx.lineTo(30, 220); ctx.lineTo(50, 100); ctx.lineTo(30, -60); ctx.closePath();
+ctx.fill(); ctx.stroke();
+
+// Cabeza y cúpula en tres cuartos
+ctx.fillStyle = '#1c2430'; ctx.beginPath(); ctx.arc(0, -130, 38, 0, TAU); ctx.fill(); ctx.stroke();
+ctx.fillStyle = 'rgba(120, 220, 240, 0.2)'; ctx.beginPath(); ctx.arc(0, -130, 32, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(180, 250, 255, 0.7)'; ctx.stroke();
+// Ojos en perspectiva
+ctx.fillStyle = '#ff4a85'; ctx.beginPath(); ctx.arc(-8, -135, 5, 0, TAU); ctx.fill();
+ctx.fillStyle = '#4affd0'; ctx.beginPath(); ctx.arc(8, -130, 5, 0, TAU); ctx.fill();
+ctx.restore();
+
+
+// Sombra Perfil
+ctx.save();
+const sh3 = ctx.createRadialGradient(1180, 550, 5, 1180, 550, 80);
+sh3.addColorStop(0, 'rgba(0,0,0,0.8)'); sh3.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = sh3; ctx.beginPath(); ctx.ellipse(1180, 550, 80, 20, 0, 0, TAU); ctx.fill();
+ctx.restore();
+
+// Dibujo Perfil Estricto (Silueta icónica estilo Mignola)
+ctx.save();
+ctx.translate(1180, 350);
+ctx.fillStyle = '#1c222b'; ctx.strokeStyle = '#0d0f14'; ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.moveTo(-20, -60);
+ctx.lineTo(-45, -120); // Cresta occipital
+ctx.lineTo(25, -140);  // Frente prominente inclinada (Peter Chung)
+ctx.lineTo(15, -90);   // Barbilla angular
+ctx.lineTo(-10, -50);  // Cuello
+ctx.lineTo(-35, 80);   // Espalda jorobada elegante
+ctx.lineTo(-25, 200);  // Piernas
+ctx.lineTo(25, 200);
+ctx.lineTo(30, 80);
+ctx.lineTo(20, -60);
+ctx.closePath();
+ctx.fill(); ctx.stroke();
+ctx.restore();
+
+
+// =========================================================================
+// Panel 3: Expresiones Faciales y Primer Plano del Rostro
+// =========================================================================
+drawPanelHeader(1410, 150, 470, 30, '03. ROSTRO Y EXPRESIONES FACIALES');
+
+// Primer plano del rostro (Zoom anatómico)
+ctx.save();
+ctx.translate(1645, 290);
+// Marco del primer plano
+ctx.fillStyle = '#1a1e28'; ctx.strokeStyle = 'rgba(215, 175, 120, 0.3)'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.roundRect(-180, -110, 360, 210, 8); ctx.fill(); ctx.stroke();
+
+// Rostro grande
+ctx.fillStyle = '#222d3a'; ctx.beginPath(); ctx.ellipse(0, 0, 110, 80, 0, 0, TAU); ctx.fill(); ctx.stroke();
+// Cúpula sensorial central
+ctx.fillStyle = 'rgba(100, 230, 255, 0.22)'; ctx.beginPath(); ctx.arc(0, -10, 65, 0, TAU); ctx.fill(); ctx.strokeStyle = '#7be6ff'; ctx.lineWidth = 2; ctx.stroke();
+
+// 4 Ojos en primer plano con expresiones de barman sabio e imperturbable
+const exprEyes = [
+  {x: -25, y: -20, col: '#ff4a85'},
+  {x: 0, y: -35, col: '#4affd0'},
+  {x: 25, y: -20, col: '#ffd24a'},
+  {x: 0, y: 10, col: '#b84aff'}
+];
+for(let e of exprEyes) {
+  ctx.fillStyle = e.col; ctx.beginPath(); ctx.arc(e.x, e.y, 8, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(e.x-2, e.y-2, 2.5, 0, TAU); ctx.fill();
+}
+
+// Boca exótica inferior (tipo hendidura filtradora bioluminiscente)
+ctx.strokeStyle = '#0d0f14'; ctx.lineWidth = 3;
+ctx.beginPath(); ctx.moveTo(-30, 45); ctx.quadraticCurveTo(0, 60, 30, 45); ctx.stroke();
+ctx.fillStyle = '#4affd0'; ctx.beginPath(); ctx.arc(0, 52, 4, 0, TAU); ctx.fill();
+
+ctx.fillStyle = '#f0e6d2'; ctx.font = '600 11px monospace'; ctx.fillText('DETALLE CÚPULA CEREBRAL & ÓRGANOS ÓPTICOS MÚLTIPLES', -165, 85);
+ctx.restore();
+
+
+// 3 Expresiones Faciales (Miniaturas)
+const expressions = [
+  { title: 'A. CALCULADOR / OBSERVANDO', color: '#ff4a85', eyeShape: 'narrow' },
+  { title: 'B. SARCÁSTICO / SIRVIENDO TRAGO', color: '#ffd24a', eyeShape: 'curved' },
+  { title: 'C. ALERTA /CLIENTE CON PROBLEMAS', color: '#4affd0', eyeShape: 'wide' }
+];
+
+for(let i=0; i<3; i++) {
+  let exY = 550 + i * 165;
+  ctx.save();
+  ctx.translate(1410, exY);
+  
+  // Caja de expresión
+  ctx.fillStyle = '#191d26'; ctx.strokeStyle = 'rgba(215, 175, 120, 0.25)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(0, 0, 470, 145, 6); ctx.fill(); ctx.stroke();
+
+  // Título
+  ctx.fillStyle = '#f0e6d2'; ctx.font = '700 11px monospace'; ctx.fillText(expressions[i].title, 15, 22);
+
+  // Mini-cabeza esquemática con la expresión
+  ctx.translate(85, 85);
+  ctx.fillStyle = '#222d3a'; ctx.beginPath(); ctx.arc(0, 0, 42, 0, TAU); ctx.fill(); ctx.stroke();
+  
+  // Cúpula pequeña
+  ctx.fillStyle = 'rgba(100, 230, 255, 0.25)'; ctx.beginPath(); ctx.arc(0, -5, 28, 0, TAU); ctx.fill(); ctx.stroke();
+  
+  // Ojos según emoción
+  ctx.fillStyle = expressions[i].color;
+  if(i === 0) { // Calculador
+    ctx.fillRect(-15, -12, 10, 4); ctx.fillRect(5, -12, 10, 4);
+  } else if(i === 1) { // Sarcástico
+    ctx.beginPath(); ctx.arc(-10, -10, 6, Math.PI, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -10, 6, Math.PI, TAU); ctx.fill();
+  } else { // Alerta
+    ctx.beginPath(); ctx.arc(-12, -12, 7, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(12, -12, 7, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -22, 6, 0, TAU); ctx.fill();
+  }
+
+  // Texto explicativo de la expresión
+  ctx.translate(65, -35);
+  ctx.fillStyle = 'rgba(240, 230, 210, 0.8)'; ctx.font = '500 11px sans-serif';
+  let desc = [
+    'Evalúa al cliente con frialdad analítica mediante sus 3 bandas ópticas.',
+    'Sonrisa cínica característica de veterano de la barra intergaláctica.',
+    'Dilatación máxima de receptores ante altercados espaciales.'
+  ];
+  ctx.fillText(desc[i], 0, 30, 300);
+  ctx.fillText('Materiales: Cristal orgánico / Plasma bioluminiscente', 0, 50, 300);
+
+  ctx.restore();
+}
+
+
+// =========================================================================
+// Panel 4: Detalles anatómicos, accesorios y paleta de colores (Parte Inferior Izquierda/Centro)
+// =========================================================================
+drawPanelHeader(60, 600, 1320, 30, '04. DETALLES DE ANATOMÍA, ACCESORIOS Y PALETA DE COLORES');
+
+ctx.save();
+ctx.translate(80, 650);
+
+// Cuadro de accesorios (Coctelera cuántica y cristalería)
+ctx.fillStyle = '#191d26'; ctx.strokeStyle = 'rgba(215, 175, 120, 0.25)'; ctx.lineWidth = 1.5;
+ctx.beginPath(); ctx.roundRect(0, 0, 380, 340, 6); ctx.fill(); ctx.stroke();
+
+ctx.fillStyle = '#f0e6d2'; ctx.font = '700 12px monospace'; ctx.fillText('ACCESORIO: COCTELERA CUÁNTICA DE GRAVEDAD CERO', 15, 25);
+
+// Ilustración esquemática de la coctelera
+ctx.save();
+ctx.translate(190, 180);
+ctx.fillStyle = '#2b3442'; ctx.beginPath(); ctx.roundRect(-30, -70, 60, 110, 12); ctx.fill(); ctx.strokeStyle = '#4affd0'; ctx.lineWidth = 2; ctx.stroke();
+ctx.fillStyle = 'rgba(74, 255, 208, 0.3)'; ctx.beginPath(); ctx.ellipse(0, -20, 25, 15, 0, 0, TAU); ctx.fill();
+// Anillos energéticos
+ctx.strokeStyle = '#ff4a85'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 0, 36, 10, 0, 0, TAU); ctx.stroke();
+ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, -40, 36, 10, 0, 0, TAU); ctx.stroke();
+ctx.restore();
+
+ctx.fillStyle = 'rgba(240, 230, 210, 0.8)'; ctx.font = '500 11px sans-serif';
+ctx.fillText('Diseño angular inspirado en la ergonomía de Mignola.', 15, 280);
+ctx.fillText('Utiliza campos magnéticos para mezclar líquidos a -200°C.', 15, 300);
+ctx.restore();
+
+
+// Paleta de colores cromática (Muestras circulares)
+ctx.save();
+ctx.translate(480, 650);
+ctx.fillStyle = '#191d26'; ctx.strokeStyle = 'rgba(215, 175, 120, 0.25)'; ctx.lineWidth = 1.5;
+ctx.beginPath(); ctx.roundRect(0, 0, 880, 340, 6); ctx.fill(); ctx.stroke();
+
+ctx.fillStyle = '#f0e6d2'; ctx.font = '700 12px monospace'; ctx.fillText('PALETA CROMÁTICA & MATERIALES DE SUPERFICIE', 20, 25);
+
+const palette = [
+  { col: '#1c2430', name: 'Placa Exo-Ósea', desc: 'Gris Grafito Oscuro' },
+  { col: '#3a5870', name: 'Tejido Muscular', desc: 'Azul Abisal Profundo' },
+  { col: '#ff4a85', name: 'Óptico Alfa', desc: 'Magenta Fotónico' },
+  { col: '#4affd0', name: 'Óptico Beta', desc: 'Cian Bioluminiscente' },
+  { col: '#ffd24a', name: 'Óptico Gamma', desc: 'Ámbar Ionizado' },
+  { col: '#c88c38', name: 'Arneses Cuero', desc: 'Cuero Sintético Marciano' }
+];
+
+for(let i=0; i<palette.length; i++) {
+  let px = 30 + (i % 3) * 280;
+  let py = 60 + Math.floor(i / 3) * 120;
+
+  ctx.fillStyle = palette[i].col;
+  ctx.beginPath(); ctx.arc(px + 30, py + 35, 30, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#f0e6d2'; ctx.lineWidth = 2; ctx.stroke();
+
+  ctx.fillStyle = '#f0e6d2'; ctx.font = '700 12px monospace'; ctx.fillText(palette[i].name, px + 75, py + 25);
+  ctx.fillStyle = 'rgba(215, 175, 120, 0.75)'; ctx.font = '500 11px sans-serif'; ctx.fillText(palette[i].desc, px + 75, py + 45);
+  ctx.fillText('HEX: ' + palette[i].col.toUpperCase(), px + 75, py + 65);
+}
+
+ctx.restore();
+
+</script>
+</body>
+</html>

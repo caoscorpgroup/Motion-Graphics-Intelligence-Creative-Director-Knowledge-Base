@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Clon Wireframe 3D - Versión Robusta</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background-color: #000000;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+try {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const SIZE = 800;
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+
+  const COLORS = {
+    bg: '#000000',
+    platformStroke: '#D946EF',   // Magenta neón
+    platformFill: '#000000',
+    coreFill: '#FF6B00',         // Naranja eléctrico
+    coreStroke: '#FFFFFF',
+    runnerStroke: '#39FF14',     // Verde fosforescente
+    ghostRunnerStroke: '#1B5E20' // Verde oscuro de contraste
+  };
+
+  const CAM = {
+    fov: 480,
+    dist: 400,
+    pitch: 0.58,
+    centerY: SIZE * 0.56
+  };
+
+  function project(x, y, z) {
+    const cosP = Math.cos(CAM.pitch);
+    const sinP = Math.sin(CAM.pitch);
+    const ry = y * cosP - z * sinP;
+    const rz = y * sinP + z * cosP + CAM.dist;
+    const scale = CAM.fov / Math.max(10, rz);
+    return {
+      x: SIZE / 2 + x * scale,
+      y: CAM.centerY + ry * scale,
+      z: rz
+    };
+  }
+
+  function drawPoly3D(pts3D, strokeColor, fillColor = '#000000', lineWidth = 1.2) {
+    if (!pts3D || pts3D.length === 0) return;
+    const proj = pts3D.map(p => project(p[0], p[1], p[2]));
+    ctx.beginPath();
+    ctx.moveTo(proj[0].x, proj[0].y);
+    for (let i = 1; i < proj.length; i++) {
+      ctx.lineTo(proj[i].x, proj[i].y);
+    }
+    ctx.closePath();
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+    }
+  }
+
+  // Plataforma poligonal escalonada
+  function drawPlatform() {
+    const sides = 10;
+    const rings = [
+      { r: 36, y: 12 },
+      { r: 68, y: 12 },
+      { r: 68, y: -6 },
+      { r: 108, y: -6 },
+      { r: 108, y: 8 },
+      { r: 162, y: 12 },
+      { r: 220, y: 58 }
+    ];
+
+    const faces = [];
+    for (let rIdx = 0; rIdx < rings.length - 1; rIdx++) {
+      const r1 = rings[rIdx];
+      const r2 = rings[rIdx + 1];
+
+      for (let s = 0; s < sides; s++) {
+        const a1 = (s / sides) * Math.PI * 2 + 0.15;
+        const a2 = ((s + 1) / sides) * Math.PI * 2 + 0.15;
+
+        const p1 = [Math.cos(a1) * r1.r, r1.y, Math.sin(a1) * r1.r];
+        const p2 = [Math.cos(a2) * r1.r, r1.y, Math.sin(a2) * r1.r];
+        const p3 = [Math.cos(a2) * r2.r, r2.y, Math.sin(a2) * r2.r];
+        const p4 = [Math.cos(a1) * r2.r, r2.y, Math.sin(a1) * r2.r];
+
+        const cx = (p1[0] + p2[0] + p3[0] + p4[0]) / 4;
+        const cy = (p1[1] + p2[1] + p3[1] + p4[1]) / 4;
+        const cz = (p1[2] + p2[2] + p3[2] + p4[2]) / 4;
+        const depth = project(cx, cy, cz).z;
+
+        faces.push({ pts: [p1, p2, p3, p4], depth });
+      }
+    }
+
+    faces.sort((a, b) => b.depth - a.depth);
+    for (const f of faces) {
+      drawPoly3D(f.pts, COLORS.platformStroke, COLORS.platformFill, 1.3);
+    }
+  }
+
+  // Núcleo central giratorio
+  function drawCore(time) {
+    const t = 1.618;
+    const rawVerts = [
+      [-1,  t,  0], [ 1,  t,  0], [-1, -t,  0], [ 1, -t,  0],
+      [ 0, -1,  t], [ 0,  1,  t], [ 0, -1, -t], [ 0,  1, -t],
+      [ t,  0, -1], [ t,  0,  1], [-t,  0, -1], [-t,  0,  1]
+    ];
+
+    const icosaFaces = [
+      [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+      [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+      [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+      [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]
+    ];
+
+    const radius = 15;
+    const rotY = time * 1.4;
+    const rotX = Math.sin(time * 0.8) * 0.35;
+
+    const verts = rawVerts.map(v => {
+      let x = v[0] * (radius / 2.5);
+      let y = v[1] * (radius / 2.5);
+      let z = v[2] * (radius / 2.5);
+
+      let tx = x * Math.cos(rotY) - z * Math.sin(rotY);
+      let tz = x * Math.sin(rotY) + z * Math.cos(rotY);
+      x = tx; z = tz;
+
+      let ty = y * Math.cos(rotX) - z * Math.sin(rotX);
+      tz = y * Math.sin(rotX) + z * Math.cos(rotX);
+      y = ty; z = tz;
+
+      return [x, y - 6, z];
+    });
+
+    const renderedFaces = icosaFaces.map(f => {
+      const pts = [verts[f[0]], verts[f[1]], verts[f[2]]];
+      const cx = (pts[0][0] + pts[1][0] + pts[2][0]) / 3;
+      const cy = (pts[0][1] + pts[1][1] + pts[2][1]) / 3;
+      const cz = (pts[0][2] + pts[1][2] + pts[2][2]) / 3;
+      return { pts, depth: project(cx, cy, cz).z };
+    });
+
+    renderedFaces.sort((a, b) => b.depth - a.depth);
+    for (const f of renderedFaces) {
+      drawPoly3D(f.pts, COLORS.coreStroke, COLORS.coreFill, 1.15);
+    }
+  }
+
+  // Generador de extremidades malladas
+  function buildLimbMesh(pStart, pEnd, rStart, rEnd, rings = 2, sides = 5) {
+    const dx = pEnd[0] - pStart[0];
+    const dy = pEnd[1] - pStart[1];
+    const dz = pEnd[2] - pStart[2];
+    const len = Math.hypot(dx, dy, dz) || 1;
+    const ux = dx / len, uy = dy / len, uz = dz / len;
+
+    let vx = uz, vy = 0, vz = -ux;
+    if (Math.abs(ux) > 0.9) { vx = 0; vy = uz; vz = -uy; }
+    const vLen = Math.hypot(vx, vy, vz) || 1;
+    vx /= vLen; vy /= vLen; vz /= vLen;
+
+    const wx = uy * vz - uz * vy;
+    const wy = uz * vx - ux * vz;
+    const wz = ux * vy - uy * vx;
+
+    const ringPts = [];
+    for (let r = 0; r <= rings; r++) {
+      const t = r / rings;
+      const cx = pStart[0] + dx * t;
+      const cy = pStart[1] + dy * t;
+      const cz = pStart[2] + dz * t;
+      const rad = rStart + (rEnd - rStart) * t;
+
+      const loop = [];
+      for (let s = 0; s < sides; s++) {
+        const ang = (s / sides) * Math.PI * 2;
+        const ca = Math.cos(ang) * rad;
+        const sa = Math.sin(ang) * rad;
+        loop.push([
+          cx + vx * ca + wx * sa,
+          cy + vy * ca + wy * sa,
+          cz + vz * ca + wz * sa
+        ]);
+      }
+      ringPts.push(loop);
+    }
+
+    const quads = [];
+    for (let r = 0; r < rings; r++) {
+      for (let s = 0; s < sides; s++) {
+        const nextS = (s + 1) % sides;
+        quads.push([
+          ringPts[r][s],
+          ringPts[r][nextS],
+          ringPts[r + 1][nextS],
+          ringPts[r + 1][s]
+        ]);
+      }
+    }
+    return quads;
+  }
+
+  // Humanoides en movimiento
+  function getRunnerQuads(orbitAngle, cyclePhase, isGhost) {
+    const trackRadius = 142;
+    const rx = Math.cos(orbitAngle) * trackRadius;
+    const rz = Math.sin(orbitAngle) * trackRadius;
+
+    const heading = orbitAngle - Math.PI / 2;
+    const cosH = Math.cos(heading);
+    const sinH = Math.sin(heading);
+    const sc = 1.25;
+
+    const toWorld = (lx, ly, lz) => {
+      const bounce = Math.abs(Math.sin(cyclePhase)) * 5.5;
+      const sx = lx * sc, sy = ly * sc, sz = lz * sc;
+      return [
+        rx + sx * cosH + sz * sinH,
+        12 + sy - bounce,
+        rz - sx * sinH + sz * cosH
+      ];
+    };
+
+    const leg1 = Math.sin(cyclePhase) * 0.95;
+    const leg2 = Math.sin(cyclePhase + Math.PI) * 0.95;
+    const lean = 0.32;
+
+    const pelvis = toWorld(0, -32, 0);
+    const chest = toWorld(0, -52, Math.sin(lean) * 20);
+    const neck = toWorld(0, -60, Math.sin(lean) * 24);
+    const head = toWorld(0, -72, Math.sin(lean) * 26);
+
+    let quads = [];
+    quads.push(...buildLimbMesh(pelvis, chest, 7 * sc, 9 * sc, 2, 6));
+    quads.push(...buildLimbMesh(neck, head, 5 * sc, 4.5 * sc, 2, 6));
+
+    // Piernas simplificadas y estables
+    const addLeg = (sideX, angle) => {
+      const hip = toWorld(sideX, -32, 0);
+      const knee = toWorld(sideX, -12, Math.sin(angle) * 16);
+      const foot = toWorld(sideX, 6, Math.sin(angle + 0.5) * 20);
+      quads.push(...buildLimbMesh(hip, knee, 4 * sc, 3 * sc, 2, 5));
+      quads.push(...buildLimbMesh(knee, foot, 3 * sc, 2 * sc, 2, 5));
+    };
+
+    addLeg(-4, leg1);
+    addLeg(4, leg2);
+
+    const stroke = isGhost ? COLORS.ghostRunnerStroke : COLORS.runnerStroke;
+    return quads.map(q => {
+      const cx = (q[0][0] + q[1][0] + q[2][0] + q[3][0]) / 4;
+      const cy = (q[0][1] + q[1][1] + q[2][1] + q[3][1]) / 4;
+      const cz = (q[0][2] + q[1][2] + q[2][2] + q[3][2]) / 4;
+      return { pts: q, stroke, depth: project(cx, cy, cz).z };
+    });
+  }
+
+  let time = 0;
+
+  function render() {
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, SIZE, SIZE);
+
+    time += 0.03;
+
+    drawPlatform();
+    drawCore(time);
+
+    let sceneQuads = [];
+    const TOTAL = 12;
+    for (let i = 0; i < TOTAL; i++) {
+      const angle = (i / TOTAL) * Math.PI * 2 - time * 0.45;
+      const phase = time * 5.0 + i * 0.2;
+      sceneQuads.push(...getRunnerQuads(angle, phase, i === 9));
+    }
+
+    sceneQuads.sort((a, b) => b.depth - a.depth);
+    for (const q of sceneQuads) {
+      drawPoly3D(q.pts, q.stroke, '#000000', 0.9);
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  render();
+
+} catch (err) {
+  // Si ocurre algún error, lo muestra en pantalla para depurarlo de inmediato
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FF0000';
+  ctx.font = '16px monospace';
+  ctx.fillText('Error: ' + err.message, 20, 50);
+  console.error(err);
+}
+</script>
+</body>
+</html>

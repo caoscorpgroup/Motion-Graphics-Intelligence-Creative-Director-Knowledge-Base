@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Viaje Estelar Continuo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background-color: #000000;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const SIZE = 800;
+canvas.width = SIZE;
+canvas.height = SIZE;
+
+const CX = SIZE / 2;
+const CY = SIZE / 2;
+const MAX_DIST = SIZE * 0.75;
+
+// Generación de estrellas con posición inicial en ciclo continuo (0.0 a 1.0)
+const stars = [];
+const TOTAL_STARS = 1200;
+
+for (let i = 0; i < TOTAL_STARS; i++) {
+  stars.push({
+    angle: Math.random() * Math.PI * 2,
+    progress: Math.random(), // Posición normalizada en el túnel (0 = centro, 1 = borde)
+    speed: 0.002 + Math.random() * 0.004, // Velocidad constante por fotograma
+    baseLength: 4 + Math.random() * 14,
+    alpha: 0.35 + Math.random() * 0.65
+  });
+}
+
+function render() {
+  // Fondo negro puro sin rastro residual
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  ctx.strokeStyle = '#FFFFFF';
+
+  for (let i = 0; i < stars.length; i++) {
+    const s = stars[i];
+
+    // Avance continuo y lineal (sin acelerones ni frenazos)
+    s.progress += s.speed;
+    if (s.progress >= 1.0) {
+      s.progress -= 1.0; // Vuelve exactamente a 0 sin perder su ángulo ni ritmo
+    }
+
+    // Curva de perspectiva suave: las estrellas aceleran visualmente al acercarse a ti
+    const easedProgress = Math.pow(s.progress, 1.8);
+    const dist = easedProgress * MAX_DIST;
+
+    const px = CX + Math.cos(s.angle) * dist;
+    const py = CY + Math.sin(s.angle) * dist;
+
+    // Estela proporcional a la profundidad actual
+    const currentLength = s.baseLength * easedProgress * 1.6;
+    const tx = px - Math.cos(s.angle) * currentLength;
+    const ty = py - Math.sin(s.angle) * currentLength;
+
+    // Aparición gradual desde el centro (evita que "broten" puntos blancos de golpe en medio)
+    const fadeIn = Math.min(1.0, s.progress * 5.0);
+    ctx.globalAlpha = s.alpha * fadeIn;
+    ctx.lineWidth = dist > 320 ? 1.4 : 1.0;
+
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1.0;
+  requestAnimationFrame(render);
+}
+
+render();
+</script>
+</body>
+</html>

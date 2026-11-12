@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PELAGOCYSTIS HYPERBOREA — Cinematic Concept Art</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #080a0f;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #concept-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 177.78vh;
+    max-height: 56.25vw;
+    aspect-ratio: 16 / 9;
+    background: #090e14;
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.92), 0 0 0 1px rgba(105, 232, 255, 0.14);
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #film-grain {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.075;
+    mix-blend-mode: overlay;
+  }
+  #vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 45%, rgba(14, 42, 64, 0.0) 40%, rgba(3, 6, 10, 0.72) 100%);
+  }
+</style>
+</head>
+<body>
+<div id="concept-container">
+  <canvas id="art-canvas"></canvas>
+  <svg id="film-grain" xmlns="http://www.w3.org/2000/svg">
+    <filter id="cinematic-noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#cinematic-noise)"/>
+  </svg>
+  <div id="vignette"></div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const W = 1920;
+  const H = 1080;
+  const TAU = Math.PI * 2;
+  const canvas = document.getElementById('art-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // =========================================================================
+  // RENDERIZADO DE FONDO ABISAL CINEMATOGRÁFICO
+  // =========================================================================
+  function renderDeepSeaBackground(ctx) {
+    // Gradiente vertical de profundidad abisal
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0.0, '#060a12');
+    bgGrad.addColorStop(0.35, '#0b1626');
+    bgGrad.addColorStop(0.75, '#0e2038');
+    bgGrad.addColorStop(1.0, '#060c14');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Haz de luz cenital difuso (filtrado a través de capas mesopelágicas)
+    const lightBeam = ctx.createLinearGradient(W * 0.45, 0, W * 0.55, H * 0.85);
+    lightBeam.addColorStop(0.0, 'rgba(105, 222, 255, 0.14)');
+    lightBeam.addColorStop(0.3, 'rgba(72, 178, 220, 0.08)');
+    lightBeam.addColorStop(0.7, 'rgba(42, 112, 165, 0.03)');
+    lightBeam.addColorStop(1.0, 'rgba(10, 30, 50, 0)');
+    ctx.fillStyle = lightBeam;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.25, 0);
+    ctx.lineTo(W * 0.75, 0);
+    ctx.lineTo(W * 0.95, H);
+    ctx.lineTo(W * 0.05, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Partículas de nieve marina abisal y plancton bioluminiscente en suspensión
+    const particles = [
+      { x: 420, y: 180, r: 2.2, a: 0.6, col: '#8ef9ff' },
+      { x: 1450, y: 260, r: 1.5, a: 0.4, col: '#c89eff' },
+      { x: 280, y: 640, r: 2.8, a: 0.5, col: '#7ef6ff' },
+      { x: 1680, y: 720, r: 1.8, a: 0.7, col: '#8ef9ff' },
+      { x: 960, y: 880, r: 3.2, a: 0.4, col: '#5ee7ff' },
+      { x: 720, y: 340, r: 1.2, a: 0.3, col: '#ff9ee2' },
+      { x: 1220, y: 490, r: 2.0, a: 0.5, col: '#8ef9ff' },
+      { x: 340, y: 920, r: 1.6, a: 0.4, col: '#b89eff' },
+      { x: 1540, y: 190, r: 2.5, a: 0.6, col: '#7ef6ff' }
+    ];
+    for (const p of particles) {
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5);
+      glow.addColorStop(0, p.col);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 5, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // =========================================================================
+  // ILUSTRACIÓN PRINCIPAL: PELAGOCYSTIS HYPERBOREA (ESPECIE AVANZADA)
+  // =========================================================================
+  function renderPelagocystisMaster(ctx, cx, cy) {
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // -----------------------------------------------------------------------
+    // 1. SOMBRA DE CONTACTO Y VOLUMEN AMBIENTAL SUBACUÁTICO
+    // -----------------------------------------------------------------------
+    const ambientShadow = ctx.createRadialGradient(0, 40, 20, 0, 40, 380);
+    ambientShadow.addColorStop(0.0, 'rgba(4, 12, 22, 0.75)');
+    ambientShadow.addColorStop(0.5, 'rgba(6, 18, 34, 0.35)');
+    ambientShadow.addColorStop(1.0, 'rgba(6, 18, 34, 0)');
+    ctx.fillStyle = ambientShadow;
+    ctx.beginPath();
+    ctx.ellipse(0, 60, 390, 160, 0, 0, TAU);
+    ctx.fill();
+
+    // -----------------------------------------------------------------------
+    // 2. TENTÁCULOS HIDRO-CILIADOS INFERIORES Y APÉNDICES FILTRADORES MULTICAPA
+    // -----------------------------------------------------------------------
+    drawTrailingTendrils(ctx);
+
+    // -----------------------------------------------------------------------
+    // 3. ESTRUCTURAS AXIALES DE BIO-SILICIO (CORONA DE ESPINAS SUPERIORES)
+    // -----------------------------------------------------------------------
+    drawSilicaSpireCrown(ctx);
+
+    // -----------------------------------------------------------------------
+    // 4. NEUMATOCIST CENTRAL (MANTO GELATINOSO TRANSLÚCIDO Y VOLUMÉTRICO)
+    // -----------------------------------------------------------------------
+    drawGelatinousMantle(ctx);
+
+    // -----------------------------------------------------------------------
+    // 5. NÚCLEO VISCERAL INTERNO (ÓRGANOS BIOLUMINISCENTES Y RED DE PLASMA)
+    // -----------------------------------------------------------------------
+    drawVisceralBioluminescentCore(ctx);
+
+    // -----------------------------------------------------------------------
+    // 6. CORONA ECUATORIAL DE ÓRGANOS SENSORIALES (OJOS CRISTALINOS FACETADOS)
+    // -----------------------------------------------------------------------
+    drawSensorEyesCrown(ctx);
+
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // SUBSISTEMA A: TENTÁCULOS INFERIORES Y FILTRADORES
+  // -------------------------------------------------------------------------
+  function drawTrailingTendrils(ctx) {
+    ctx.save();
+    const tendrilCount = 18;
+    for (let i = 0; i < tendrilCount; i++) {
+      const angleOffset = (i / tendrilCount - 0.5) * 1.75;
+      const startX = angleOffset * 160;
+      const startY = 115;
+
+      ctx.save();
+      ctx.translate(startX, startY);
+      const curveDir = i % 2 === 0 ? 1 : -1;
+
+      const tGrad = ctx.createLinearGradient(0, 0, curveDir * 50, 260);
+      tGrad.addColorStop(0.0, 'rgba(92, 225, 245, 0.55)');
+      tGrad.addColorStop(0.4, 'rgba(125, 112, 235, 0.35)');
+      tGrad.addColorStop(1.0, 'rgba(54, 42, 140, 0)');
+      ctx.strokeStyle = tGrad;
+      ctx.lineWidth = 3.2 - Math.abs(angleOffset) * 1.2;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(
+        curveDir * 60, 90,
+        curveDir * -40, 180,
+        curveDir * (20 + i * 4), 310
+      );
+      ctx.stroke();
+
+      // Cilios bioluminiscentes en suspensión sobre el tentáculo
+      ctx.strokeStyle = 'rgba(155, 252, 255, 0.45)';
+      ctx.lineWidth = 1;
+      for (let c = 1; c <= 5; c++) {
+        const t = c / 6;
+        const cx = curveDir * (t * 40 + Math.sin(t * 10 + i) * 15);
+        const cy = t * 250;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + curveDir * 12, cy + 6);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // SUBSISTEMA B: CORONA DE ESPINAS DE BIO-SILICIO (POLO SUPERIOR)
+  // -------------------------------------------------------------------------
+  function drawSilicaSpireCrown(ctx) {
+    ctx.save();
+    const spires = [
+      { x: 0,   y: -145, h: 180, w: 18, rot: 0 },
+      { x: -55, y: -130, h: 150, w: 15, rot: -0.22 },
+      { x: 55,  y: -130, h: 150, w: 15, rot: 0.22 },
+      { x: -105,y: -105, h: 120, w: 12, rot: -0.44 },
+      { x: 105, y: -105, h: 120, w: 12, rot: 0.44 },
+      { x: -142,y: -75,  h: 90,  w: 9,  rot: -0.68 },
+      { x: 142, y: -75,  h: 90,  w: 9,  rot: 0.68 }
+    ];
+
+    for (const sp of spires) {
+      ctx.save();
+      ctx.translate(sp.x, sp.y);
+      ctx.rotate(sp.rot);
+
+      // Gradiente de bio-silicio translúcido con refracción violeta-cian
+      const spGrad = ctx.createLinearGradient(0, -sp.h, 0, 0);
+      spGrad.addColorStop(0.0, 'rgba(235, 254, 255, 0.92)');
+      spGrad.addColorStop(0.35, 'rgba(128, 235, 250, 0.65)');
+      spGrad.addColorStop(0.75, 'rgba(145, 112, 235, 0.45)');
+      spGrad.addColorStop(1.0, 'rgba(72, 42, 140, 0.3)');
+
+      ctx.fillStyle = spGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, -sp.h);
+      ctx.lineTo(sp.w * 0.5, 0);
+      ctx.lineTo(-sp.w * 0.5, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Arista facetada especular brillante
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(0, -sp.h);
+      ctx.lineTo(0, 0);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // SUBSISTEMA C: NEUMATOCIST CENTRAL (MANTO GELATINOSO TRIDIMENSIONAL)
+  // -------------------------------------------------------------------------
+  function drawGelatinousMantle(ctx) {
+    ctx.save();
+    // Volumen elipsoidal principal con curvatura compleja
+    const mantleGrad = ctx.createRadialGradient(-40, -45, 20, 0, 0, 210);
+    mantleGrad.addColorStop(0.0, 'rgba(135, 245, 255, 0.42)');
+    mantleGrad.addColorStop(0.4, 'rgba(64, 155, 210, 0.28)');
+    mantleGrad.addColorStop(0.8, 'rgba(45, 78, 160, 0.38)');
+    mantleGrad.addColorStop(1.0, 'rgba(22, 36, 88, 0.65)');
+
+    ctx.fillStyle = mantleGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 185, 135, 0, 0, TAU);
+    ctx.fill();
+
+    // Membrana externa de doble refracción (borde brillante de contorno)
+    ctx.strokeStyle = 'rgba(175, 248, 255, 0.65)';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 185, 135, 0, 0, TAU);
+    ctx.stroke();
+
+    // Capa de oclusión y volumen interno (*subsurface scattering*)
+    const subSurface = ctx.createRadialGradient(20, 30, 10, 0, 0, 170);
+    subSurface.addColorStop(0.0, 'rgba(56, 182, 235, 0)');
+    subSurface.addColorStop(0.7, 'rgba(112, 75, 205, 0.22)');
+    subSurface.addColorStop(1.0, 'rgba(12, 22, 54, 0.72)');
+    ctx.fillStyle = subSurface;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 178, 128, 0, 0, TAU);
+    ctx.fill();
+
+    // Reflejos especulares húmedos cenitales en la cúpula gelatinosa
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.beginPath();
+    ctx.ellipse(-52, -58, 65, 18, -0.38, 0, TAU);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(205, 252, 255, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(45, -72, 35, 10, 0.25, 0, TAU);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // SUBSISTEMA D: NÚCLEO VISCERAL Y RED NEURONAL BIOLUMINISCENTE
+  // -------------------------------------------------------------------------
+  function drawVisceralBioluminescentCore(ctx) {
+    ctx.save();
+    // Núcleo central de plasma (corazón energético)
+    const coreGlow = ctx.createRadialGradient(0, 10, 5, 0, 10, 95);
+    coreGlow.addColorStop(0.0, '#ffffff');
+    coreGlow.addColorStop(0.25, '#7ef6ff');
+    coreGlow.addColorStop(0.6, 'rgba(168, 92, 255, 0.65)');
+    coreGlow.addColorStop(1.0, 'rgba(72, 32, 160, 0)');
+    ctx.fillStyle = coreGlow;
+    ctx.beginPath();
+    ctx.arc(0, 10, 95, 0, TAU);
+    ctx.fill();
+
+    // Red sináptica fractal ramificada
+    ctx.strokeStyle = 'rgba(225, 254, 255, 0.85)';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    
+    const nodes = [
+      { x: 0, y: 15 },
+      { x: -45, y: -15 }, { x: 45, y: -15 },
+      { x: -75, y: 35 }, { x: 75, y: 35 },
+      { x: -25, y: 65 }, { x: 25, y: 65 },
+      { x: 0, y: -45 }
+    ];
+
+    const connections = [
+      [0, 1], [0, 2], [0, 7],
+      [1, 3], [2, 4],
+      [1, 5], [2, 6],
+      [5, 6], [3, 5], [4, 6]
+    ];
+
+    for (const [a, b] of connections) {
+      const p1 = nodes[a];
+      const p2 = nodes[b];
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.quadraticCurveTo((p1.x + p2.x) * 0.5 + 10, (p1.y + p2.y) * 0.5 - 15, p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    // Nodos nodulares brillantes de alta intensidad
+    for (const n of nodes) {
+      const ng = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 10);
+      ng.addColorStop(0, '#ffffff');
+      ng.addColorStop(0.5, '#68e2ff');
+      ng.addColorStop(1, 'rgba(104, 226, 255, 0)');
+      ctx.fillStyle = ng;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 10, 0, TAU);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------------------------
+  // SUBSISTEMA E: CORONA ECUATORIAL DE ÓRGANOS SENSORIALES (OJOS DE SILICIO)
+  // -------------------------------------------------------------------------
+  function drawSensorEyesCrown(ctx) {
+    ctx.save();
+    const eyes = [
+      { x: 0,   y: 15,  s: 1.2 },
+      { x: -50, y: 5,   s: 1.0 },
+      { x: 50,  y: 5,   s: 1.0 },
+      { x: -95, y: -15, s: 0.85 },
+      { x: 95,  y: -15, s: 0.85 },
+      { x: -135,y: -40, s: 0.65 },
+      { x: 135, y: -40, s: 0.65 }
+    ];
+
+    for (const eye of eyes) {
+      ctx.save();
+      ctx.translate(eye.x, eye.y);
+      ctx.scale(eye.s, eye.s);
+
+      // Cúpula esferoidal cristalina exterior
+      const eyeGlass = ctx.createRadialGradient(-3, -3, 1, 0, 0, 18);
+      eyeGlass.addColorStop(0.0, '#ffffff');
+      eyeGlass.addColorStop(0.4, '#5ef2ff');
+      eyeGlass.addColorStop(0.8, '#2a6cb8');
+      eyeGlass.addColorStop(1.0, '#0e1c38');
+      ctx.fillStyle = eyeGlass;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, TAU);
+      ctx.fill();
+
+      // Anillo de sujeción de bio-silicio
+      ctx.strokeStyle = 'rgba(215, 252, 255, 0.85)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, TAU);
+      ctx.stroke();
+
+      // Pupila colimadora central de plasma concentrado
+      ctx.fillStyle = '#060a12';
+      ctx.beginPath();
+      ctx.arc(0, 0, 7, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = '#ff9ee2';
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.5, 0, TAU);
+      ctx.fill();
+
+      // Brillo especular nítido
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.beginPath();
+      ctx.arc(-5, -5, 3, 0, TAU);
+      ctx.fill();
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // RENDERIZADO DE VISTAS AMPLIADAS (CALLOUTS TÉCNICOS DE CONCEPT ART)
+  // =========================================================================
+  function renderConceptCallouts(ctx) {
+    // Callout 1: Detalle de los Ojos Sensoriales de Silicio (Estructura Ecuatorial)
+    drawCalloutPanel(ctx, 120, 120, 260, 240, 'ESTRUCTURA SENSORIAL // OJO CRISTALINO', () => {
+      ctx.translate(250, 240);
+      ctx.scale(3.2, 3.2);
+      
+      const eyeGlass = ctx.createRadialGradient(-3, -3, 1, 0, 0, 20);
+      eyeGlass.addColorStop(0.0, '#ffffff');
+      eyeGlass.addColorStop(0.4, '#5ef2ff');
+      eyeGlass.addColorStop(0.8, '#2a6cb8');
+      eyeGlass.addColorStop(1.0, '#0e1c38');
+      ctx.fillStyle = eyeGlass;
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, TAU);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(215, 252, 255, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, TAU);
+      ctx.stroke();
+
+      ctx.fillStyle = '#060a12';
+      ctx.beginPath();
+      ctx.arc(0, 0, 8, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = '#ff9ee2';
+      ctx.beginPath();
+      ctx.arc(0, 0, 4, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.beginPath();
+      ctx.arc(-6, -6, 3.5, 0, TAU);
+      ctx.fill();
+    });
+
+    // Callout 2: Detalle del Núcleo Visceral y Red Fractal Interna
+    drawCalloutPanel(ctx, 120, 720, 260, 240, 'NÚCLEO VISCERAL // RED FRACTAL', () => {
+      ctx.translate(250, 840);
+      ctx.scale(1.4, 1.4);
+
+      const coreGlow = ctx.createRadialGradient(0, 0, 2, 0, 0, 70);
+      coreGlow.addColorStop(0.0, '#ffffff');
+      coreGlow.addColorStop(0.3, '#7ef6ff');
+      coreGlow.addColorStop(0.7, 'rgba(168, 92, 255, 0.55)');
+      coreGlow.addColorStop(1.0, 'rgba(72, 32, 160, 0)');
+      ctx.fillStyle = coreGlow;
+      ctx.beginPath();
+      ctx.arc(0, 0, 70, 0, TAU);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(225, 254, 255, 0.9)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-35, -35); ctx.lineTo(35, 35);
+      ctx.moveTo(35, -35); ctx.lineTo(-35, 35);
+      ctx.moveTo(0, -50); ctx.lineTo(0, 50);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, 9, 0, TAU);
+      ctx.arc(-35, -35, 6, 0, TAU);
+      ctx.arc(35, -35, 6, 0, TAU);
+      ctx.arc(-35, 35, 6, 0, TAU);
+      ctx.arc(35, 35, 6, 0, TAU);
+      ctx.fill();
+    });
+  }
+
+  function drawCalloutPanel(ctx, x, y, w, h, title, renderFn) {
+    ctx.save();
+    // Fondo de panel técnico translúcido
+    ctx.fillStyle = 'rgba(10, 18, 30, 0.78)';
+    ctx.strokeStyle = 'rgba(105, 222, 255, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    // Esquinas de encuadre estético cinemático
+    ctx.strokeStyle = 'rgba(105, 222, 255, 0.75)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 16); ctx.lineTo(x, y); ctx.lineTo(x + 16, y);
+    ctx.moveTo(x + w - 16, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - 16);
+    ctx.stroke();
+
+    // Título de callout
+    ctx.fillStyle = 'rgba(205, 245, 255, 0.85)';
+    ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText(title, x + 14, y + 24);
+
+    // Contenido del callout recortado en su región
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(x + 2, y + 36, w - 4, h - 38, 6);
+    ctx.clip();
+    renderFn();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // TIPOGRAFÍA Y MARCO DE PRESENTACIÓN CINEMATOGRÁFICA
+  // =========================================================================
+  function renderCinematicUI(ctx) {
+    ctx.save();
+    // Marco exterior sutil
+    ctx.strokeStyle = 'rgba(105, 222, 255, 0.16)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(40, 40, W - 80, H - 80);
+
+    // Tipografía de título y subtítulo de producción
+    ctx.fillStyle = 'rgba(225, 245, 255, 0.88)';
+    ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('PELAGOCYSTIS HYPERBOREA', 120, H - 85);
+
+    ctx.fillStyle = 'rgba(105, 222, 255, 0.65)';
+    ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('SPECIE BIOMORFOLÓGICA MESOPELÁGICA // CONCEPT ART MASTER 01', 120, H - 62);
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // EJECUCIÓN MAESTRA DE RENDERIZADO
+  // =========================================================================
+  function renderFullConceptArt() {
+    ctx.clearRect(0, 0, W, H);
+    renderDeepSeaBackground(ctx);
+    renderPelagocystisMaster(ctx, W * 0.5, H * 0.48);
+    renderConceptCallouts(ctx);
+    renderCinematicUI(ctx);
+  }
+
+  renderFullConceptArt();
+  window.addEventListener('resize', renderFullConceptArt);
+})();
+</script>
+</body>
+</html>

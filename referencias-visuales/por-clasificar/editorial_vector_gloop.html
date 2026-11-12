@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editorial Vector Character — "Gloop, el Músico Estelar"</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 100vw;
+    height: 100vh;
+    background: #0d1117;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #artwork-container {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    max-width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: 16 / 9;
+    background: #0d1117;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div id="artwork-container">
+  <canvas id="vectorCanvas" width="1920" height="1080"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('vectorCanvas');
+const ctx = canvas.getContext('2d');
+const TAU = Math.PI * 2;
+
+// =========================================================================
+// ILUSTRACIÓN VECTORIAL EDITORIAL: "GLOOP, EL MÚSICO ESTELAR"
+// Inspiración: Eran Mendel + Estilo Editorial Plano / Bloques de Color Sólido
+// =========================================================================
+
+function renderVectorArtwork() {
+  // 1. Fondo de panel plano de alto contraste (Verde Menta / Turquesa Editorial)
+  ctx.fillStyle = '#2ec4b6';
+  ctx.fillRect(0, 0, 1920, 1080);
+
+  // Marco de diseño gráfico editorial limpio
+  ctx.strokeStyle = '#011627';
+  ctx.lineWidth = 16;
+  ctx.strokeRect(40, 40, 1840, 1000);
+
+  // Sombra proyectada plana en el suelo (Estilo vector block)
+  ctx.fillStyle = '#209e93';
+  ctx.beginPath();
+  ctx.ellipse(960, 920, 280, 50, 0, 0, TAU);
+  ctx.fill();
+
+  ctx.save();
+  ctx.translate(960, 560);
+
+  // -----------------------------------------------------------------------
+  // 2. CUERPO Y TORSO (Estilo bloques sólidos, silueta geométrica orgánica)
+  // -----------------------------------------------------------------------
+  // Chaqueta de cuero / rockero intergaláctico (Color Negro Profundo Vectorial)
+  ctx.fillStyle = '#011627';
+  ctx.beginPath();
+  ctx.moveTo(-75, -120);
+  ctx.lineTo(-120, 160);
+  ctx.lineTo(-110, 340);
+  ctx.lineTo(110, 340);
+  ctx.lineTo(120, 160);
+  ctx.lineTo(75, -120);
+  ctx.closePath();
+  ctx.fill();
+
+  // Solapas de la chaqueta (Contraste Amarillo Naranja / Estilo Mendel)
+  ctx.fillStyle = '#ff9f1c';
+  ctx.beginPath();
+  ctx.moveTo(-75, -120);
+  ctx.lineTo(-45, 120);
+  ctx.lineTo(-75, 180);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(75, -120);
+  ctx.lineTo(45, 120);
+  ctx.lineTo(75, 180);
+  ctx.closePath();
+  ctx.fill();
+
+  // Camisa interior blanca geométrica
+  ctx.fillStyle = '#fdfffc';
+  ctx.beginPath();
+  ctx.moveTo(-45, -120);
+  ctx.lineTo(45, -120);
+  ctx.lineTo(25, 40);
+  ctx.lineTo(-25, 40);
+  ctx.closePath();
+  ctx.fill();
+
+  // -----------------------------------------------------------------------
+  // 3. PIERNAS Y BOTAS
+  // -----------------------------------------------------------------------
+  ctx.fillStyle = '#011627';
+  ctx.fillRect(-70, 340, 50, 220);
+  ctx.fillRect(20, 340, 50, 220);
+
+  // Botas rojas vibrantes
+  ctx.fillStyle = '#e71d36';
+  ctx.beginPath();
+  ctx.roundRect(-90, 520, 75, 45, 8);
+  ctx.roundRect(15, 520, 75, 45, 8);
+  ctx.fill();
+
+  // -----------------------------------------------------------------------
+  // 4. BRAZOS Y GUITARRA ESPACIAL DE BLOQUES
+  // -----------------------------------------------------------------------
+  // Brazo izquierdo (sosteniendo el mástil)
+  ctx.strokeStyle = '#011627';
+  ctx.lineWidth = 28;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-75, -80);
+  ctx.lineTo(-160, -20);
+  ctx.lineTo(-190, 40);
+  ctx.stroke();
+
+  // Guitarra espacial / Keytar vectorial de colores sólidos
+  ctx.save();
+  ctx.translate(-130, 40);
+  ctx.rotate(-0.25);
+  // Cuerpo de la guitarra
+  ctx.fillStyle = '#ff9f1c';
+  ctx.beginPath();
+  ctx.roundRect(-40, -25, 220, 50, 10);
+  ctx.fill();
+  ctx.strokeStyle = '#011627';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  // Mástil de la guitarra
+  ctx.fillStyle = '#011627';
+  ctx.fillRect(180, -10, 140, 20);
+
+  // Teclas / Trastes en bloques
+  ctx.fillStyle = '#fdfffc';
+  for(let i=0; i<6; i++) {
+    ctx.fillRect(-25 + i * 32, -18, 22, 36);
+    ctx.fillStyle = '#011627';
+    ctx.fillRect(-25 + i * 32, -18, 5, 36);
+    ctx.fillStyle = '#fdfffc';
+  }
+  ctx.restore();
+
+  // Brazo derecho (tocando las cuerdas)
+  ctx.strokeStyle = '#011627';
+  ctx.lineWidth = 28;
+  ctx.beginPath();
+  ctx.moveTo(75, -80);
+  ctx.lineTo(30, 20);
+  ctx.stroke();
+
+  // -----------------------------------------------------------------------
+  // 5. CUELLO Y CABEZA ALIENÍGENA (Cefalópodo amigable / Estilo plano)
+  // -----------------------------------------------------------------------
+  // Cuello cilíndrico sólido
+  ctx.fillStyle = '#ff6b6b';
+  ctx.fillRect(-30, -180, 60, 70);
+  ctx.strokeStyle = '#011627'; ctx.lineWidth = 6;
+  ctx.strokeRect(-30, -180, 60, 70);
+
+  // Cabeza redonda y expresiva (Color Magenta / Coral vibrante)
+  ctx.fillStyle = '#ff6b6b';
+  ctx.beginPath();
+  ctx.arc(0, -240, 95, 0, TAU);
+  ctx.fill();
+  ctx.strokeStyle = '#011627';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  // Antenas superiores (característico alienígena minimalista)
+  ctx.strokeStyle = '#011627'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-25, -325); ctx.lineTo(-45, -380);
+  ctx.moveTo(25, -325); ctx.lineTo(45, -380);
+  ctx.stroke();
+
+  // Puntas de antena luminosas (Amarillo brillante)
+  ctx.fillStyle = '#ff9f1c';
+  ctx.beginPath();
+  ctx.arc(-45, -385, 12, 0, TAU);
+  ctx.arc(45, -385, 12, 0, TAU);
+  ctx.fill();
+  ctx.strokeStyle = '#011627'; ctx.lineWidth = 5;
+  ctx.stroke(); ctx.beginPath(); ctx.arc(-45, -385, 12, 0, TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(45, -385, 12, 0, TAU); ctx.stroke();
+
+  // Gafas de sol negras estilo rockero (Bloque geométrico limpio)
+  ctx.fillStyle = '#011627';
+  ctx.beginPath();
+  ctx.roundRect(-60, -265, 120, 45, 8);
+  ctx.fill();
+
+  // Brillo en las gafas (Línea blanca diagonal característica)
+  ctx.strokeStyle = '#fdfffc';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-35, -250); ctx.lineTo(-15, -235);
+  ctx.moveTo(15, -250); ctx.lineTo(35, -235);
+  ctx.stroke();
+
+  // Sonrisa cool / segura (Estilo Eran Mendel)
+  ctx.strokeStyle = '#011627';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(0, -195, 22, 0.1, Math.PI - 0.1);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+renderVectorArtwork();
+</script>
+</body>
+</html>

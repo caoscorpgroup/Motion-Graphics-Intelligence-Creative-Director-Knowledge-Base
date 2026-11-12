@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>THE LAST ORBIT — Character Concept Sheet (Cephalon & Xylariani)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #141619;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  #sheet-frame {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 177.78vh;
+    max-height: 56.25vw;
+    aspect-ratio: 16 / 9;
+    background: #1d2025;
+    box-shadow: 0 32px 100px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(212, 185, 140, 0.18);
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #paper-grain {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.065;
+    mix-blend-mode: overlay;
+  }
+</style>
+</head>
+<body>
+<div id="sheet-frame">
+  <canvas id="concept-canvas"></canvas>
+  <svg id="paper-grain" xmlns="http://www.w3.org/2000/svg">
+    <filter id="studio-paper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#studio-paper)"/>
+  </svg>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const W = 1920;
+  const H = 1080;
+  const TAU = Math.PI * 2;
+  const canvas = document.getElementById('concept-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // =========================================================================
+  // 1. ESTUDIO NEUTRO DE PRESENTACIÓN (HOJA DE DISEÑO DE PERSONAJES)
+  // =========================================================================
+  function renderStudioBackdrop(ctx) {
+    // Fondo de estudio cálido-neutro pizarra/pergamino oscuro para lectura clara de materiales y transparencias
+    const bg = ctx.createRadialGradient(W * 0.5, H * 0.46, 120, W * 0.5, H * 0.5, W * 0.72);
+    bg.addColorStop(0.0, '#2b2f36');
+    bg.addColorStop(0.55, '#21242a');
+    bg.addColorStop(1.0, '#17191e');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Retícula técnica sutil de hoja de concept art
+    ctx.save();
+    ctx.strokeStyle = 'rgba(218, 204, 178, 0.045)';
+    ctx.lineWidth = 1;
+    const step = 48;
+    for (let x = step; x < W; x += step) {
+      ctx.beginPath();
+      ctx.moveTo(x, 36);
+      ctx.lineTo(x, H - 36);
+      ctx.stroke();
+    }
+    for (let y = step; y < H; y += step) {
+      ctx.beginPath();
+      ctx.moveTo(36, y);
+      ctx.lineTo(W - 36, y);
+      ctx.stroke();
+    }
+
+    // Marco editorial y divisor central de lámina
+    ctx.strokeStyle = 'rgba(218, 198, 162, 0.24)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(36, 36, W - 72, H - 72);
+
+    ctx.strokeStyle = 'rgba(218, 198, 162, 0.14)';
+    ctx.setLineDash([6, 8]);
+    ctx.beginPath();
+    ctx.moveTo(W * 0.5, 64);
+    ctx.lineTo(W * 0.5, H - 64);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Pedestales elípticos neutros con sombra de contacto
+    drawPedestal(ctx, 430, 935, 220, 38, 'rgba(232, 168, 92, 0.14)');
+    drawPedestal(ctx, 1340, 935, 210, 38, 'rgba(98, 224, 245, 0.16)');
+
+    // Recuadros de detalle ampliado (Callouts anatómicos y de material)
+    drawCalloutFrame(ctx, 695, 135, 230, 245, 'DETALLE CRANEAL · CEPHALON');
+    drawCalloutFrame(ctx, 695, 415, 230, 220, 'VENTOSA Y ARTICULACIÓN');
+    drawCalloutFrame(ctx, 1635, 135, 230, 245, 'FACETADO Y NÚCLEO · XYLARIANI');
+    drawCalloutFrame(ctx, 1635, 415, 230, 220, 'REFRACCIÓN SILÍCEA INTERNA');
+
+    // Tipografía técnica limpia de lámina de estudio
+    ctx.fillStyle = 'rgba(235, 224, 202, 0.86)';
+    ctx.font = '600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('THE LAST ORBIT  //  CHARACTER DESIGN SHEET 01', 64, 72);
+
+    ctx.fillStyle = 'rgba(212, 186, 142, 0.65)';
+    ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('ESPECIE 01: CEPHALON (BARMAN CIBER-SIMBIÓTICO)', 64, 96);
+    ctx.fillText('ESPECIE 02: XYLARIANI (ENTIDAD CRISTALINA SILÍCEA)', 992, 96);
+
+    // Escalas de proporción al pie
+    ctx.fillStyle = 'rgba(212, 196, 168, 0.52)';
+    ctx.font = '500 11px monospace';
+    ctx.fillText('FIG. 01 — POSE ARTICULADA DE 4 TENTÁCULOS / DELANTAL INDUSTRIAL / RESPIRADOR BRANQUIAL', 64, H - 54);
+    ctx.fillText('FIG. 02 — ESTRUCTURA CRISTALINA TRANSLÚCIDA / RED FRACTAL DE PLASMA / COPA DE XENO-NECTAR', 992, H - 54);
+    ctx.restore();
+  }
+
+  function drawPedestal(ctx, x, y, rx, ry, rimCol) {
+    ctx.save();
+    const sh = ctx.createRadialGradient(x, y + 6, 10, x, y + 6, rx * 1.15);
+    sh.addColorStop(0, 'rgba(0, 0, 0, 0.65)');
+    sh.addColorStop(0.7, 'rgba(0, 0, 0, 0.25)');
+    sh.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = sh;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 8, rx * 1.15, ry * 1.25, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.fillStyle = '#252930';
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.strokeStyle = rimCol;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx * 0.78, ry * 0.72, 0, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawCalloutFrame(ctx, x, y, w, h, label) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(18, 20, 25, 0.72)';
+    ctx.strokeStyle = 'rgba(218, 198, 162, 0.25)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    // Esquinas técnicas
+    ctx.strokeStyle = 'rgba(232, 188, 118, 0.65)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 14); ctx.lineTo(x, y); ctx.lineTo(x + 14, y);
+    ctx.moveTo(x + w - 14, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - 14);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(224, 208, 178, 0.78)';
+    ctx.font = '600 10.5px monospace';
+    ctx.fillText(label, x + 12, y + 20);
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 2. PERSONAJE 1: EL CEPHALON (CAMARERO CEFALÓPODO CIBER-SIMBIÓTICO)
+  // =========================================================================
+  function drawCephalonFull(ctx, cx, cy, scale) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    // -----------------------------------------------------------------------
+    // A. TENTÁCULOS POSTERIORES (Sostienen el cuerpo y crean base estable)
+    // -----------------------------------------------------------------------
+    // Tentáculo trasero izquierdo (apoyo en pedestal)
+    drawArticulatedTentacle(ctx, {
+      pts: [
+        { x: -34, y: 120, r: 24 },
+        { x: -95, y: 205, r: 19 },
+        { x: -135, y: 310, r: 14 },
+        { x: -175, y: 392, r: 9 },
+        { x: -205, y: 405, r: 4.5 }
+      ],
+      colBase: '#27434b',
+      colMid: '#375c66',
+      colLight: '#568591',
+      suckerCol: '#b87d68',
+      suckerSide: 1,
+      suckerCount: 9
+    });
+
+    // Tentáculo trasero derecho (apoyo en pedestal)
+    drawArticulatedTentacle(ctx, {
+      pts: [
+        { x: 36, y: 120, r: 24 },
+        { x: 96, y: 210, r: 19 },
+        { x: 128, y: 315, r: 14 },
+        { x: 162, y: 394, r: 9 },
+        { x: 192, y: 404, r: 4.5 }
+      ],
+      colBase: '#233b42',
+      colMid: '#32535c',
+      colLight: '#4e7985',
+      suckerCol: '#a66f5b',
+      suckerSide: -1,
+      suckerCount: 9
+    });
+
+    // -----------------------------------------------------------------------
+    // B. TORSO BIOMECÁNICO Y CHALECO / DELANTAL DE BARMAN INTERGALÁCTICO
+    // -----------------------------------------------------------------------
+    // Musculatura del manto y hombros cefalópodos
+    const torsoGrad = ctx.createLinearGradient(-75, -60, 85, 130);
+    torsoGrad.addColorStop(0.0, '#4f7a85');
+    torsoGrad.addColorStop(0.45, '#355761');
+    torsoGrad.addColorStop(1.0, '#1f353d');
+    ctx.fillStyle = torsoGrad;
+    ctx.beginPath();
+    ctx.moveTo(-58, -56);
+    ctx.bezierCurveTo(-84, -22, -78, 58, -52, 132);
+    ctx.bezierCurveTo(-18, 152, 22, 152, 54, 132);
+    ctx.bezierCurveTo(78, 58, 84, -22, 58, -56);
+    ctx.bezierCurveTo(24, -72, -24, -72, -58, -56);
+    ctx.closePath();
+    ctx.fill();
+
+    // Camisa de trabajo oscura de tejido técnico con pliegues
+    ctx.fillStyle = '#25272d';
+    ctx.beginPath();
+    ctx.moveTo(-54, -46);
+    ctx.bezierCurveTo(-72, -10, -68, 45, -50, 95);
+    ctx.lineTo(50, 95);
+    ctx.bezierCurveTo(68, 45, 72, -10, 54, -46);
+    ctx.closePath();
+    ctx.fill();
+
+    // Arnés biomecánico de latón envejecido y acero (exo-respirador dorsal/pectoral)
+    drawBiomechanicalHarness(ctx);
+
+    // Delantal industrial de cuero sintético terracota/ocre desgastado
+    const apronGrad = ctx.createLinearGradient(-48, -10, 56, 210);
+    apronGrad.addColorStop(0.0, '#8d5338');
+    apronGrad.addColorStop(0.5, '#6e3e29');
+    apronGrad.addColorStop(1.0, '#472618');
+    ctx.fillStyle = apronGrad;
+    ctx.beginPath();
+    ctx.moveTo(-40, -14);
+    ctx.lineTo(40, -14);
+    ctx.bezierCurveTo(48, 45, 58, 118, 62, 198);
+    ctx.bezierCurveTo(22, 212, -22, 212, -62, 198);
+    ctx.bezierCurveTo(-58, 118, -48, 45, -40, -14);
+    ctx.closePath();
+    ctx.fill();
+
+    // Costuras, remaches de latón y bolsillo con herramientas de coctelería
+    ctx.strokeStyle = 'rgba(232, 178, 122, 0.45)';
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(-34, -8);
+    ctx.bezierCurveTo(-42, 48, -50, 116, -54, 190);
+    ctx.moveTo(34, -8);
+    ctx.bezierCurveTo(42, 48, 50, 116, 54, 190);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Bolsillo frontal con medidor de presión y pinzas de hielo
+    ctx.fillStyle = '#532d1d';
+    ctx.beginPath();
+    ctx.roundRect(-28, 72, 56, 48, 5);
+    ctx.fill();
+    ctx.strokeStyle = '#c48c5a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Herramientas asomando del bolsillo (pipeta luminosa y pinza metálica)
+    ctx.fillStyle = '#9aa8b2';
+    ctx.fillRect(-16, 52, 5, 22);
+    ctx.fillStyle = '#4be3e8';
+    ctx.fillRect(-4, 55, 6, 19);
+    ctx.fillStyle = '#d4a359';
+    ctx.beginPath();
+    ctx.arc(14, 64, 7, 0, TAU);
+    ctx.fill();
+
+    // Cinturón utilitario con hebilla magnética
+    ctx.fillStyle = '#1b1d22';
+    ctx.fillRect(-52, 34, 104, 15);
+    ctx.fillStyle = '#c89b54';
+    ctx.beginPath();
+    ctx.roundRect(-14, 31, 28, 21, 3);
+    ctx.fill();
+    ctx.fillStyle = '#38d6e0';
+    ctx.beginPath();
+    ctx.arc(0, 41.5, 4, 0, TAU);
+    ctx.fill();
+
+    // -----------------------------------------------------------------------
+    // C. CUATRO TENTÁCULOS PRINCIPALES DE TRABAJO (POSE DE COCTELERÍA)
+    // -----------------------------------------------------------------------
+    // Tentáculo Superior Izquierdo: sosteniendo y agitando una coctelera gravimétrica
+    drawArticulatedTentacle(ctx, {
+      pts: [
+        { x: -56, y: -32, r: 21 },
+        { x: -118, y: -58, r: 17 },
+        { x: -168, y: -112, r: 13 },
+        { x: -152, y: -168, r: 9.5 },
+        { x: -124, y: -185, r: 5 }
+      ],
+      colBase: '#2f5059',
+      colMid: '#46727d',
+      colLight: '#6ca1ad',
+      suckerCol: '#d99379',
+      suckerSide: 1,
+      suckerCount: 10
+    });
+    // Coctelera alienígena de cristal y latón envuelta por el tentáculo superior izquierdo
+    drawAlienShaker(ctx, -148, -158, -0.35);
+
+    // Tentáculo Inferior Izquierdo: sosteniendo una botella de licor bioluminiscente
+    drawArticulatedTentacle(ctx, {
+      pts: [
+        { x: -58, y: 26, r: 19 },
+        { x: -112, y: 58, r: 15.5 },
+        { x: -146, y: 112, r: 12 },
+        { x: -118, y: 152, r: 8.5 },
+        { x: -86, y: 158, r: 4.5 }
+      ],
+      colBase: '#2c4b54',
+      colMid: '#426b75',
+      colLight: '#6599a6',
+      suckerCol: '#d18b71',
+      suckerSide: -1,
+      suckerCount: 9
+    });
+    drawAlienBottle(ctx, -116, 134, 0.28);
+
+    // Tentáculo Superior Derecho: gesto expresivo de conversación y servicio
+    drawArticulatedTentacle(ctx, {
+      pts: [
+        { x: 56, y: -30, r: 21 },
+        { x: 124, y: -48, r: 17 },
+        { x: 176, y: -18, r: 13 },
+        { x: 208, y: 34, r: 9 },
+        { x: 226, y: 74, r: 4.5 }
+      ],
+      colBase: '#2f5059',
+      colMid: '#46727d',
+      colLight: '#6ca1ad',
+      suckerCol: '#d99379',
+      suckerSide: -1,
+      suckerCount: 10
+    });
+
+    // Tentáculo Inferior Derecho: limpiando/sosteniendo una copa flotante con paño de microfibra
+    drawArticulatedTentacle(ctx, {
+      pts: [
+        { x: 58, y: 28, r: 19 },
+        { x: 115, y: 76, r: 15 },
+        { x: 145, y: 134, r: 11.5 },
+        { x: 112, y: 174, r: 8 },
+        { x: 84, y: 178, r: 4 }
+      ],
+      colBase: '#29464f',
+      colMid: '#3e6670',
+      colLight: '#5f919e',
+      suckerCol: '#cc866c',
+      suckerSide: 1,
+      suckerCount: 9
+    });
+    drawBarClothAndGlass(ctx, 114, 152);
+
+    // -----------------------------------------------------------------------
+    // D. CABEZA BULBOSA DE CEPHALON, NÚCLEO ENCEFÁLICO TRANSLÚCIDO Y ROSTRO
+    // -----------------------------------------------------------------------
+    drawCephalonHead(ctx, 0, -138, 1.0);
+
+    ctx.restore();
+  }
+
+  function drawBiomechanicalHarness(ctx) {
+    ctx.save();
+    // Hombreras metálicas articuladas con válvulas de presión branquial
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.scale(side, 1);
+      const padGrad = ctx.createLinearGradient(35, -62, 78, -15);
+      padGrad.addColorStop(0, '#5a636e');
+      padGrad.addColorStop(0.5, '#3b424a');
+      padGrad.addColorStop(1, '#22262b');
+      ctx.fillStyle = padGrad;
+      ctx.beginPath();
+      ctx.moveTo(34, -58);
+      ctx.bezierCurveTo(64, -64, 82, -42, 76, -14);
+      ctx.bezierCurveTo(58, -16, 44, -28, 34, -58);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#c49652';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      // Conducto branquial con fluido cian
+      ctx.strokeStyle = '#252930';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(46, -42);
+      ctx.quadraticCurveTo(32, -24, 24, -12);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#3ce8f5';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Regulador central en el esternón
+    ctx.fillStyle = '#2c3138';
+    ctx.beginPath();
+    ctx.arc(0, -34, 14, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = '#cfa058';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const coreGlow = ctx.createRadialGradient(0, -34, 1, 0, -34, 11);
+    coreGlow.addColorStop(0, '#d8ffff');
+    coreGlow.addColorStop(0.5, '#35dce8');
+    coreGlow.addColorStop(1, 'rgba(53, 220, 232, 0)');
+    ctx.fillStyle = coreGlow;
+    ctx.beginPath();
+    ctx.arc(0, -34, 11, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCephalonHead(ctx, hx, hy, scale) {
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.scale(scale, scale);
+
+    // Cuello musculoso con pliegues branquiales laterales
+    ctx.fillStyle = '#32525c';
+    ctx.beginPath();
+    ctx.moveTo(-36, 76);
+    ctx.bezierCurveTo(-42, 42, -36, 18, -28, 0);
+    ctx.lineTo(28, 0);
+    ctx.bezierCurveTo(36, 18, 42, 42, 36, 76);
+    ctx.closePath();
+    ctx.fill();
+
+    // Branquias laterales rítmicas
+    ctx.strokeStyle = '#1d3238';
+    ctx.lineWidth = 2.4;
+    for (const side of [-1, 1]) {
+      for (let g = 0; g < 3; g++) {
+        ctx.beginPath();
+        ctx.moveTo(side * 26, 26 + g * 12);
+        ctx.quadraticCurveTo(side * 36, 30 + g * 12, side * 32, 38 + g * 12);
+        ctx.stroke();
+      }
+    }
+
+    // Cráneo / Manto cefálico bulboso asimétrico con volumen tridimensional
+    const headGrad = ctx.createRadialGradient(-22, -68, 12, 0, -35, 115);
+    headGrad.addColorStop(0.0, '#78b0bd');
+    headGrad.addColorStop(0.35, '#4b7b87');
+    headGrad.addColorStop(0.75, '#2f525c');
+    headGrad.addColorStop(1.0, '#1b3138');
+    ctx.fillStyle = headGrad;
+
+    ctx.beginPath();
+    ctx.moveTo(-42, 16);
+    // Lóbulo craneal izquierdo expansivo
+    ctx.bezierCurveTo(-78, -6, -94, -68, -56, -112);
+    // Cresta occipital superior
+    ctx.bezierCurveTo(-24, -146, 32, -144, 62, -108);
+    // Lóbulo derecho y arco superciliar
+    ctx.bezierCurveTo(94, -66, 76, -4, 42, 16);
+    // Mejillas y mandíbula cefalópoda
+    ctx.bezierCurveTo(32, 36, -32, 36, -42, 16);
+    ctx.closePath();
+    ctx.fill();
+
+    // Domo craneal superior semi-translúcido (deja ver el núcleo encefálico bioluminiscente)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(-44, -62);
+    ctx.bezierCurveTo(-56, -98, -22, -128, 8, -126);
+    ctx.bezierCurveTo(38, -124, 58, -94, 46, -60);
+    ctx.bezierCurveTo(22, -48, -22, -48, -44, -62);
+    ctx.closePath();
+    ctx.clip();
+
+    // Cavidad interna profunda
+    ctx.fillStyle = 'rgba(14, 28, 36, 0.58)';
+    ctx.fillRect(-60, -135, 120, 90);
+
+    // Lóbulos encefálicos luminosos internos (red neuronal bioluminiscente)
+    const brainGlow = ctx.createRadialGradient(0, -86, 4, 0, -86, 44);
+    brainGlow.addColorStop(0.0, 'rgba(135, 250, 245, 0.85)');
+    brainGlow.addColorStop(0.5, 'rgba(56, 198, 214, 0.42)');
+    brainGlow.addColorStop(1.0, 'rgba(30, 120, 140, 0)');
+    ctx.fillStyle = brainGlow;
+    ctx.beginPath();
+    ctx.ellipse(-10, -86, 22, 18, -0.2, 0, TAU);
+    ctx.ellipse(12, -84, 20, 17, 0.25, 0, TAU);
+    ctx.fill();
+
+    // Filamentos sinápticos
+    ctx.strokeStyle = 'rgba(185, 255, 252, 0.52)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-24, -84); ctx.quadraticCurveTo(-8, -104, 16, -88);
+    ctx.moveTo(-18, -74); ctx.quadraticCurveTo(4, -88, 24, -76);
+    ctx.moveTo(0, -102); ctx.lineTo(0, -68);
+    ctx.stroke();
+
+    // Reflejo especular húmedo en la membrana externa
+    ctx.fillStyle = 'rgba(220, 248, 255, 0.22)';
+    ctx.beginPath();
+    ctx.ellipse(-18, -102, 22, 9, -0.35, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Borde de sutura craneal y manchas dérmicas moteadas procedurales
+    ctx.strokeStyle = 'rgba(140, 215, 225, 0.28)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-44, -62);
+    ctx.bezierCurveTo(-18, -50, 18, -50, 46, -60);
+    ctx.stroke();
+
+    const mottles = [
+      [-58, -42, 7, 4, 0.3], [-66, -24, 5, 3.5, -0.2], [58, -44, 6.5, 4, -0.4],
+      [64, -22, 5, 3, 0.2], [-48, -82, 5.5, 3, 0.5], [50, -80, 5, 3, -0.5]
+    ];
+    ctx.fillStyle = 'rgba(24, 44, 50, 0.36)';
+    for (const [mx, my, rx, ry, rot] of mottles) {
+      ctx.beginPath();
+      ctx.ellipse(mx, my, rx, ry, rot, 0, TAU);
+      ctx.fill();
+    }
+
+    // Arcos superciliares prominentes y expresivos (mirada sabia y hospitalaria)
+    ctx.fillStyle = '#27434c';
+    ctx.beginPath();
+    ctx.moveTo(-54, -34);
+    ctx.quadraticCurveTo(-30, -48, -10, -34);
+    ctx.quadraticCurveTo(-30, -38, -54, -34);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(54, -34);
+    ctx.quadraticCurveTo(30, -48, 10, -34);
+    ctx.quadraticCurveTo(30, -38, 54, -34);
+    ctx.fill();
+
+    // Ojos compuestos de pupila horizontal tipo cefalópodo con brillo ámbar
+    for (const side of [-1, 1]) {
+      const ex = side * 31;
+      const ey = -24;
+      ctx.save();
+      ctx.translate(ex, ey);
+      ctx.rotate(side * -0.12);
+
+      // Cuenca ocular profunda
+      ctx.fillStyle = '#16272c';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 15, 11.5, 0, 0, TAU);
+      ctx.fill();
+
+      // Iris dorado-ámbar luminoso
+      const irisGrad = ctx.createRadialGradient(-2, -2, 2, 0, 0, 12);
+      irisGrad.addColorStop(0, '#ffe39e');
+      irisGrad.addColorStop(0.55, '#e89638');
+      irisGrad.addColorStop(1, '#8c4814');
+      ctx.fillStyle = irisGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 12.5, 9.5, 0, 0, TAU);
+      ctx.fill();
+
+      // Pupila horizontal característica en forma de "W" suave
+      ctx.fillStyle = '#111619';
+      ctx.beginPath();
+      ctx.moveTo(-8, -1.5);
+      ctx.quadraticCurveTo(-3, 2.5, 0, -1);
+      ctx.quadraticCurveTo(3, 2.5, 8, -1.5);
+      ctx.quadraticCurveTo(4, 3.8, 0, 2.2);
+      ctx.quadraticCurveTo(-4, 3.8, -8, -1.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Reflejo especular
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.beginPath();
+      ctx.ellipse(-4, -3.5, 3.2, 1.8, -0.3, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Estructura bucal: sifón lateral + 4 zarcillos faciales (bigote cefalópodo expresivo)
+    // Sifón respiratorio izquierdo con anillo metálico traductor de voz
+    ctx.fillStyle = '#2b4952';
+    ctx.beginPath();
+    ctx.ellipse(-42, 4, 9, 6, 0.3, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = '#c89b54';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Zarcillos faciales articulados que enmarcan el pico oculto
+    const facialTendrils = [
+      { x0: -18, y0: 12, cx1: -28, cy1: 28, cx2: -38, cy2: 42, x1: -26, y1: 54, w: 6.5 },
+      { x0: -7,  y0: 15, cx1: -12, cy1: 34, cx2: -16, cy2: 52, x1: -8,  y1: 66, w: 5.5 },
+      { x0: 7,   y0: 15, cx1: 12,  cy1: 34, cx2: 16,  cy2: 52, x1: 8,   y1: 66, w: 5.5 },
+      { x0: 18,  y0: 12, cx1: 28,  cy1: 28, cx2: 38,  cy2: 42, x1: 26,  y1: 54, w: 6.5 }
+    ];
+    for (const ft of facialTendrils) {
+      ctx.strokeStyle = '#385d68';
+      ctx.lineWidth = ft.w;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(ft.x0, ft.y0);
+      ctx.bezierCurveTo(ft.cx1, ft.cy1, ft.cx2, ft.cy2, ft.x1, ft.y1);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#6da2af';
+      ctx.lineWidth = ft.w * 0.32;
+      ctx.beginPath();
+      ctx.moveTo(ft.x0 + 1, ft.y0);
+      ctx.bezierCurveTo(ft.cx1 + 1, ft.cy1, ft.cx2 + 1, ft.cy2, ft.x1 + 1, ft.y1 - 2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  // Motor de dibujo de tentáculos orgánicos con envolvente cónica Bézier y ventosas
+  function drawArticulatedTentacle(ctx, cfg) {
+    const { pts, colBase, colMid, colLight, suckerCol, suckerSide, suckerCount } = cfg;
+    if (pts.length < 2) return;
+
+    const leftEdge = [];
+    const rightEdge = [];
+
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      const prev = pts[Math.max(0, i - 1)];
+      const next = pts[Math.min(pts.length - 1, i + 1)];
+      const dx = next.x - prev.x;
+      const dy = next.y - prev.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+      leftEdge.push({ x: p.x + nx * p.r, y: p.y + ny * p.r, nx, ny, r: p.r });
+      rightEdge.push({ x: p.x - nx * p.r, y: p.y - ny * p.r, nx, ny, r: p.r });
+    }
+
+    ctx.save();
+    // Cuerpo principal del tentáculo con contorno suave
+    const grad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[pts.length - 1].x, pts[pts.length - 1].y);
+    grad.addColorStop(0.0, colBase);
+    grad.addColorStop(0.45, colMid);
+    grad.addColorStop(1.0, colLight);
+    ctx.fillStyle = grad;
+
+    ctx.beginPath();
+    ctx.moveTo(leftEdge[0].x, leftEdge[0].y);
+    for (let i = 1; i < leftEdge.length; i++) {
+      const p0 = leftEdge[i - 1];
+      const p1 = leftEdge[i];
+      ctx.quadraticCurveTo(p0.x, p0.y, (p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5);
+    }
+    const last = pts[pts.length - 1];
+    ctx.lineTo(last.x, last.y);
+    for (let i = rightEdge.length - 1; i >= 1; i--) {
+      const p0 = rightEdge[i];
+      const p1 = rightEdge[i - 1];
+      ctx.quadraticCurveTo(p0.x, p0.y, (p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5);
+    }
+    ctx.lineTo(rightEdge[0].x, rightEdge[0].y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Brillo dorsal continuo a lo largo del músculo
+    ctx.strokeStyle = 'rgba(182, 232, 240, 0.28)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length - 1; i++) {
+      ctx.lineTo(pts[i].x - leftEdge[i].nx * pts[i].r * 0.35 * suckerSide, pts[i].y - leftEdge[i].ny * pts[i].r * 0.35 * suckerSide);
+    }
+    ctx.stroke();
+
+    // Ventosas anatómicas distribuidas a lo largo de la cara ventral
+    for (let s = 1; s <= suckerCount; s++) {
+      const t = s / (suckerCount + 1);
+      const segF = t * (pts.length - 1);
+      const idx = Math.min(pts.length - 2, Math.floor(segF));
+      const f = segF - idx;
+      const pA = pts[idx];
+      const pB = pts[idx + 1];
+      const eA = suckerSide > 0 ? leftEdge[idx] : rightEdge[idx];
+      const eB = suckerSide > 0 ? leftEdge[idx + 1] : rightEdge[idx + 1];
+
+      const sx = eA.x + (eB.x - eA.x) * f;
+      const sy = eA.y + (eB.y - eA.y) * f;
+      const sr = (pA.r + (pB.r - pA.r) * f) * 0.36;
+      const ang = Math.atan2(pB.y - pA.y, pB.x - pA.x);
+
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(ang);
+      ctx.fillStyle = suckerCol;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, sr * 1.15, sr * 0.68, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(58, 32, 26, 0.55)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, sr * 0.55, sr * 0.32, 0, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function drawAlienShaker(ctx, x, y, rot) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+
+    // Cuerpo de la coctelera gravimétrica
+    const shGrad = ctx.createLinearGradient(-18, -36, 18, 36);
+    shGrad.addColorStop(0, '#d8b068');
+    shGrad.addColorStop(0.5, '#8c6832');
+    shGrad.addColorStop(1, '#4f3818');
+    ctx.fillStyle = shGrad;
+    ctx.beginPath();
+    ctx.moveTo(-12, -36);
+    ctx.lineTo(12, -36);
+    ctx.lineTo(18, -10);
+    ctx.lineTo(13, 34);
+    ctx.lineTo(-13, 34);
+    ctx.lineTo(-18, -10);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ventana central de plasma líquido
+    ctx.fillStyle = '#38f2ff';
+    ctx.beginPath();
+    ctx.ellipse(0, 6, 9, 16, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.beginPath();
+    ctx.ellipse(-3, 2, 2.5, 9, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawAlienBottle(ctx, x, y, rot) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+
+    // Botella facetada con licor ámbar-magenta
+    ctx.fillStyle = 'rgba(34, 48, 56, 0.85)';
+    ctx.beginPath();
+    ctx.moveTo(-7, -38);
+    ctx.lineTo(7, -38);
+    ctx.lineTo(9, -18);
+    ctx.lineTo(20, -4);
+    ctx.lineTo(16, 32);
+    ctx.lineTo(-16, 32);
+    ctx.lineTo(-20, -4);
+    ctx.lineTo(-9, -18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(180, 230, 240, 0.45)';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    // Líquido bioluminiscente interior
+    const liq = ctx.createLinearGradient(0, -4, 0, 30);
+    liq.addColorStop(0, '#ff6ec7');
+    liq.addColorStop(1, '#9d2b8a');
+    ctx.fillStyle = liq;
+    ctx.beginPath();
+    ctx.moveTo(-17, 2);
+    ctx.lineTo(17, 2);
+    ctx.lineTo(14, 29);
+    ctx.lineTo(-14, 29);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBarClothAndGlass(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    // Paño editorial doblado
+    ctx.fillStyle = '#d8cfc0';
+    ctx.beginPath();
+    ctx.moveTo(-18, -8);
+    ctx.quadraticCurveTo(0, -14, 20, -6);
+    ctx.lineTo(16, 22);
+    ctx.quadraticCurveTo(0, 16, -16, 24);
+    ctx.closePath();
+    ctx.fill();
+
+    // Copa cónica traslúcida sobre el paño
+    ctx.fillStyle = 'rgba(195, 245, 255, 0.28)';
+    ctx.strokeStyle = 'rgba(220, 250, 255, 0.72)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-14, -36);
+    ctx.lineTo(14, -36);
+    ctx.lineTo(3, -12);
+    ctx.lineTo(-3, -12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 3. PERSONAJE 2: EL XYLARIANI (ENTIDAD CRISTALINA SILÍCEA CON NÚCLEO FRACTAL)
+  // =========================================================================
+  function drawXylarianiFull(ctx, cx, cy, scale) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    // Aura de refracción ambiental bajo la figura cristalina
+    const aura = ctx.createRadialGradient(0, 20, 20, 0, 40, 260);
+    aura.addColorStop(0.0, 'rgba(72, 232, 255, 0.16)');
+    aura.addColorStop(0.55, 'rgba(138, 92, 246, 0.08)');
+    aura.addColorStop(1.0, 'rgba(72, 232, 255, 0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(0, 30, 260, 0, TAU);
+    ctx.fill();
+
+    // -----------------------------------------------------------------------
+    // A. EXTREMIDADES INFERIORES DE CUARZO FACETADO (ASIMETRÍA ELEGANTE)
+    // -----------------------------------------------------------------------
+    // Pierna izquierda (retrasa el peso, articulación prismática)
+    drawCrystalLimb(ctx, [
+      { x: -24, y: 112 },
+      { x: -48, y: 238 },
+      { x: -58, y: 382 }
+    ], [24, 17, 10], false);
+
+    // Pierna derecha (adelantada, refractando luz cian-amatista)
+    drawCrystalLimb(ctx, [
+      { x: 24, y: 112 },
+      { x: 38, y: 244 },
+      { x: 46, y: 392 }
+    ], [25, 18, 10], true);
+
+    // -----------------------------------------------------------------------
+    // B. TORSO SILÍCEO FACETADO Y RED NEURONAL FRACTAL INTERNA
+    // -----------------------------------------------------------------------
+    ctx.save();
+    // Polígono complejo del torso de cuarzo estilizado
+    const torsoPath = new Path2D();
+    torsoPath.moveTo(0, -68);
+    torsoPath.lineTo(-56, -42);
+    torsoPath.lineTo(-42, 48);
+    torsoPath.lineTo(-28, 118);
+    torsoPath.lineTo(0, 134);
+    torsoPath.lineTo(28, 118);
+    torsoPath.lineTo(42, 48);
+    torsoPath.lineTo(56, -42);
+    torsoPath.closePath();
+
+    // Relleno translúcido base con gradiente mineral
+    const silGrad = ctx.createLinearGradient(-56, -68, 56, 134);
+    silGrad.addColorStop(0.0, 'rgba(145, 236, 252, 0.42)');
+    silGrad.addColorStop(0.45, 'rgba(78, 168, 212, 0.34)');
+    silGrad.addColorStop(0.85, 'rgba(116, 86, 188, 0.44)');
+    silGrad.addColorStop(1.0, 'rgba(54, 96, 142, 0.55)');
+    ctx.fillStyle = silGrad;
+    ctx.fill(torsoPath);
+
+    // Máscara de recorte para dibujar el sistema interno fractal luminoso
+    ctx.save();
+    ctx.clip(torsoPath);
+
+    // Núcleo energético esternal (corazón fractal)
+    const heartGlow = ctx.createRadialGradient(0, -6, 4, 0, -6, 74);
+    heartGlow.addColorStop(0.0, '#ffffff');
+    heartGlow.addColorStop(0.22, '#6ef7ff');
+    heartGlow.addColorStop(0.6, 'rgba(155, 102, 255, 0.48)');
+    heartGlow.addColorStop(1.0, 'rgba(72, 210, 255, 0)');
+    ctx.fillStyle = heartGlow;
+    ctx.fillRect(-70, -80, 140, 220);
+
+    // Red de fractales nerviosos luminosos
+    ctx.strokeStyle = 'rgba(210, 252, 255, 0.85)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(0, -65); ctx.lineTo(0, 128);
+    ctx.moveTo(0, -12); ctx.lineTo(-46, -36);
+    ctx.moveTo(0, -12); ctx.lineTo(46, -36);
+    ctx.moveTo(0, 18); ctx.lineTo(-34, 46);
+    ctx.moveTo(0, 18); ctx.lineTo(34, 46);
+    ctx.moveTo(0, 58); ctx.lineTo(-22, 110);
+    ctx.moveTo(0, 58); ctx.lineTo(22, 110);
+    ctx.stroke();
+
+    // Nodos fractales geométricos
+    const nodes = [[0, -12, 7], [-24, -24, 3.5], [24, -24, 3.5], [0, 36, 4.5], [-18, 52, 3], [18, 52, 3]];
+    ctx.fillStyle = '#ffffff';
+    for (const [nx, ny, nr] of nodes) {
+      ctx.beginPath();
+      ctx.moveTo(nx, ny - nr);
+      ctx.lineTo(nx + nr, ny);
+      ctx.lineTo(nx, ny + nr);
+      ctx.lineTo(nx - nr, ny);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Planos de facetado interno con distintos índices de refracción
+    drawFacetTriangle(ctx, [0, -68], [-56, -42], [0, -12], 'rgba(215, 250, 255, 0.24)');
+    drawFacetTriangle(ctx, [0, -68], [56, -42], [0, -12], 'rgba(112, 208, 242, 0.14)');
+    drawFacetTriangle(ctx, [-56, -42], [-42, 48], [0, -12], 'rgba(165, 122, 248, 0.18)');
+    drawFacetTriangle(ctx, [56, -42], [42, 48], [0, -12], 'rgba(56, 134, 184, 0.24)');
+    drawFacetTriangle(ctx, [-42, 48], [0, 134], [0, -12], 'rgba(130, 232, 250, 0.16)');
+    drawFacetTriangle(ctx, [42, 48], [0, 134], [0, -12], 'rgba(84, 72, 156, 0.28)');
+    ctx.restore();
+
+    // Aristas cristalinas especulares del torso
+    ctx.strokeStyle = 'rgba(218, 252, 255, 0.78)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke(torsoPath);
+
+    ctx.strokeStyle = 'rgba(218, 252, 255, 0.36)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(-56, -42); ctx.lineTo(0, -12); ctx.lineTo(56, -42);
+    ctx.moveTo(-42, 48); ctx.lineTo(0, -12); ctx.lineTo(42, 48);
+    ctx.stroke();
+    ctx.restore();
+
+    // -----------------------------------------------------------------------
+    // C. ESTOLA CEREMONIAL DE SEDA ESTELAR Y CINTURÓN DE CONTENCIÓN GRAVITACIONAL
+    // -----------------------------------------------------------------------
+    // Paño editorial oscuro con ribete dorado que contrasta con el cuerpo translúcido
+    ctx.save();
+    const sashGrad = ctx.createLinearGradient(-44, 52, 44, 165);
+    sashGrad.addColorStop(0, '#23202e');
+    sashGrad.addColorStop(1, '#14121c');
+    ctx.fillStyle = sashGrad;
+    ctx.beginPath();
+    ctx.moveTo(-36, 74);
+    ctx.lineTo(36, 74);
+    ctx.lineTo(44, 108);
+    ctx.lineTo(14, 186);
+    ctx.lineTo(0, 164);
+    ctx.lineTo(-14, 186);
+    ctx.lineTo(-44, 108);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#d9b26f';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // Broche orbital dorado en la cintura
+    ctx.fillStyle = '#e5be75';
+    ctx.beginPath();
+    ctx.moveTo(0, 78); ctx.lineTo(14, 92); ctx.lineTo(0, 106); ctx.lineTo(-14, 92);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5cf2ff';
+    ctx.beginPath();
+    ctx.arc(0, 92, 4.5, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // -----------------------------------------------------------------------
+    // D. BRAZOS CRISTALINOS ARTICULADOS Y COPA DE XENO-NÉCTAR
+    // -----------------------------------------------------------------------
+    // Brazo izquierdo relajado con dedos prismáticos
+    drawCrystalLimb(ctx, [
+      { x: -56, y: -38 },
+      { x: -94, y: 42 },
+      { x: -106, y: 126 }
+    ], [16, 12, 7], false);
+    drawCrystalHand(ctx, -106, 126, 0.25, false);
+
+    // Brazo derecho elevado sosteniendo una copa con líquido radiactivo cian
+    drawCrystalLimb(ctx, [
+      { x: 56, y: -38 },
+      { x: 96, y: 26 },
+      { x: 118, y: -36 }
+    ], [16, 12, 7.5], true);
+    drawCrystalHand(ctx, 118, -36, -0.35, true);
+    drawXylarianiGoblet(ctx, 124, -64);
+
+    // -----------------------------------------------------------------------
+    // E. CABEZA CRISTALINA FACETADA, CORONA DE CUARZO Y OJOS DE PLASMA
+    // -----------------------------------------------------------------------
+    drawXylarianiHead(ctx, 0, -142, 1.0);
+
+    ctx.restore();
+  }
+
+  function drawFacetTriangle(ctx, p1, p2, p3, fillStyle) {
+    ctx.fillStyle = fillStyle;
+    ctx.beginPath();
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
+    ctx.lineTo(p3[0], p3[1]);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawCrystalLimb(ctx, joints, widths, highlight) {
+    ctx.save();
+    for (let i = 0; i < joints.length - 1; i++) {
+      const a = joints[i];
+      const b = joints[i + 1];
+      const wa = widths[i];
+      const wb = widths[i + 1];
+      const ang = Math.atan2(b.y - a.y, b.x - a.x);
+      const nx = -Math.sin(ang);
+      const ny = Math.cos(ang);
+
+      const p1 = [a.x + nx * wa, a.y + ny * wa];
+      const p2 = [b.x + nx * wb, b.y + ny * wb];
+      const p3 = [b.x - nx * wb, b.y - ny * wb];
+      const p4 = [a.x - nx * wa, a.y - ny * wa];
+
+      const g = ctx.createLinearGradient(p1[0], p1[1], p3[0], p3[1]);
+      g.addColorStop(0, highlight ? 'rgba(175, 245, 255, 0.56)' : 'rgba(130, 215, 240, 0.42)');
+      g.addColorStop(0.5, 'rgba(82, 152, 204, 0.36)');
+      g.addColorStop(1, 'rgba(118, 86, 186, 0.52)');
+
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(p1[0], p1[1]);
+      ctx.lineTo(p2[0], p2[1]);
+      ctx.lineTo(p3[0], p3[1]);
+      ctx.lineTo(p4[0], p4[1]);
+      ctx.closePath();
+      ctx.fill();
+
+      // Filamento energético interno del miembro
+      ctx.strokeStyle = 'rgba(215, 252, 255, 0.72)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+
+      // Aristas cristalinas
+      ctx.strokeStyle = 'rgba(210, 248, 255, 0.65)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]);
+      ctx.lineTo(p3[0], p3[1]); ctx.lineTo(p4[0], p4[1]);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Articulación prismática flotante en el codo/rodilla
+      if (i > 0) {
+        ctx.fillStyle = '#bff8ff';
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y - wa * 0.9);
+        ctx.lineTo(a.x + wa * 0.9, a.y);
+        ctx.lineTo(a.x, a.y + wa * 0.9);
+        ctx.lineTo(a.x - wa * 0.9, a.y);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawCrystalHand(ctx, x, y, rot, holding) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    const fingers = holding
+      ? [[-8, -4, -14, -22], [0, -6, -4, -26], [8, -4, 6, -22]]
+      : [[-6, 4, -10, 22], [0, 6, 0, 26], [6, 4, 10, 22]];
+    ctx.strokeStyle = 'rgba(195, 248, 255, 0.85)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    for (const [x0, y0, x1, y1] of fingers) {
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawXylarianiGoblet(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    // Vaso cilíndrico de laboratorio estelar con líquido radiactivo cian
+    ctx.fillStyle = 'rgba(205, 248, 255, 0.22)';
+    ctx.strokeStyle = 'rgba(220, 252, 255, 0.82)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-14, -26, 28, 52, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // Líquido cian luminoso suspendido dentro
+    const g = ctx.createLinearGradient(0, -10, 0, 22);
+    g.addColorStop(0, '#9effff');
+    g.addColorStop(1, '#18c8e0');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(-11, -10, 22, 33, 2);
+    ctx.fill();
+
+    // Burbujas energéticas
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-4, 4, 2, 0, TAU);
+    ctx.arc(5, -2, 1.5, 0, TAU);
+    ctx.arc(2, 12, 2.2, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawXylarianiHead(ctx, hx, hy, scale) {
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.scale(scale, scale);
+
+    // Cuello prismático de conexión
+    ctx.fillStyle = 'rgba(112, 206, 238, 0.45)';
+    ctx.beginPath();
+    ctx.moveTo(-16, 74);
+    ctx.lineTo(-12, 34);
+    ctx.lineTo(12, 34);
+    ctx.lineTo(16, 74);
+    ctx.closePath();
+    ctx.fill();
+
+    // Corona de agujas de cuarzo posteriores
+    const spires = [
+      [-34, -28, -56, -86, -16, -48],
+      [-14, -46, -24, -112, 0, -56],
+      [14, -46, 24, -112, 0, -56],
+      [34, -28, 56, -86, 16, -48]
+    ];
+    for (const [x1, y1, tx, ty, x2, y2] of spires) {
+      const spGrad = ctx.createLinearGradient(tx, ty, (x1 + x2) * 0.5, y1);
+      spGrad.addColorStop(0, 'rgba(220, 252, 255, 0.85)');
+      spGrad.addColorStop(0.6, 'rgba(105, 198, 238, 0.48)');
+      spGrad.addColorStop(1, 'rgba(132, 92, 212, 0.55)');
+      ctx.fillStyle = spGrad;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(tx, ty);
+      ctx.lineTo(x2, y2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(225, 254, 255, 0.72)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    // Estructura craneal hexagonal alargada y aristada
+    const headPoly = new Path2D();
+    headPoly.moveTo(0, -64);
+    headPoly.lineTo(-42, -32);
+    headPoly.lineTo(-34, 18);
+    headPoly.lineTo(0, 44);
+    headPoly.lineTo(34, 18);
+    headPoly.lineTo(42, -32);
+    headPoly.closePath();
+
+    const hGrad = ctx.createLinearGradient(-42, -64, 42, 44);
+    hGrad.addColorStop(0.0, 'rgba(185, 248, 255, 0.64)');
+    hGrad.addColorStop(0.45, 'rgba(92, 182, 224, 0.44)');
+    hGrad.addColorStop(1.0, 'rgba(116, 82, 184, 0.62)');
+    ctx.fillStyle = hGrad;
+    ctx.fill(headPoly);
+
+    // Facetas faciales internas
+    ctx.save();
+    ctx.clip(headPoly);
+    drawFacetTriangle(ctx, [0, -64], [-42, -32], [0, -10], 'rgba(235, 254, 255, 0.34)');
+    drawFacetTriangle(ctx, [0, -64], [42, -32], [0, -10], 'rgba(128, 218, 248, 0.18)');
+    drawFacetTriangle(ctx, [-42, -32], [-34, 18], [0, -10], 'rgba(162, 128, 248, 0.22)');
+    drawFacetTriangle(ctx, [42, -32], [34, 18], [0, -10], 'rgba(62, 134, 182, 0.28)');
+    drawFacetTriangle(ctx, [-34, 18], [0, 44], [0, -10], 'rgba(155, 240, 255, 0.24)');
+    drawFacetTriangle(ctx, [34, 18], [0, 44], [0, -10], 'rgba(86, 68, 152, 0.32)');
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(225, 254, 255, 0.88)';
+    ctx.lineWidth = 1.6;
+    ctx.stroke(headPoly);
+
+    // Órganos sensoriales ópticos: 3 hendiduras de plasma luminoso (tríada ocular)
+    const eyes = [
+      { x: -18, y: -12, w: 12, h: 4.5, rot: 0.22 },
+      { x: 18,  y: -12, w: 12, h: 4.5, rot: -0.22 },
+      { x: 0,   y: -28, w: 6,  h: 11,  rot: 0 }
+    ];
+    for (const e of eyes) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate(e.rot);
+      const eg = ctx.createRadialGradient(0, 0, 1, 0, 0, Math.max(e.w, e.h) * 1.4);
+      eg.addColorStop(0, '#ffffff');
+      eg.addColorStop(0.45, '#68f8ff');
+      eg.addColorStop(1, 'rgba(104, 248, 255, 0)');
+      ctx.fillStyle = eg;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, e.w, e.h, 0, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Hendidura bucal geométrica resonante
+    ctx.strokeStyle = 'rgba(215, 252, 255, 0.85)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(-12, 16);
+    ctx.lineTo(0, 20);
+    ctx.lineTo(12, 16);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 4. VISTAS AMPLIADAS (CALLOUTS ANATÓMICOS Y DE MATERIALES)
+  // =========================================================================
+  function renderCallouts(ctx) {
+    // Callout 1: Cabeza del Cephalon ampliada
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(697, 137, 226, 241, 6);
+    ctx.clip();
+    drawCephalonHead(ctx, 810, 322, 1.38);
+    ctx.restore();
+
+    // Callout 2: Detalle ampliado de tentáculo articulado, ventosas y textura dérmica
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(697, 417, 226, 216, 6);
+    ctx.clip();
+    drawArticulatedTentacle(ctx, {
+      pts: [
+        { x: 715, y: 615, r: 34 },
+        { x: 765, y: 550, r: 27 },
+        { x: 825, y: 505, r: 20 },
+        { x: 885, y: 472, r: 12 },
+        { x: 912, y: 446, r: 5 }
+      ],
+      colBase: '#27434b',
+      colMid: '#436e7a',
+      colLight: '#6ca1ad',
+      suckerCol: '#e0987e',
+      suckerSide: 1,
+      suckerCount: 8
+    });
+    ctx.restore();
+
+    // Callout 3: Cabeza y corona cristalina del Xylariani ampliada
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(1637, 137, 226, 241, 6);
+    ctx.clip();
+    drawXylarianiHead(ctx, 1750, 305, 1.55);
+    ctx.restore();
+
+    // Callout 4: Detalle ampliado del núcleo fractal interno y refracción silícea
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(1637, 417, 226, 216, 6);
+    ctx.clip();
+    ctx.translate(1750, 520);
+    ctx.scale(1.65, 1.65);
+    const g = ctx.createRadialGradient(0, 0, 4, 0, 0, 62);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.28, '#6ef7ff');
+    g.addColorStop(0.68, 'rgba(155, 102, 255, 0.5)');
+    g.addColorStop(1, 'rgba(72, 210, 255, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, 62, 0, TAU);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(225, 254, 255, 0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -45); ctx.lineTo(0, 45);
+    ctx.moveTo(-42, -22); ctx.lineTo(42, 22);
+    ctx.moveTo(42, -22); ctx.lineTo(-42, 22);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(218, 252, 255, 0.65)';
+    ctx.strokeRect(-32, -32, 64, 64);
+    ctx.restore();
+
+    // Líneas guía finas conectando los personajes con sus recuadros de detalle
+    ctx.save();
+    ctx.strokeStyle = 'rgba(218, 198, 162, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    // Guías Cephalon
+    ctx.beginPath();
+    ctx.moveTo(495, 365); ctx.lineTo(695, 260);
+    ctx.moveTo(615, 515); ctx.lineTo(695, 520);
+    // Guías Xylariani
+    ctx.moveTo(1385, 370); ctx.lineTo(1635, 260);
+    ctx.moveTo(1380, 505); ctx.lineTo(1635, 520);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // =========================================================================
+  // 5. RENDERIZADO DE LA LÁMINA COMPLETA
+  // =========================================================================
+  function renderConceptSheet() {
+    renderStudioBackdrop(ctx);
+    drawCephalonFull(ctx, 430, 520, 1.0);
+    drawXylarianiFull(ctx, 1340, 525, 1.0);
+    renderCallouts(ctx);
+  }
+
+  renderConceptSheet();
+  window.addEventListener('resize', renderConceptSheet);
+})();
+</script>
+</body>
+</html>

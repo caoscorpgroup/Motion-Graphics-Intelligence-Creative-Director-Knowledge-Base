@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La Ciudad del Árbol Eterno — Ilustración Procedural 2.5D</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #0b0e17;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    #hud {
+      position: fixed;
+      bottom: 18px;
+      left: 22px;
+      color: rgba(235, 224, 200, 0.72);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
+  </style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="hud">La Ciudad del Árbol Eterno · Semilla #7492 · Motor Procedural 2.5D</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ============================================================================
+  // 1. NÚCLEO MATEMÁTICO Y SEMILLA REPRODUCIBLE (PRNG)
+  // ============================================================================
+  class SeededRandom {
+    constructor(seed = 7492) {
+      this.seed = seed % 2147483647;
+      if (this.seed <= 0) this.seed += 2147483646;
+    }
+    next() {
+      this.seed = (this.seed * 16807) % 2147483647;
+      return (this.seed - 1) / 2147483646;
+    }
+    range(min, max) {
+      return min + this.next() * (max - min);
+    }
+    int(min, max) {
+      return Math.floor(this.range(min, max + 1));
+    }
+    pick(arr) {
+      return arr[Math.floor(this.next() * arr.length)];
+    }
+  }
+
+  // ============================================================================
+  // 2. DIRECCIÓN ARTÍSTICA Y PALETA DE MATERIALES
+  // ============================================================================
+  const PALETTE = {
+    skyTop: '#0d1528',
+    skyMid: '#243454',
+    skyHorizon: '#6e5c6b',
+    sunGlow: '#f6b979',
+
+    farMountain: '#1b263d',
+    farMountainLight: '#2e3e5e',
+    midMountain: '#141d30',
+    midMountainLight: '#273552',
+
+    abyssDark: '#070a12',
+    mistCool: 'rgba(130, 158, 198, 0.14)',
+    mistWarm: 'rgba(245, 185, 120, 0.12)',
+
+    barkShadow: '#1c1415',
+    barkMid: '#362624',
+    barkLight: '#5c4138',
+    barkHighlight: '#8f6753',
+
+    foliageDeep: '#132a28',
+    foliageMid: '#1f473e',
+    foliageLight: '#366e56',
+    foliageSun: '#689c68',
+    blossomGold: '#e8a856',
+
+    stoneShadow: '#232836',
+    stoneMid: '#3b4254',
+    stoneLight: '#5a637a',
+    roofSlate: '#1e2c3d',
+    roofCopper: '#2d5a58',
+    roofTerracotta: '#6e3b36',
+    woodTimber: '#4a3127',
+    windowWarm: '#ffcf75',
+    windowGlow: 'rgba(255, 196, 92, 0.45)',
+
+    waterBase: '#4da3b8',
+    waterFoam: '#d9f4fa'
+  };
+
+  // ============================================================================
+  // 3. GENERADORES PROCEDURALES (ENTORNO, ÁRBOL Y ARQUITECTURA)
+  // ============================================================================
+  class WorldGenerator {
+    constructor(seed) {
+      this.rng = new SeededRandom(seed);
+      this.W = 1920;
+      this.H = 1080;
+    }
+
+    build() {
+      const world = {
+        stars: this.generateStars(160),
+        farMountains: this.generateMountainRange(0.56, 170, 7, 1.0),
+        midMountains: this.generateMountainRange(0.66, 220, 6, 1.3),
+        clouds: this.generateClouds(14),
+        crags: this.generateAbyssCrags(),
+        tree: this.generateEternalTree(),
+        architecture: [],
+        bridges: [],
+        waterfalls: [],
+        fireflies: this.generateFireflies(95),
+        fallingLeaves: this.generateFallingLeaves(45),
+        foregroundVines: this.generateForegroundFraming()
+      };
+
+      this.populateCityOnTree(world);
+      return world;
+    }
+
+    generateStars(count) {
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        list.push({
+          x: this.rng.range(0, this.W),
+          y: this.rng.range(0, this.H * 0.48),
+          r: this.rng.range(0.6, 1.8),
+          phase: this.rng.range(0, Math.PI * 2),
+          speed: this.rng.range(0.8, 2.2)
+        });
+      }
+      return list;
+    }
+
+    generateMountainRange(baseYRatio, amplitude, peaks, ruggedness) {
+      const points = [];
+      const ridges = [];
+      const step = this.W / peaks;
+      let prevX = -100;
+      let prevY = this.H * baseYRatio;
+      points.push({ x: prevX, y: prevY });
+
+      for (let i = 0; i <= peaks + 1; i++) {
+        const px = i * step + this.rng.range(-step * 0.25, step * 0.25);
+        const py = this.H * baseYRatio - this.rng.range(amplitude * 0.35, amplitude);
+
+        // Subdivisión orgánica entre picos
+        const subSteps = 6;
+        for (let s = 1; s <= subSteps; s++) {
+          const t = s / subSteps;
+          const ix = prevX + (px - prevX) * t;
+          const jag = Math.sin(t * Math.PI) * this.rng.range(-22, 22) * ruggedness;
+          const iy = prevY + (py - prevY) * t + jag;
+          points.push({ x: ix, y: iy });
+        }
+
+        // Arista de luz/sombra interna en cada cumbre
+        ridges.push({
+          topX: px,
+          topY: py,
+          footX: px + this.rng.range(35, 95),
+          footY: py + this.rng.range(120, 260),
+          midX: px + this.rng.range(-15, 25),
+          midY: py + this.rng.range(60, 120)
+        });
+
+        prevX = px;
+        prevY = py;
+      }
+
+      return { points, ridges };
+    }
+
+    generateClouds(count) {
+      const clouds = [];
+      for (let i = 0; i < count; i++) {
+        const puffs = [];
+        const puffCount = this.rng.int(4, 8);
+        let cx = 0;
+        for (let p = 0; p < puffCount; p++) {
+          puffs.push({
+            dx: cx,
+            dy: this.rng.range(-14, 10),
+            rx: this.rng.range(45, 110),
+            ry: this.rng.range(16, 36)
+          });
+          cx += this.rng.range(35, 75);
+        }
+        clouds.push({
+          x: this.rng.range(-200, this.W + 200),
+          y: this.rng.range(this.H * 0.24, this.H * 0.64),
+          speed: this.rng.range(4, 14),
+          layer: i % 2 === 0 ? 0.22 : 0.42, // Paralaje
+          alpha: this.rng.range(0.18, 0.45),
+          puffs
+        });
+      }
+      return clouds;
+    }
+
+    generateAbyssCrags() {
+      // Peñascos suspendidos sobre el abismo que sirven de anclaje a raíces y torres
+      return [
+        { x: 460, y: 740, w: 230, h: 290, depth: 0.72 },
+        { x: 1440, y: 710, w: 250, h: 310, depth: 0.75 },
+        { x: 960, y: 780, w: 380, h: 340, depth: 0.85 }
+      ];
+    }
+
+    // ------------------------------------------------------------------------
+    // GENERADOR DEL ÁRBOL MONUMENTAL (TRONCO, RAÍCES, RAMAS Y COPAS)
+    // ------------------------------------------------------------------------
+    generateEternalTree() {
+      const cx = this.W * 0.5;
+      const baseY = this.H * 0.84;
+
+      // Silueta orgánica del tronco principal con curvas Bézier y contrafuertes
+      const trunk = {
+        cx,
+        baseY,
+        topY: this.H * 0.36,
+        barkStriations: []
+      };
+
+      for (let i = 0; i < 34; i++) {
+        const offsetRatio = this.rng.range(-0.82, 0.82);
+        trunk.barkStriations.push({
+          offsetRatio,
+          waveAmp: this.rng.range(6, 18),
+          waveFreq: this.rng.range(1.5, 3.2),
+          width: this.rng.range(1.5, 4.5),
+          tone: this.rng.next() > 0.45 ? PALETTE.barkShadow : PALETTE.barkHighlight
+        });
+      }
+
+      // Raíces monumentales abrazando los peñascos del abismo
+      const roots = [
+        {
+          pts: [
+            { x: cx - 75, y: baseY - 60 },
+            { x: cx - 220, y: baseY + 10 },
+            { x: 490, y: 740 },
+            { x: 410, y: 920 }
+          ],
+          wStart: 46, wEnd: 8
+        },
+        {
+          pts: [
+            { x: cx - 40, y: baseY - 30 },
+            { x: cx - 150, y: baseY + 85 },
+            { x: 760, y: 940 },
+            { x: 710, y: 1120 }
+          ],
+          wStart: 38, wEnd: 10
+        },
+        {
+          pts: [
+            { x: cx + 75, y: baseY - 55 },
+            { x: cx + 250, y: baseY - 10 },
+            { x: 1410, y: 715 },
+            { x: 1510, y: 930 }
+          ],
+          wStart: 48, wEnd: 9
+        },
+        {
+          pts: [
+            { x: cx + 35, y: baseY - 25 },
+            { x: cx + 160, y: baseY + 95 },
+            { x: 1160, y: 960 },
+            { x: 1220, y: 1120 }
+          ],
+          wStart: 36, wEnd: 10
+        }
+      ];
+
+      // Ramas principales y secundarias con física de oscilación
+      const branches = [];
+      const canopies = [];
+
+      const branchSpecs = [
+        // Rama maestra izquierda baja
+        { x0: cx - 55, y0: 540, cx1: 680, cy1: 510, x1: 440, y1: 465, w0: 34, w1: 9, sway: 5.5, phase: 0.2 },
+        // Rama maestra derecha baja
+        { x0: cx + 55, y0: 525, cx1: 1230, cy1: 490, x1: 1490, y1: 445, w0: 36, w1: 9, sway: 6.0, phase: 1.4 },
+        // Rama maestra izquierda media
+        { x0: cx - 45, y0: 445, cx1: 710, cy1: 375, x1: 490, y1: 315, w0: 28, w1: 7, sway: 7.5, phase: 2.1 },
+        // Rama maestra derecha media
+        { x0: cx + 45, y0: 430, cx1: 1210, cy1: 355, x1: 1440, y1: 295, w0: 28, w1: 7, sway: 7.2, phase: 0.8 },
+        // Copa central corona
+        { x0: cx - 18, y0: 390, cx1: 870, cy1: 270, x1: 780, y1: 185, w0: 22, w1: 6, sway: 8.5, phase: 1.9 },
+        { x0: cx + 18, y0: 390, cx1: 1050, cy1: 265, x1: 1150, y1: 180, w0: 22, w1: 6, sway: 8.5, phase: 2.7 },
+        { x0: cx, y0: 380, cx1: 955, cy1: 240, x1: 965, y1: 145, w0: 24, w1: 6, sway: 9.0, phase: 0.5 }
+      ];
+
+      branchSpecs.forEach((b, idx) => {
+        branches.push(b);
+
+        // Sub-ramas y racimos de follaje al extremo y en puntos intermedios
+        const clusters = [
+          { t: 0.65, rx: 115, ry: 58 },
+          { t: 1.0, rx: 145, ry: 72 }
+        ];
+
+        clusters.forEach((cl, cIdx) => {
+          const u = 1 - cl.t;
+          const bx = u * u * b.x0 + 2 * u * cl.t * b.cx1 + cl.t * cl.t * b.x1;
+          const by = u * u * b.y0 + 2 * u * cl.t * b.cy1 + cl.t * cl.t * b.y1;
+
+          const leafBlobs = [];
+          const blobCount = this.rng.int(9, 14);
+          for (let k = 0; k < blobCount; k++) {
+            const ang = (k / blobCount) * Math.PI * 2 + this.rng.range(-0.2, 0.2);
+            const dist = this.rng.range(0.15, 0.85);
+            leafBlobs.push({
+              ox: Math.cos(ang) * cl.rx * dist,
+              oy: Math.sin(ang) * cl.ry * dist * 0.75,
+              r: this.rng.range(28, 56),
+              layer: Math.sin(ang) // -1 arriba (luz), +1 abajo (sombra)
+            });
+          }
+
+          // Enredaderas y flores colgantes bajo la copa
+          const hangingVines = [];
+          const vineCount = this.rng.int(4, 8);
+          for (let v = 0; v < vineCount; v++) {
+            hangingVines.push({
+              ox: this.rng.range(-cl.rx * 0.75, cl.rx * 0.75),
+              oy: this.rng.range(10, cl.ry * 0.5),
+              len: this.rng.range(28, 78),
+              hasBlossom: this.rng.next() > 0.35,
+              phase: this.rng.range(0, Math.PI * 2)
+            });
+          }
+
+          canopies.push({
+            x: bx,
+            y: by,
+            sway: b.sway * (0.8 + cl.t * 0.4),
+            phase: b.phase + cIdx * 0.7 + idx * 0.3,
+            leafBlobs,
+            hangingVines
+          });
+        });
+      });
+
+      return { trunk, roots, branches, canopies };
+    }
+
+    // ------------------------------------------------------------------------
+    // GENERADOR DE ARQUITECTURA INTEGRADA, PUENTES Y CASCADAS
+    // ------------------------------------------------------------------------
+    populateCityOnTree(world) {
+      const cx = this.W * 0.5;
+
+      // Plataformas y distritos arquitectónicos anclados al árbol y peñascos
+      const districts = [
+        // Ciudadela central abrazando el tronco
+        { x: cx - 105, y: 695, w: 210, h: 28, tier: 'central', count: 5 },
+        { x: cx - 82, y: 605, w: 164, h: 22, tier: 'central', count: 4 },
+        // Barrio suspendido rama izquierda
+        { x: 520, y: 500, w: 195, h: 24, tier: 'branchL', count: 4 },
+        // Barrio suspendido rama derecha
+        { x: 1215, y: 482, w: 205, h: 24, tier: 'branchR', count: 4 },
+        // Santuario acantilado izquierdo
+        { x: 375, y: 735, w: 185, h: 26, tier: 'cragL', count: 4 },
+        // Santuario acantilado derecho
+        { x: 1350, y: 705, w: 195, h: 26, tier: 'cragR', count: 4 },
+        // Mirador alto en copa izquierda
+        { x: 585, y: 345, w: 125, h: 18, tier: 'highL', count: 3 },
+        // Mirador alto en copa derecha
+        { x: 1210, y: 330, w: 130, h: 18, tier: 'highR', count: 3 }
+      ];
+
+      districts.forEach((d, dIdx) => {
+        const buildings = [];
+        let cursorX = d.x + 12;
+        const usableW = d.w - 24;
+        const slotW = usableW / d.count;
+
+        for (let i = 0; i < d.count; i++) {
+          const bw = slotW * this.rng.range(0.76, 0.96);
+          const isSpire = (i === Math.floor(d.count / 2)) || this.rng.next() > 0.65;
+          const bh = isSpire ? this.rng.range(68, 118) : this.rng.range(38, 66);
+          const roofType = isSpire ? 'spire' : this.rng.pick(['gable', 'dome', 'pagoda']);
+          const roofColor = this.rng.pick([PALETTE.roofSlate, PALETTE.roofCopper, PALETTE.roofTerracotta]);
+
+          // Ventanas iluminadas individualmente
+          const windows = [];
+          const rows = Math.floor(bh / 18);
+          const cols = Math.max(1, Math.floor(bw / 14));
+          for (let r = 1; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              if (this.rng.next() > 0.35) {
+                windows.push({
+                  rx: (c + 0.5) / cols,
+                  ry: r / rows,
+                  lit: this.rng.next() > 0.22,
+                  flickerSpeed: this.rng.range(1.5, 4.5),
+                  flickerPhase: this.rng.range(0, Math.PI * 2)
+                });
+              }
+            }
+          }
+
+          buildings.push({
+            x: cursorX + (slotW - bw) * 0.5,
+            y: d.y,
+            w: bw,
+            h: bh,
+            roofType,
+            roofColor,
+            hasBalcony: this.rng.next() > 0.45,
+            windows
+          });
+
+          cursorX += slotW;
+        }
+
+        world.architecture.push({
+          ...d,
+          swayAmp: d.tier.startsWith('high') ? 5.5 : d.tier.startsWith('branch') ? 3.5 : 0.4,
+          swayPhase: dIdx * 0.9,
+          buildings
+        });
+      });
+
+      // Puentes colgantes curvos conectando distritos
+      world.bridges = [
+        { x0: 555, y0: 735, x1: 855, y1: 695, sag: 34, hasPillars: true },
+        { x0: 1065, y0: 695, x1: 1355, y1: 705, sag: 32, hasPillars: true },
+        { x0: 710, y0: 502, x1: 885, y1: 605, sag: 28, hasPillars: false },
+        { x0: 1035, y0: 605, x1: 1220, y1: 484, sag: 28, hasPillars: false },
+        { x0: 705, y0: 348, x1: 895, y1: 410, sag: 22, hasPillars: false },
+        { x0: 1025, y0: 410, x1: 1215, y1: 332, sag: 22, hasPillars: false }
+      ];
+
+      // Cascadas cayendo desde jardines colgantes y peñascos hacia el abismo
+      world.waterfalls = [
+        { x: 525, y: 760, w: 16, h: 340, speed: 135, phase: 0.0 },
+        { x: 1410, y: 730, w: 18, h: 370, speed: 145, phase: 1.7 },
+        { x: 895, y: 722, w: 12, h: 370, speed: 120, phase: 3.1 },
+        { x: 1022, y: 722, w: 10, h: 370, speed: 115, phase: 4.4 }
+      ];
+    }
+
+    generateFireflies(count) {
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        list.push({
+          baseX: this.rng.range(360, 1560),
+          baseY: this.rng.range(160, 860),
+          orbitRx: this.rng.range(18, 65),
+          orbitRy: this.rng.range(12, 42),
+          speed: this.rng.range(0.35, 1.1),
+          phase: this.rng.range(0, Math.PI * 2),
+          size: this.rng.range(1.4, 3.2),
+          warm: this.rng.next() > 0.25
+        });
+      }
+      return list;
+    }
+
+    generateFallingLeaves(count) {
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        list.push({
+          x: this.rng.range(420, 1500),
+          y: this.rng.range(180, 950),
+          vx: this.rng.range(14, 32),
+          vy: this.rng.range(18, 42),
+          flutterSpeed: this.rng.range(2.0, 4.5),
+          phase: this.rng.range(0, Math.PI * 2),
+          size: this.rng.range(3.2, 5.5),
+          isGold: this.rng.next() > 0.35
+        });
+      }
+      return list;
+    }
+
+    generateForegroundFraming() {
+      // Siluetas oscuras en primer plano para enmarcar la escena (profundidad 2.5D)
+      return {
+        leftBranch: { x0: -40, y0: 140, cx: 140, cy: 190, x1: 270, y1: 285 },
+        rightBranch: { x0: 1960, y0: 110, cx: 1760, cy: 175, x1: 1630, y1: 260 },
+        vines: Array.from({ length: 14 }, (_, i) => ({
+          x: i < 7 ? this.rng.range(10, 240) : this.rng.range(1670, 1910),
+          topY: i < 7 ? this.rng.range(140, 260) : this.rng.range(115, 240),
+          len: this.rng.range(90, 240),
+          phase: this.rng.range(0, Math.PI * 2)
+        }))
+      };
+    }
+  }
+
+  // ============================================================================
+  // 4. MOTOR DE RENDERIZADO ARTÍSTICO (CAPAS, ILUMINACIÓN Y MATERIALES)
+  // ============================================================================
+  class SceneRenderer {
+    constructor(canvas, world) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.world = world;
+      this.time = 0;
+    }
+
+    render(dt) {
+      this.time += dt;
+      const ctx = this.ctx;
+      const W = this.canvas.width;
+      const H = this.canvas.height;
+
+      // Movimiento cinematográfico lento de cámara (respiración / aproximación)
+      const camZoom = 1.0 + Math.sin(this.time * 0.14) * 0.024 + 0.024;
+      const camPanX = Math.cos(this.time * 0.11) * 14;
+      const camPanY = Math.sin(this.time * 0.09) * 9;
+
+      ctx.save();
+      ctx.clearRect(0, 0, W, H);
+
+      // ----------------------------------------------------------------------
+      // PLANO 4: CIELO ATMOSFÉRICO Y RESPLANDOR SOLAR
+      // ----------------------------------------------------------------------
+      this.drawSkyAndStars(ctx, W, H);
+
+      // ----------------------------------------------------------------------
+      // PLANO 3: MONTAÑAS LEJANAS Y NUBES CON PARALAJE
+      // ----------------------------------------------------------------------
+      this.applyParallax(ctx, W, H, camZoom, camPanX * 0.25, camPanY * 0.25);
+      this.drawMountains(ctx, this.world.farMountains, PALETTE.farMountain, PALETTE.farMountainLight, H);
+      this.drawClouds(ctx, 0.22, dt, W);
+      ctx.restore();
+
+      ctx.save();
+      this.applyParallax(ctx, W, H, camZoom, camPanX * 0.45, camPanY * 0.45);
+      this.drawMountains(ctx, this.world.midMountains, PALETTE.midMountain, PALETTE.midMountainLight, H);
+      this.drawClouds(ctx, 0.42, dt, W);
+      this.drawAbyssMist(ctx, W, H, false);
+      ctx.restore();
+
+      // ----------------------------------------------------------------------
+      // PLANO 2: PEÑASCOS, ÁRBOL MONUMENTAL, ARQUITECTURA Y CASCADAS
+      // ----------------------------------------------------------------------
+      ctx.save();
+      this.applyParallax(ctx, W, H, camZoom, camPanX * 0.85, camPanY * 0.85);
+
+      this.drawAbyssCrags(ctx);
+      this.drawWaterfalls(ctx);
+      this.drawTreeRootsAndTrunk(ctx);
+      this.drawTreeBranches(ctx);
+      this.drawBridges(ctx);
+      this.drawCityDistricts(ctx);
+      this.drawTreeCanopies(ctx);
+      this.drawFireflies(ctx);
+      this.drawFallingLeaves(ctx, dt);
+      this.drawAbyssMist(ctx, W, H, true);
+
+      ctx.restore();
+
+      // ----------------------------------------------------------------------
+      // PLANO 1: PRIMER PLANO ENMARCADO (PARALAJE RÁPIDO)
+      // ----------------------------------------------------------------------
+      ctx.save();
+      this.applyParallax(ctx, W, H, 1.0 + (camZoom - 1.0) * 1.45, camPanX * 1.35, camPanY * 1.35);
+      this.drawForegroundFraming(ctx);
+      ctx.restore();
+    }
+
+    applyParallax(ctx, W, H, zoom, panX, panY) {
+      ctx.translate(W * 0.5 + panX, H * 0.5 + panY);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-W * 0.5, -H * 0.5);
+    }
+
+    drawSkyAndStars(ctx, W, H) {
+      const grad = ctx.createLinearGradient(0, 0, 0, H * 0.82);
+      grad.addColorStop(0.0, PALETTE.skyTop);
+      grad.addColorStop(0.48, PALETTE.skyMid);
+      grad.addColorStop(0.85, PALETTE.skyHorizon);
+      grad.addColorStop(1.0, PALETTE.abyssDark);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Halo solar cálido detrás de la corona del árbol
+      const sunGrad = ctx.createRadialGradient(W * 0.5, H * 0.44, 30, W * 0.5, H * 0.44, 580);
+      sunGrad.addColorStop(0, 'rgba(255, 206, 138, 0.36)');
+      sunGrad.addColorStop(0.45, 'rgba(235, 148, 102, 0.14)');
+      sunGrad.addColorStop(1, 'rgba(13, 21, 40, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Estrellas titilantes
+      for (const s of this.world.stars) {
+        const alpha = 0.25 + 0.65 * (0.5 + 0.5 * Math.sin(this.time * s.speed + s.phase));
+        ctx.fillStyle = `rgba(255, 248, 232, ${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    drawMountains(ctx, range, shadowCol, lightCol, H) {
+      const pts = range.points;
+      if (!pts.length) return;
+
+      ctx.fillStyle = shadowCol;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, H + 80);
+      for (const p of pts) ctx.lineTo(p.x, p.y);
+      ctx.lineTo(pts[pts.length - 1].x, H + 80);
+      ctx.closePath();
+      ctx.fill();
+
+      // Facetas iluminadas por el sol lateral derecho
+      ctx.fillStyle = lightCol;
+      for (const r of range.ridges) {
+        ctx.beginPath();
+        ctx.moveTo(r.topX, r.topY);
+        ctx.lineTo(r.footX, r.footY);
+        ctx.lineTo(r.midX, r.midY);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    drawClouds(ctx, targetLayer, dt, W) {
+      for (const c of this.world.clouds) {
+        if (c.layer !== targetLayer) continue;
+        c.x += c.speed * dt;
+        if (c.x > W + 320) c.x = -380;
+
+        for (const p of c.puffs) {
+          const grad = ctx.createRadialGradient(
+            c.x + p.dx, c.y + p.dy - p.ry * 0.25, p.rx * 0.1,
+            c.x + p.dx, c.y + p.dy, p.rx
+          );
+          grad.addColorStop(0, `rgba(252, 214, 174, ${c.alpha})`);
+          grad.addColorStop(0.6, `rgba(176, 162, 188, ${c.alpha * 0.65})`);
+          grad.addColorStop(1, 'rgba(110, 92, 107, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.ellipse(c.x + p.dx, c.y + p.dy, p.rx, p.ry, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    drawAbyssCrags(ctx) {
+      for (const crag of this.world.crags) {
+        const { x, y, w, h } = crag;
+        // Masa rocosa principal con facetas verticales
+        ctx.fillStyle = PALETTE.stoneShadow;
+        ctx.beginPath();
+        ctx.moveTo(x - w * 0.5, y);
+        ctx.lineTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.36, y + h * 0.45);
+        ctx.lineTo(x + w * 0.08, y + h);
+        ctx.lineTo(x - w * 0.14, y + h * 0.88);
+        ctx.lineTo(x - w * 0.42, y + h * 0.42);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cara iluminada derecha
+        ctx.fillStyle = PALETTE.stoneMid;
+        ctx.beginPath();
+        ctx.moveTo(x + w * 0.05, y);
+        ctx.lineTo(x + w * 0.5, y);
+        ctx.lineTo(x + w * 0.36, y + h * 0.45);
+        ctx.lineTo(x + w * 0.08, y + h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Grietas y estratos minerales
+        ctx.strokeStyle = PALETTE.stoneLight;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x - w * 0.25, y + 6);
+        ctx.lineTo(x - w * 0.18, y + h * 0.52);
+        ctx.moveTo(x + w * 0.22, y + 4);
+        ctx.lineTo(x + w * 0.16, y + h * 0.65);
+        ctx.stroke();
+      }
+    }
+
+    drawWaterfalls(ctx) {
+      for (const wf of this.world.waterfalls) {
+        // Columna translúcida de agua
+        const grad = ctx.createLinearGradient(wf.x, wf.y, wf.x, wf.y + wf.h);
+        grad.addColorStop(0, 'rgba(185, 240, 250, 0.78)');
+        grad.addColorStop(0.55, 'rgba(84, 175, 198, 0.42)');
+        grad.addColorStop(1, 'rgba(84, 175, 198, 0.0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(wf.x - wf.w * 0.5, wf.y, wf.w, wf.h);
+
+        // Vetas de espuma animadas descendiendo continuamente
+        ctx.strokeStyle = PALETTE.waterFoam;
+        ctx.lineWidth = 1.4;
+        const streakCount = 4;
+        for (let s = 0; s < streakCount; s++) {
+          const sx = wf.x - wf.w * 0.32 + (s / (streakCount - 1)) * wf.w * 0.64;
+          const offset = ((this.time * wf.speed + wf.phase * 40 + s * 65) % wf.h);
+          const len = Math.min(44, wf.h - offset);
+          if (len > 4) {
+            ctx.globalAlpha = 0.55 * (1 - offset / wf.h);
+            ctx.beginPath();
+            ctx.moveTo(sx, wf.y + offset);
+            ctx.lineTo(sx, wf.y + offset + len);
+            ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1.0;
+      }
+    }
+
+    drawTreeRootsAndTrunk(ctx) {
+      const { trunk, roots } = this.world.tree;
+
+      // 1. Raíces orgánicas curvas
+      for (const r of roots) {
+        const [p0, p1, p2, p3] = r.pts;
+        const steps = 18;
+        for (let i = 0; i < steps; i++) {
+          const t0 = i / steps;
+          const t1 = (i + 1) / steps;
+          const a = this.evalCubicBezier(p0, p1, p2, p3, t0);
+          const b = this.evalCubicBezier(p0, p1, p2, p3, t1);
+          const w = r.wStart + (r.wEnd - r.wStart) * t0;
+
+          ctx.strokeStyle = PALETTE.barkShadow;
+          ctx.lineWidth = w;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+
+          // Borde superior iluminado de la raíz
+          ctx.strokeStyle = PALETTE.barkLight;
+          ctx.lineWidth = Math.max(1.5, w * 0.22);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y - w * 0.32);
+          ctx.lineTo(b.x, b.y - w * 0.32);
+          ctx.stroke();
+        }
+      }
+
+      // 2. Tronco monumental con anatomía irregular y contrafuertes
+      const { cx, baseY, topY } = trunk;
+      const trunkGrad = ctx.createLinearGradient(cx - 135, 0, cx + 135, 0);
+      trunkGrad.addColorStop(0.0, PALETTE.barkShadow);
+      trunkGrad.addColorStop(0.45, PALETTE.barkMid);
+      trunkGrad.addColorStop(0.82, PALETTE.barkLight);
+      trunkGrad.addColorStop(1.0, PALETTE.barkHighlight);
+
+      ctx.fillStyle = trunkGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx - 175, baseY + 60);
+      ctx.bezierCurveTo(cx - 125, baseY - 80, cx - 105, 620, cx - 82, 520);
+      ctx.bezierCurveTo(cx - 65, 440, cx - 55, 400, cx - 35, topY);
+      ctx.lineTo(cx + 35, topY);
+      ctx.bezierCurveTo(cx + 58, 405, cx + 70, 445, cx + 88, 525);
+      ctx.bezierCurveTo(cx + 115, 630, cx + 135, baseY - 75, cx + 185, baseY + 60);
+      ctx.closePath();
+      ctx.fill();
+
+      // 3. Vetado orgánico de corteza milenaria
+      for (const st of trunk.barkStriations) {
+        ctx.strokeStyle = st.tone;
+        ctx.lineWidth = st.width;
+        ctx.beginPath();
+        const segs = 22;
+        for (let s = 0; s <= segs; s++) {
+          const t = s / segs;
+          const y = topY + (baseY + 40 - topY) * t;
+          const halfWidth = 32 + Math.pow(t, 1.45) * 135;
+          const wave = Math.sin(t * Math.PI * st.waveFreq + st.offsetRatio * 4) * st.waveAmp;
+          const x = cx + st.offsetRatio * halfWidth + wave;
+          if (s === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    drawTreeBranches(ctx) {
+      for (const b of this.world.tree.branches) {
+        const swayX = Math.sin(this.time * 0.85 + b.phase) * b.sway;
+        const swayY = Math.cos(this.time * 0.65 + b.phase) * (b.sway * 0.45);
+
+        const x1 = b.x1 + swayX;
+        const y1 = b.y1 + swayY;
+        const cx1 = b.cx1 + swayX * 0.5;
+        const cy1 = b.cy1 + swayY * 0.5;
+
+        const steps = 16;
+        for (let i = 0; i < steps; i++) {
+          const t0 = i / steps;
+          const t1 = (i + 1) / steps;
+          const p0 = this.evalQuadBezier({ x: b.x0, y: b.y0 }, { x: cx1, y: cy1 }, { x: x1, y: y1 }, t0);
+          const p1 = this.evalQuadBezier({ x: b.x0, y: b.y0 }, { x: cx1, y: cy1 }, { x: x1, y: y1 }, t1);
+          const w = b.w0 + (b.w1 - b.w0) * t0;
+
+          ctx.strokeStyle = PALETTE.barkMid;
+          ctx.lineWidth = w;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+
+          // Luz superior en las ramas
+          ctx.strokeStyle = PALETTE.barkHighlight;
+          ctx.lineWidth = Math.max(1.2, w * 0.24);
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y - w * 0.34);
+          ctx.lineTo(p1.x, p1.y - w * 0.34);
+          ctx.stroke();
+        }
+      }
+    }
+
+    drawBridges(ctx) {
+      for (const br of this.world.bridges) {
+        const midX = (br.x0 + br.x1) * 0.5;
+        const midY = (br.y0 + br.y1) * 0.5 + br.sag + Math.sin(this.time * 1.1 + br.x0 * 0.01) * 2.2;
+
+        // Cables superiores (barandales)
+        ctx.strokeStyle = PALETTE.woodTimber;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.moveTo(br.x0, br.y0 - 11);
+        ctx.quadraticCurveTo(midX, midY - 11, br.x1, br.y1 - 11);
+        ctx.stroke();
+
+        // Tablero curvo del puente
+        ctx.strokeStyle = PALETTE.stoneLight;
+        ctx.lineWidth = 4.2;
+        ctx.beginPath();
+        ctx.moveTo(br.x0, br.y0);
+        ctx.quadraticCurveTo(midX, midY, br.x1, br.y1);
+        ctx.stroke();
+
+        // Tensores verticales
+        ctx.strokeStyle = 'rgba(215, 195, 165, 0.45)';
+        ctx.lineWidth = 1.0;
+        const posts = 10;
+        for (let p = 1; p < posts; p++) {
+          const t = p / posts;
+          const pt = this.evalQuadBezier({ x: br.x0, y: br.y0 }, { x: midX, y: midY }, { x: br.x1, y: br.y1 }, t);
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(pt.x, pt.y - 11);
+          ctx.stroke();
+        }
+      }
+    }
+
+    drawCityDistricts(ctx) {
+      for (const dist of this.world.architecture) {
+        const swayX = Math.sin(this.time * 0.85 + dist.swayPhase) * dist.swayAmp;
+        const swayY = Math.cos(this.time * 0.65 + dist.swayPhase) * (dist.swayAmp * 0.4);
+
+        ctx.save();
+        ctx.translate(swayX, swayY);
+
+        // 1. Plataforma base de piedra tallada y ménsulas de madera
+        ctx.fillStyle = PALETTE.stoneShadow;
+        ctx.beginPath();
+        ctx.moveTo(dist.x, dist.y);
+        ctx.lineTo(dist.x + dist.w, dist.y);
+        ctx.lineTo(dist.x + dist.w - 18, dist.y + dist.h);
+        ctx.lineTo(dist.x + 18, dist.y + dist.h);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = PALETTE.stoneLight;
+        ctx.fillRect(dist.x, dist.y, dist.w, 4);
+
+        // Puntales diagonales bajo la plataforma
+        ctx.strokeStyle = PALETTE.woodTimber;
+        ctx.lineWidth = 3.0;
+        ctx.beginPath();
+        ctx.moveTo(dist.x + 24, dist.y + dist.h);
+        ctx.lineTo(dist.x + 48, dist.y + dist.h + 26);
+        ctx.moveTo(dist.x + dist.w - 24, dist.y + dist.h);
+        ctx.lineTo(dist.x + dist.w - 48, dist.y + dist.h + 26);
+        ctx.stroke();
+
+        // 2. Edificios, torres, balcones y tejados individuales
+        for (const b of dist.buildings) {
+          const bx = b.x;
+          const by = b.y - b.h;
+
+          // Cuerpo del edificio (sombra izquierda + cara iluminada derecha)
+          ctx.fillStyle = PALETTE.stoneShadow;
+          ctx.fillRect(bx, by, b.w * 0.58, b.h);
+
+          ctx.fillStyle = PALETTE.stoneMid;
+          ctx.fillRect(bx + b.w * 0.58, by, b.w * 0.42, b.h);
+
+          // Cornisas horizontales de madera
+          ctx.fillStyle = PALETTE.woodTimber;
+          ctx.fillRect(bx - 2, by + b.h * 0.48, b.w + 4, 3);
+
+          // Balcón saliente opcional
+          if (b.hasBalcony) {
+            ctx.fillStyle = PALETTE.stoneLight;
+            ctx.fillRect(bx - 5, by + b.h * 0.62, b.w + 10, 4);
+          }
+
+          // Ventanas iluminadas con parpadeo orgánico
+          for (const win of b.windows) {
+            const wx = bx + win.rx * (b.w - 6);
+            const wy = by + win.ry * (b.h - 10);
+            if (win.lit) {
+              const flicker = 0.72 + 0.28 * Math.sin(this.time * win.flickerSpeed + win.flickerPhase);
+              ctx.fillStyle = `rgba(255, 207, 117, ${flicker.toFixed(2)})`;
+              ctx.fillRect(wx, wy, 4.5, 6.5);
+            } else {
+              ctx.fillStyle = '#111622';
+              ctx.fillRect(wx, wy, 4.5, 6.5);
+            }
+          }
+
+          // Tejados con siluetas arquitectónicas diferenciadas
+          ctx.fillStyle = b.roofColor;
+          if (b.roofType === 'spire') {
+            ctx.beginPath();
+            ctx.moveTo(bx - 4, by);
+            ctx.quadraticCurveTo(bx + b.w * 0.35, by - 16, bx + b.w * 0.5, by - 42);
+            ctx.quadraticCurveTo(bx + b.w * 0.65, by - 16, bx + b.w + 4, by);
+            ctx.closePath();
+            ctx.fill();
+
+            // Pináculo metálico dorado
+            ctx.strokeStyle = PALETTE.blossomGold;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(bx + b.w * 0.5, by - 42);
+            ctx.lineTo(bx + b.w * 0.5, by - 56);
+            ctx.stroke();
+          } else if (b.roofType === 'dome') {
+            ctx.beginPath();
+            ctx.arc(bx + b.w * 0.5, by, b.w * 0.52, Math.PI, 0);
+            ctx.closePath();
+            ctx.fill();
+          } else if (b.roofType === 'pagoda') {
+            ctx.beginPath();
+            ctx.moveTo(bx - 7, by);
+            ctx.quadraticCurveTo(bx + b.w * 0.5, by - 10, bx + b.w * 0.5, by - 22);
+            ctx.quadraticCurveTo(bx + b.w * 0.5, by - 10, bx + b.w + 7, by);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(bx - 4, by);
+            ctx.lineTo(bx + b.w * 0.5, by - 20);
+            ctx.lineTo(bx + b.w + 4, by);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+      }
+    }
+
+    drawTreeCanopies(ctx) {
+      for (const cap of this.world.tree.canopies) {
+        const swayX = Math.sin(this.time * 0.9 + cap.phase) * cap.sway;
+        const swayY = Math.cos(this.time * 0.7 + cap.phase) * (cap.sway * 0.45);
+        const cx = cap.x + swayX;
+        const cy = cap.y + swayY;
+
+        // 1. Enredaderas y flores colgantes bajo la copa
+        for (const v of cap.hangingVines) {
+          const vx = cx + v.ox;
+          const vy = cy + v.oy;
+          const tipSway = Math.sin(this.time * 1.4 + v.phase) * 7;
+
+          ctx.strokeStyle = PALETTE.foliageMid;
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(vx, vy);
+          ctx.quadraticCurveTo(vx + tipSway * 0.4, vy + v.len * 0.5, vx + tipSway, vy + v.len);
+          ctx.stroke();
+
+          if (v.hasBlossom) {
+            ctx.fillStyle = PALETTE.blossomGold;
+            ctx.beginPath();
+            ctx.arc(vx + tipSway, vy + v.len, 2.6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // 2. Capas volumétricas de follaje (sombra profunda -> tono medio -> luz solar)
+        for (const blob of cap.leafBlobs) {
+          const bx = cx + blob.ox;
+          const by = cy + blob.oy;
+
+          if (blob.layer > 0.2) {
+            ctx.fillStyle = PALETTE.foliageDeep;
+          } else if (blob.layer > -0.35) {
+            ctx.fillStyle = PALETTE.foliageMid;
+          } else {
+            ctx.fillStyle = PALETTE.foliageLight;
+          }
+
+          ctx.beginPath();
+          ctx.ellipse(bx, by, blob.r, blob.r * 0.68, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Corona iluminada superior
+          if (blob.layer <= -0.25) {
+            ctx.fillStyle = PALETTE.foliageSun;
+            ctx.beginPath();
+            ctx.ellipse(bx + 6, by - blob.r * 0.22, blob.r * 0.65, blob.r * 0.35, -0.15, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    drawFireflies(ctx) {
+      for (const f of this.world.fireflies) {
+        const fx = f.baseX + Math.cos(this.time * f.speed + f.phase) * f.orbitRx;
+        const fy = f.baseY + Math.sin(this.time * f.speed * 1.3 + f.phase) * f.orbitRy;
+        const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(this.time * 2.4 + f.phase));
+
+        const grad = ctx.createRadialGradient(fx, fy, 0, fx, fy, f.size * 4.5);
+        if (f.warm) {
+          grad.addColorStop(0, `rgba(255, 224, 140, ${pulse})`);
+          grad.addColorStop(1, 'rgba(255, 180, 70, 0)');
+        } else {
+          grad.addColorStop(0, `rgba(155, 240, 225, ${pulse})`);
+          grad.addColorStop(1, 'rgba(80, 200, 190, 0)');
+        }
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(fx, fy, f.size * 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    drawFallingLeaves(ctx, dt) {
+      for (const lf of this.world.fallingLeaves) {
+        lf.x += lf.vx * dt + Math.sin(this.time * lf.flutterSpeed + lf.phase) * 18 * dt;
+        lf.y += lf.vy * dt;
+
+        if (lf.y > 1020) {
+          lf.y = 210;
+          lf.x = 460 + ((lf.x * 1.37) % 980);
+        }
+
+        const rot = Math.sin(this.time * lf.flutterSpeed + lf.phase) * 0.9;
+        ctx.save();
+        ctx.translate(lf.x, lf.y);
+        ctx.rotate(rot);
+        ctx.fillStyle = lf.isGold ? PALETTE.blossomGold : PALETTE.foliageSun;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, lf.size, lf.size * 0.48, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    drawAbyssMist(ctx, W, H, isFront) {
+      const drift = Math.sin(this.time * 0.25) * 45;
+      const yBase = isFront ? H * 0.88 : H * 0.72;
+      const grad = ctx.createLinearGradient(0, yBase - 140, 0, H + 60);
+      grad.addColorStop(0, 'rgba(11, 14, 23, 0)');
+      grad.addColorStop(0.5, isFront ? 'rgba(26, 38, 62, 0.34)' : PALETTE.mistCool);
+      grad.addColorStop(1, PALETTE.abyssDark);
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(-60 + drift, yBase - 140, W + 120, H - yBase + 200);
+    }
+
+    drawForegroundFraming(ctx) {
+      const { leftBranch, rightBranch, vines } = this.world.foregroundVines;
+      ctx.fillStyle = '#070910';
+      ctx.strokeStyle = '#070910';
+
+      // Rama silueteada esquina superior izquierda
+      ctx.lineWidth = 28;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(leftBranch.x0, leftBranch.y0);
+      ctx.quadraticCurveTo(leftBranch.cx, leftBranch.cy, leftBranch.x1, leftBranch.y1);
+      ctx.stroke();
+
+      // Rama silueteada esquina superior derecha
+      ctx.beginPath();
+      ctx.moveTo(rightBranch.x0, rightBranch.y0);
+      ctx.quadraticCurveTo(rightBranch.cx, rightBranch.cy, rightBranch.x1, rightBranch.y1);
+      ctx.stroke();
+
+      // Lianas y hojas colgando en primer plano reaccionando al viento
+      for (const v of vines) {
+        const sway = Math.sin(this.time * 1.1 + v.phase) * 14;
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.moveTo(v.x, v.topY);
+        ctx.quadraticCurveTo(v.x + sway * 0.5, v.topY + v.len * 0.5, v.x + sway, v.topY + v.len);
+        ctx.stroke();
+
+        // Hojas en silueta a lo largo de la liana
+        const leaves = 6;
+        for (let k = 1; k <= leaves; k++) {
+          const t = k / leaves;
+          const pt = this.evalQuadBezier(
+            { x: v.x, y: v.topY },
+            { x: v.x + sway * 0.5, y: v.topY + v.len * 0.5 },
+            { x: v.x + sway, y: v.topY + v.len },
+            t
+          );
+          const dir = k % 2 === 0 ? 1 : -1;
+          ctx.beginPath();
+          ctx.ellipse(pt.x + dir * 7, pt.y, 9, 4, dir * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    evalQuadBezier(p0, p1, p2, t) {
+      const u = 1 - t;
+      return {
+        x: u * u * p0.x + 2 * u * t * p1.x + t * t * p2.x,
+        y: u * u * p0.y + 2 * u * t * p1.y + t * t * p2.y
+      };
+    }
+
+    evalCubicBezier(p0, p1, p2, p3, t) {
+      const u = 1 - t;
+      return {
+        x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x,
+        y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y
+      };
+    }
+  }
+
+  // ============================================================================
+  // 5. INICIALIZACIÓN, ADAPTACIÓN RESPONSIVA Y BUCLE PRINCIPAL (DELTA TIME)
+  // ============================================================================
+  const canvas = document.getElementById('scene');
+  canvas.width = 1920;
+  canvas.height = 1080;
+
+  const generator = new WorldGenerator(7492);
+  const world = generator.build();
+  const renderer = new SceneRenderer(canvas, world);
+
+  let lastTime = performance.now();
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+
+    renderer.render(dt);
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

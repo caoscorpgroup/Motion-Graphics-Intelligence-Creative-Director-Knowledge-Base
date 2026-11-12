@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editorial Illustration — "The Lounge Regular: Lyra"</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 100vw;
+    height: 100vh;
+    background: #0f121a;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #artwork-container {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    max-width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: 16 / 9;
+    background: #151a24;
+    box-shadow: 0 50px 120px rgba(0,0,0,0.95);
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div id="artwork-container">
+  <canvas id="editorialCanvas" width="1920" height="1080"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('editorialCanvas');
+const ctx = canvas.getContext('2d');
+const TAU = Math.PI * 2;
+
+// =========================================================================
+// ILUSTRACIÓN EDITORIAL CONTEMPORÁNEA: "LYRA, LA FRECUENTADORA DEL NEBULA"
+// =========================================================================
+
+// 1. Fondo atmosférico de ilustración editorial (Ambiente de bar intergaláctico sofisticado)
+function renderEditorialBackground() {
+  // Gradiente de profundidad nocturna cálida y envolvente
+  const bg = ctx.createRadialGradient(960, 540, 100, 960, 540, 1200);
+  bg.addColorStop(0.0, '#242a38');
+  bg.addColorStop(0.5, '#161b24');
+  bg.addColorStop(1.0, '#0a0d14');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 1920, 1080);
+
+  // Bokeh y luces ambientales difusas de fondo (estilo editorial moderno)
+  const bokehOrbs = [
+    { x: 300, y: 250, r: 120, col: 'rgba(255, 107, 157, 0.08)' },
+    { x: 1600, y: 350, r: 180, col: 'rgba(78, 205, 196, 0.06)' },
+    { x: 960, y: 800, r: 350, col: 'rgba(255, 190, 118, 0.05)' },
+    { x: 1400, y: 850, r: 90, col: 'rgba(162, 155, 254, 0.07)' }
+  ];
+
+  for (let b of bokehOrbs) {
+    const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+    grad.addColorStop(0, b.col);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, TAU);
+    ctx.fill();
+  }
+
+  // Suelo reflectante con sutil brillo de neón bajo los pies
+  const floorGrad = ctx.createLinearGradient(960, 850, 960, 1080);
+  floorGrad.addColorStop(0, 'rgba(15, 18, 26, 0)');
+  floorGrad.addColorStop(1, 'rgba(7, 9, 14, 0.85)');
+  ctx.fillStyle = floorGrad;
+  ctx.fillRect(0, 850, 1920, 230);
+}
+
+// 2. Sombra proyectada del personaje en el suelo
+function renderGroundShadow(x, y) {
+  ctx.save();
+  const shadow = ctx.createRadialGradient(x, y, 10, x, y, 220);
+  shadow.addColorStop(0, 'rgba(5, 7, 12, 0.85)');
+  shadow.addColorStop(0.5, 'rgba(10, 13, 20, 0.4)');
+  shadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = shadow;
+  ctx.beginPath();
+  ctx.ellipse(x, y, 220, 55, 0, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+// 3. Personaje Principal: Lyra (Ilustración editorial de cuerpo completo)
+function renderLyraCharacter(cx, cy) {
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // -----------------------------------------------------------------------
+  // A. Silueta de Vestuario y Abrigo Largo Estilizado (Corte Editorial)
+  // -----------------------------------------------------------------------
+  // Capa exterior del abrigo fluido
+  const coatGrad = ctx.createLinearGradient(-120, -200, 150, 450);
+  coatGrad.addColorStop(0.0, '#323a4d');
+  coatGrad.addColorStop(0.4, '#1e2430');
+  coatGrad.addColorStop(1.0, '#0f131a');
+
+  ctx.fillStyle = coatGrad;
+  ctx.beginPath();
+  ctx.moveTo(-45, -220);
+  // Hombro izquierdo y caída de abrigo
+  ctx.bezierCurveTo(-110, -200, -150, -50, -180, 220);
+  ctx.bezierCurveTo(-195, 380, -140, 480, -100, 520);
+  ctx.lineTo(110, 520);
+  ctx.bezierCurveTo(140, 480, 180, 380, 160, 220);
+  ctx.bezierCurveTo(130, -50, 90, -200, 45, -220);
+  ctx.closePath();
+  ctx.fill();
+
+  // Solapas y ribetes interiores en tono contraste cálido / cobre
+  ctx.strokeStyle = '#c88a58';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-45, -220);
+  ctx.lineTo(-65, 120);
+  ctx.lineTo(-90, 450);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(45, -220);
+  ctx.lineTo(65, 120);
+  ctx.lineTo(90, 450);
+  ctx.stroke();
+
+  // -----------------------------------------------------------------------
+  // B. Torso Estilizado y Blusa de Seda Estelar
+  // -----------------------------------------------------------------------
+  ctx.fillStyle = '#18202b';
+  ctx.beginPath();
+  ctx.moveTo(-45, -220);
+  ctx.lineTo(-55, -80);
+  ctx.lineTo(-40, 120);
+  ctx.lineTo(40, 120);
+  ctx.lineTo(55, -80);
+  ctx.lineTo(45, -220);
+  ctx.closePath();
+  ctx.fill();
+
+  // Detalles de joyería cósmica / pectoral orgánico incrustado en el pecho
+  const broochGlow = ctx.createRadialGradient(0, -60, 2, 0, -60, 25);
+  broochGlow.addColorStop(0, '#ff6b9d');
+  broochGlow.addColorStop(0.5, '#a29bfe');
+  broochGlow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = broochGlow;
+  ctx.beginPath();
+  ctx.arc(0, -60, 25, 0, TAU);
+  ctx.fill();
+
+  ctx.fillStyle = '#ffeaa7';
+  ctx.beginPath();
+  ctx.arc(0, -60, 8, 0, TAU);
+  ctx.fill();
+
+  // -----------------------------------------------------------------------
+  // C. Piernas Estilizadas y Calzado Elegante
+  // -----------------------------------------------------------------------
+  ctx.fillStyle = '#0b0e14';
+  // Pierna izquierda
+  ctx.beginPath();
+  ctx.moveTo(-75, 450);
+  ctx.lineTo(-85, 590);
+  ctx.lineTo(-95, 610);
+  ctx.lineTo(-65, 610);
+  ctx.lineTo(-55, 480);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pierna derecha (ligeramente cruzada / elegante)
+  ctx.beginPath();
+  ctx.moveTo(45, 450);
+  ctx.lineTo(60, 580);
+  ctx.lineTo(80, 605);
+  ctx.lineTo(50, 605);
+  ctx.lineTo(30, 480);
+  ctx.closePath();
+  ctx.fill();
+
+  // Zapatos de tacón estelar estilizados
+  ctx.fillStyle = '#ff6b9d';
+  ctx.beginPath();
+  ctx.ellipse(-80, 612, 18, 7, 0.1, 0, TAU);
+  ctx.ellipse(65, 608, 18, 7, -0.1, 0, TAU);
+  ctx.fill();
+
+  // -----------------------------------------------------------------------
+  // D. Brazos Expresivos y Accesorios (Sosteniendo una copa elegante)
+  // -----------------------------------------------------------------------
+  // Brazo izquierdo (caído con gracia, dedos largos y delicados)
+  ctx.strokeStyle = '#2b3447';
+  ctx.lineWidth = 24;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-65, -190);
+  ctx.quadraticCurveTo(-110, -50, -90, 100);
+  ctx.stroke();
+
+  // Brazo derecho (flexionado sosteniendo copa de cóctel flotante)
+  ctx.beginPath();
+  ctx.moveTo(65, -190);
+  ctx.quadraticCurveTo(110, -80, 95, 40);
+  ctx.stroke();
+
+  // Copa de cóctel con líquido bioluminiscente
+  ctx.save();
+  ctx.translate(110, 15);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.lineWidth = 2;
+  // Base de copa
+  ctx.beginPath(); ctx.moveTo(-10, 45); ctx.lineTo(10, 45); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, 45); ctx.lineTo(0, 15); ctx.stroke();
+  // Vaso cónico
+  ctx.beginPath(); ctx.moveTo(-18, -10); ctx.lineTo(18, -10); ctx.lineTo(0, 15); ctx.closePath(); ctx.stroke();
+  
+  // Líquido brillante dentro de la copa
+  const drinkGlow = ctx.createRadialGradient(0, 2, 1, 0, 2, 12);
+  drinkGlow.addColorStop(0, '#4ecdc4');
+  drinkGlow.addColorStop(1, 'rgba(78, 205, 196, 0)');
+  ctx.fillStyle = drinkGlow;
+  ctx.beginPath();
+  ctx.arc(0, 2, 12, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+
+  // -----------------------------------------------------------------------
+  // E. Cuello Elegante y Cabeza Expresiva (Estilo Editorial Contemporáneo)
+  // -----------------------------------------------------------------------
+  // Cuello esbelto
+  ctx.fillStyle = '#2b3447';
+  ctx.beginPath();
+  ctx.moveTo(-22, -190);
+  ctx.lineTo(-18, -260);
+  ctx.lineTo(18, -260);
+  ctx.lineTo(22, -190);
+  ctx.closePath();
+  ctx.fill();
+
+  // Rostro y Cráneo (Forma orgánica, elegante, sin ser humano convencional)
+  const faceGrad = ctx.createRadialGradient(-15, -340, 10, 0, -320, 90);
+  faceGrad.addColorStop(0.0, '#3f4c6b');
+  faceGrad.addColorStop(0.5, '#242b3d');
+  faceGrad.addColorStop(1.0, '#151a24');
+
+  ctx.fillStyle = faceGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, -410); // Corona craneal ligeramente almendrada
+  ctx.bezierCurveTo(-55, -400, -70, -330, -55, -280); // Sienes y pómulos
+  ctx.bezierCurveTo(-40, -250, -20, -255, 0, -260); // Barbilla delicada
+  ctx.bezierCurveTo(20, -255, 40, -250, 55, -280);
+  ctx.bezierCurveTo(70, -330, 55, -400, 0, -410);
+  ctx.closePath();
+  ctx.fill();
+
+  // Marcas estelares / constelaciones decorativas en la piel (Pecas bioluminiscentes)
+  ctx.fillStyle = '#4ecdc4';
+  const freckles = [
+    {x: -25, y: -310, r: 2.5}, {x: -32, y: -300, r: 1.5},
+    {x: 28, y: -315, r: 2}, {x: 35, y: -305, r: 1.2},
+    {x: -10, y: -370, r: 2}, {x: 12, y: -365, r: 1.8}, {x: 0, y: -385, r: 2.2}
+  ];
+  for (let f of freckles) {
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, f.r, 0, TAU);
+    ctx.fill();
+  }
+
+  // Ojos Expresivos y Rasgados (Grandes, magnéticos, de tono ámbar/violeta)
+  for (let side of [-1, 1]) {
+    const ex = side * 24;
+    const ey = -320;
+
+    // Cuenca / Sombra de ojo
+    ctx.fillStyle = '#0f131a';
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, 14, 9, side * 0.15, 0, TAU);
+    ctx.fill();
+
+    // Iris brillante multicolor
+    const irisGrad = ctx.createRadialGradient(ex, ey, 1, ex, ey, 10);
+    irisGrad.addColorStop(0, '#ffeaa7');
+    irisGrad.addColorStop(0.5, '#ff6b9d');
+    irisGrad.addColorStop(1, '#6c5ce7');
+    ctx.fillStyle = irisGrad;
+    ctx.beginPath();
+    ctx.arc(ex, ey, 9, 0, TAU);
+    ctx.fill();
+
+    // Pupila vertical estilizada
+    ctx.fillStyle = '#0f131a';
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, 2.5, 7, 0, 0, TAU);
+    ctx.fill();
+
+    // Brillo especular en el ojo
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(ex - 3, ey - 3, 2.5, 0, TAU);
+    ctx.fill();
+  }
+
+  // Labios sutiles y sofisticados
+  ctx.strokeStyle = '#ff6b9d';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-12, -275);
+  ctx.quadraticCurveTo(0, -268, 12, -275);
+  ctx.stroke();
+
+  // -----------------------------------------------------------------------
+  // F. Cabello / Antenas Sensoriales Cósmicas (Diseño Editorial Fluido)
+  // -----------------------------------------------------------------------
+  // Melena fluida que imita nebulosas y filamentos de energía
+  const hairGrad = ctx.createLinearGradient(0, -420, 0, -180);
+  hairGrad.addColorStop(0.0, '#ff6b9d');
+  hairGrad.addColorStop(0.4, '#a29bfe');
+  hairGrad.addColorStop(1.0, '#4ecdc4');
+
+  ctx.fillStyle = hairGrad;
+  ctx.beginPath();
+  ctx.moveTo(-10, -415);
+  // Ondas de cabello cayendo por los hombros con elegancia editorial
+  ctx.bezierCurveTo(-70, -380, -90, -250, -75, -150);
+  ctx.bezierCurveTo(-65, -100, -50, -50, -55, 30);
+  ctx.bezierCurveTo(-50, -50, -30, -120, -20, -220);
+  ctx.bezierCurveTo(-15, -280, -5, -350, 0, -415);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(10, -415);
+  ctx.bezierCurveTo(70, -380, 90, -250, 75, -150);
+  ctx.bezierCurveTo(65, -100, 50, -50, 55, 30);
+  ctx.bezierCurveTo(50, -50, 30, -120, 20, -220);
+  ctx.bezierCurveTo(15, -280, 5, -350, 0, -415);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// 4. Elementos de Ambientación del Bar Intergaláctico (Detalle en primer plano / fondo)
+function renderBarAtmosphere() {
+  ctx.save();
+  // Barra estilizada difuminada en el lateral derecho para dar contexto espacial
+  const barGrad = ctx.createLinearGradient(1600, 0, 1920, 0);
+  barGrad.addColorStop(0, 'rgba(21, 26, 36, 0)');
+  barGrad.addColorStop(1, 'rgba(21, 26, 36, 0.9)');
+  ctx.fillStyle = barGrad;
+  ctx.fillRect(1600, 0, 320, 1080);
+
+  // Luz de neón vertical decorativa en el marco del bar
+  const neonGlow = ctx.createRadialGradient(1880, 540, 5, 1880, 540, 80);
+  neonGlow.addColorStop(0, '#ff6b9d');
+  neonGlow.addColorStop(1, 'rgba(255, 107, 157, 0)');
+  ctx.fillStyle = neonGlow;
+  ctx.beginPath();
+  ctx.arc(1880, 540, 80, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+}
+
+// 5. Viñeta y Textura de Grano Cinematográfico Editorial
+function renderEditorialVignette() {
+  const vig = ctx.createRadialGradient(960, 540, 600, 960, 540, 1100);
+  vig.addColorStop(0, 'rgba(10, 13, 20, 0)');
+  vig.addColorStop(0.7, 'rgba(10, 13, 20, 0.5)');
+  vig.addColorStop(1.0, 'rgba(5, 7, 10, 0.92)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, 1920, 1080);
+}
+
+// Función Principal de Ejecución de la Ilustración
+function renderEditorialArtwork() {
+  ctx.clearRect(0, 0, 1920, 1080);
+  
+  renderEditorialBackground();
+  renderBarAtmosphere();
+  renderGroundShadow(960, 920);
+  renderLyraCharacter(960, 480);
+  renderEditorialVignette();
+}
+
+renderEditorialArtwork();
+</script>
+</body>
+</html>
