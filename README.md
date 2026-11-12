@@ -34,6 +34,7 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 - [PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md](docs/PROTOCOLO-PRUEBA-COMPARATIVA-TECNOLOGIAS-2D.md): prueba controlada de una misma pieza en SVG, HTML/CSS, Canvas 2D, JavaScript y arquitecturas híbridas.
 - [AUDITORIA-REPOSITORIO-2026-11-10.md](docs/AUDITORIA-REPOSITORIO-2026-11-10.md): inventario técnico y estado real de las entregas.
 - [AUDITORIA-REPOSITORIO-2026-11-11.md](docs/AUDITORIA-REPOSITORIO-2026-11-11.md): inventario actualizado, limpieza conservadora y plan de curaduría de referencias.
+- [AUDITORIA-MUESTRAS-CREATIVAS-2026-11-12.md](docs/AUDITORIA-MUESTRAS-CREATIVAS-2026-11-12.md): comparación de muestras técnicas y visuales, incluyendo la prueba de ilustración urbana Gemini/Meta y el protocolo para comprobar continuidad estilística durante la animación.
 - [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](docs/ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md): análisis de arquitectura, simulación, interacción, renderizado y criterios reutilizables derivados de la muestra Procedural Particle Systems.
 - [ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md](docs/ANALISIS-ECOSISTEMA-BIOLUMINISCENTE-FACEBOOK.md): análisis de la escena procedural 2D de Facebook, sus planos de profundidad, vegetación, partículas, interacciones y límites de validación.
 
