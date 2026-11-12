@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escena Urbana Narrativa 2D — Ilustración Vectorial Riggeada</title>
+  <!-- Tipografía editorial limpia para rótulos y controles discretos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+  
+  <!-- React, ReactDOM y Babel Standalone vía CDN para ejecución directa en navegador -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+      background-color: #071019;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+      color: #e2eef8;
+    }
+
+    /* Contenedor cinematográfico centrado que mantiene la proporción 16:9 sin recortes */
+    .viewport-stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0e1e30 0%, #050b12 100%);
+    }
+
+    .canvas-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 177.78vh; /* 16 / 9 */
+      max-height: 56.25vw; /* 9 / 16 */
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(122, 184, 224, 0.14);
+      border-radius: 6px;
+      overflow: hidden;
+      background-color: #0b1b2b;
+    }
+
+    svg.narrative-scene {
+      width: 100%;
+      height: 100%;
+      display: block;
+      shape-rendering: geometricPrecision;
+    }
+
+    /* Transiciones suaves para pruebas de pose en el rig vectorial */
+    .rig-limb {
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Panel flotante discreto en la esquina superior izquierda */
+    .inspector-dock {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .dock-toggle-btn {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: rgba(11, 25, 40, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(136, 196, 236, 0.25);
+      color: #d8ecfa;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    .dock-toggle-btn:hover {
+      background: rgba(18, 39, 61, 0.92);
+      border-color: rgba(246, 196, 83, 0.55);
+      color: #ffffff;
+    }
+
+    .dock-panel {
+      width: 270px;
+      background: rgba(10, 22, 35, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(136, 196, 236, 0.22);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+      font-size: 12px;
+    }
+
+    .dock-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7eb2d6;
+      margin-bottom: 8px;
+    }
+
+    .pose-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .pose-btn {
+      padding: 6px 8px;
+      border-radius: 7px;
+      border: 1px solid rgba(136, 196, 236, 0.2);
+      background: rgba(20, 42, 66, 0.55);
+      color: #cbe2f4;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .pose-btn:hover {
+      background: rgba(32, 64, 98, 0.85);
+    }
+
+    .pose-btn.active {
+      background: #e59a38;
+      border-color: #ffd17a;
+      color: #0b1622;
+      font-weight: 700;
+    }
+
+    .layer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .layer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: rgba(18, 37, 57, 0.45);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      user-select: none;
+    }
+
+    .layer-item:hover {
+      background: rgba(28, 56, 84, 0.65);
+    }
+
+    .layer-item input {
+      accent-color: #f4b24e;
+      cursor: pointer;
+    }
+
+    .sign-condensed {
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    /**
+     * ============================================================================
+     * PALETA DE COLOR Y TOKENS DE DIRECCIÓN ARTÍSTICA (THEME)
+     * Centraliza toda la identidad cromática nocturna (azules petróleo/cian + ámbar)
+     * para facilitar la edición artística global sin tocar la geometría SVG.
+     * ============================================================================
+     */
+    const THEME = {
+      ink: '#0c1824',             // Contorno editorial oscuro (línea clara contemporánea)
+      inkSoft: '#132638',         // Contorno secundario para detalles arquitectónicos lejanos
+      skyTop: '#081422',          // Azul medianoche cenital
+      skyMid: '#0f2840',          // Azul profundo medio
+      skyHorizon: '#184263',      // Horizonte cian atmosférico
+      farSilhouette: '#0d2236',   // Siluetas de edificios lejanos
+      farBuilding: '#13314c',     // Fachadas en tercer plano
+      midBuilding: '#184366',     // Fachadas plano intermedio
+      midBuildingDark: '#12334f', // Caras en sombra plano intermedio
+      fgBuilding: '#1b4f78',      // Fachadas primer plano iluminadas por ambiente
+      fgBuildingShadow: '#133a59',// Molduras y planos laterales en sombra
+      fgTrim: '#246391',          // Cornisas y resaltes con luz de rebote
+      sidewalkTop: '#2b6a94',     // Superficie superior de acera
+      sidewalkSide: '#173c59',    // Canto/bordillo vertical de la acera
+      roadBase: '#1a496e',        // Asfalto nocturno azulado
+      roadCenter: '#235c87',      // Zona central de calzada con brillo difuso
+      warmGlassCore: '#fff3c4',   // Núcleo luminoso de escaparates y ventanas
+      warmGlassMid: '#ffd470',    // Tono medio cálido interior
+      warmGlassEdge: '#f2a641',   // Degradado ámbar en bordes de cristal
+      lampGlowCore: '#ffe48f',    // Foco de farola
+      lampGlowSoft: '#f59e2d',    // Halo cálido de farola
+      ironDark: '#0e1d2b',        // Hierro fundido (farolas, balcones, aparcabicis)
+      ironHighlight: '#244663',   // Reflejo metálico frío en hierro
+      girlBeanie: '#d97a2b',      // Gorro tejido ocre/naranja
+      girlBeanieRib: '#b85d19',   // Doblez del gorro
+      girlHair: '#101b27',        // Cabello oscuro con ondas
+      girlSkin: '#f2c1a2',        // Tono piel cálido bajo luz nocturna
+      girlSkinShadow: '#d49a79',  // Sombra cel-shaded en rostro/cuello
+      girlJacket: '#2068a8',      // Chaqueta azul cobalto
+      girlJacketShade: '#154978', // Pliegues y sombra de chaqueta
+      girlPants: '#28527a',       // Pantalón azul acero
+      girlPantsShade: '#1b3a57',  // Sombra pierna trasera
+      girlShoes: '#16293d',       // Zapatillas urbanas oscuras
+      shoeSole: '#d9e6f2',        // Suela clara
+      dogFur: '#688ea8',          // Pelaje terrier gris azulado
+      dogFurShade: '#4b6e87',     // Sombra del pelaje
+      dogScarf: '#d65a31',        // Pañuelo naranja terracota
+      leashColor: '#0e1b26'       // Correa flexible
+    };
+
+    /**
+     * ============================================================================
+     * CONFIGURACIÓN DE POSES ARTICULABLES (RIGGING PRESETS)
+     * Demuestra la capacidad de animación por pivotes independientes en React + SVG.
+     * ============================================================================
+     */
+    const RIG_POSES = {
+      walkA: {
+        label: 'Paso 1',
+        girlOffsetY: 0,
+        torsoTilt: 2,
+        headTilt: -2,
+        leftLegAngle: 22,    // Pierna trasera extendida
+        leftKneeAngle: -14,
+        rightLegAngle: -20,  // Pierna delantera avanzando
+        rightKneeAngle: 12,
+        leftArmAngle: -18,   // Balanceo opuesto
+        rightArmAngle: 14,   // Mano sosteniendo correa
+        handAnchor: { x: 786, y: 604 },
+        dogOffsetY: 0,
+        dogBodyTilt: -2,
+        dogHeadTilt: 5,
+        dogTailAngle: -18,
+        dogFrontLegA: -22,
+        dogFrontLegB: 18,
+        dogBackLegA: 20,
+        dogBackLegB: -16,
+        collarAnchor: { x: 924, y: 676 }
+      },
+      walkB: {
+        label: 'Paso 2',
+        girlOffsetY: -5,
+        torsoTilt: 0,
+        headTilt: 2,
+        leftLegAngle: -16,   // Cambio de zancada
+        leftKneeAngle: 18,
+        rightLegAngle: 16,
+        rightKneeAngle: -10,
+        leftArmAngle: 16,
+        rightArmAngle: 6,
+        handAnchor: { x: 778, y: 598 },
+        dogOffsetY: -4,
+        dogBodyTilt: 2,
+        dogHeadTilt: -3,
+        dogTailAngle: 12,
+        dogFrontLegA: 20,
+        dogFrontLegB: -20,
+        dogBackLegA: -18,
+        dogBackLegB: 22,
+        collarAnchor: { x: 924, y: 672 }
+      },
+      idle: {
+        label: 'Reposo',
+        girlOffsetY: 2,
+        torsoTilt: -1,
+        headTilt: 4,
+        leftLegAngle: 4,
+        leftKneeAngle: 0,
+        rightLegAngle: -5,
+        rightKneeAngle: 0,
+        leftArmAngle: 5,
+        rightArmAngle: 10,
+        handAnchor: { x: 782, y: 606 },
+        dogOffsetY: 2,
+        dogBodyTilt: 0,
+        dogHeadTilt: 10,
+        dogTailAngle: -28,
+        dogFrontLegA: 0,
+        dogFrontLegB: 4,
+        dogBackLegA: -3,
+        dogBackLegB: 2,
+        collarAnchor: { x: 924, y: 678 }
+      }
+    };
+
+    /**
+     * ============================================================================
+     * DEFINICIONES SVG COMPARTIDAS (GRADIENTES, FILTROS Y PATRONES)
+     * ============================================================================
+     */
+    const SceneDefs = () => (
+      <defs>
+        {/* Degradado del cielo nocturno */}
+        <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={THEME.skyTop} />
+          <stop offset="52%" stopColor={THEME.skyMid} />
+          <stop offset="100%" stopColor={THEME.skyHorizon} />
+        </linearGradient>
+
+        {/* Degradado cálido para escaparates y ventanas iluminadas */}
+        <linearGradient id="warmWindowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={THEME.warmGlassEdge} />
+          <stop offset="35%" stopColor={THEME.warmGlassMid} />
+          <stop offset="100%" stopColor={THEME.warmGlassCore} />
+        </linearGradient>
+
+        {/* Degradado radial para el halo atmosférico de la farola principal */}
+        <radialGradient id="lampHaloPrimary" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={THEME.lampGlowCore} stopOpacity="0.85" />
+          <stop offset="30%" stopColor={THEME.lampGlowSoft} stopOpacity="0.34" />
+          <stop offset="68%" stopColor={THEME.lampGlowSoft} stopOpacity="0.10" />
+          <stop offset="100%" stopColor={THEME.lampGlowSoft} stopOpacity="0" />
+        </radialGradient>
+
+        {/* Degradado radial para el charco de luz proyectado en el suelo */}
+        <radialGradient id="groundLightPool" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fff4c2" stopOpacity="0.92" />
+          <stop offset="62%" stopColor="#ffd36b" stopOpacity="0.58" />
+          <stop offset="100%" stopColor="#f0a83a" stopOpacity="0" />
+        </radialGradient>
+
+        {/* Degradado cálido proyectado desde los escaparates sobre la acera */}
+        <linearGradient id="storefrontSpillLeft" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stopColor="#ffd778" stopOpacity="0.32" />
+          <stop offset="100%" stopColor="#ffd778" stopOpacity="0" />
+        </linearGradient>
+
+        <linearGradient id="storefrontSpillRight" x1="100%" y1="50%" x2="0%" y2="50%">
+          <stop offset="0%" stopColor="#ffd778" stopOpacity="0.32" />
+          <stop offset="100%" stopColor="#ffd778" stopOpacity="0" />
+        </linearGradient>
+
+        {/* Degradado de la calzada en perspectiva */}
+        <linearGradient id="roadPerspectiveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#143a59" />
+          <stop offset="45%" stopColor={THEME.roadBase} />
+          <stop offset="100%" stopColor="#205782" />
+        </linearGradient>
+      </defs>
+    );
+
+    /**
+     * ============================================================================
+     * CAPA 1: CIELO NOCTURNO Y HORIZONTE LEJANO (SkyLayer)
+     * ============================================================================
+     */
+    const SkyLayer = () => {
+      const stars = useMemo(() => [
+        { x: 455, y: 42, r: 1.5, o: 0.85 }, { x: 512, y: 88, r: 1.1, o: 0.6 },
+        { x: 568, y: 34, r: 1.8, o: 0.9 },  { x: 615, y: 112, r: 1.2, o: 0.65 },
+        { x: 662, y: 58, r: 1.6, o: 0.85 }, { x: 704, y: 26, r: 1.1, o: 0.55 },
+        { x: 742, y: 95, r: 1.9, o: 0.95 }, { x: 788, y: 48, r: 1.3, o: 0.7 },
+        { x: 825, y: 128, r: 1.2, o: 0.6 }, { x: 862, y: 38, r: 1.7, o: 0.85 },
+        { x: 905, y: 76, r: 1.3, o: 0.75 }, { x: 485, y: 145, r: 1.0, o: 0.5 },
+        { x: 640, y: 165, r: 1.3, o: 0.65 }, { x: 765, y: 152, r: 1.1, o: 0.55 },
+        { x: 885, y: 138, r: 1.4, o: 0.7 },  { x: 590, y: 195, r: 1.0, o: 0.45 }
+      ], []);
+
+      return (
+        <g id="layer-sky-horizon">
+          {/* Fondo celeste nocturno */}
+          <rect x="0" y="0" width="1440" height="580" fill="url(#skyGradient)" />
+
+          {/* Estrellas sutiles con destellos */}
+          <g id="sky-stars">
+            {stars.map((s, idx) => (
+              <circle key={idx} cx={s.x} cy={s.y} r={s.r} fill="#e8f4ff" opacity={s.o} />
+            ))}
+            {/* Estrella principal con brillo en cruz */}
+            <path
+              d="M 742 88 L 743.5 93.5 L 749 95 L 743.5 96.5 L 742 102 L 740.5 96.5 L 735 95 L 740.5 93.5 Z"
+              fill="#fff8dc"
+              opacity="0.9"
+            />
+          </g>
+
+          {/* Siluetas de edificios y chimeneas al fondo del punto de fuga */}
+          <g id="distant-city-skyline" stroke={THEME.ink} strokeWidth="1.6" strokeLinejoin="round">
+            <path
+              d="M 615 565 L 615 392 L 642 392 L 642 368 L 656 368 L 656 352 L 664 352 L 664 368 L 678 368 L 678 408 L 705 408 L 705 435 L 738 435 L 738 415 L 758 415 L 758 395 L 786 395 L 786 425 L 815 425 L 815 565 Z"
+              fill={THEME.farSilhouette}
+            />
+            {/* Ventanitas encendidas en el horizonte lejano */}
+            <rect x="652" y="384" width="8" height="12" fill={THEME.warmGlassMid} strokeWidth="1.2" />
+            <rect x="686" y="424" width="7" height="11" fill={THEME.warmGlassMid} strokeWidth="1.2" />
+            <rect x="765" y="410" width="8" height="12" fill={THEME.warmGlassMid} strokeWidth="1.2" />
+            <rect x="765" y="432" width="8" height="12" fill={THEME.warmGlassEdge} strokeWidth="1.2" />
+            <rect x="794" y="444" width="7" height="10" fill={THEME.warmGlassMid} strokeWidth="1.2" />
+          </g>
+        </g>
+      );
+    };
+
+    /**
+     * ============================================================================
+     * CAPA 2: CALLE, ACERAS EN PERSPECTIVA, CHARCOS Y DETALLES DE SUELO
+     * ============================================================================
+     */
+    const StreetAndSidewalksLayer = () => (
+      <g id="layer-street-and-sidewalks" stroke={THEME.ink} strokeLinejoin="round" strokeLinecap="round">
+        {/* Calzada central fugando hacia el punto de fuga (x=715, y=566) */}
+        <polygon
+          points="240,810 676,566 756,566 1175,810"
+          fill="url(#roadPerspectiveGrad)"
+          strokeWidth="2.2"
+        />
+
+        {/* Líneas sutiles de rodadura / textura de asfalto en perspectiva */}
+        <line x1="430" y1="810" x2="698" y2="566" stroke="#2c6f9e" strokeWidth="1.5" opacity="0.45" />
+        <line x1="965" y1="810" x2="736" y2="566" stroke="#2c6f9e" strokeWidth="1.5" opacity="0.45" />
+
+        {/* Acera Izquierda (superficie y bordillo vertical) */}
+        <polygon
+          points="0,735 662,566 676,566 225,810 0,810"
+          fill={THEME.sidewalkTop}
+          strokeWidth="2.2"
+        />
+        <polygon
+          points="225,810 676,566 676,573 255,810"
+          fill={THEME.sidewalkSide}
+          strokeWidth="2"
+        />
+        {/* Juntas de losas en la acera izquierda */}
+        <line x1="0" y1="768" x2="310" y2="768" stroke={THEME.ink} strokeWidth="1.6" opacity="0.7" />
+        <line x1="175" y1="690" x2="465" y2="690" stroke={THEME.ink} strokeWidth="1.5" opacity="0.65" />
+        <line x1="365" y1="642" x2="562" y2="642" stroke={THEME.ink} strokeWidth="1.4" opacity="0.6" />
+        <line x1="495" y1="608" x2="622" y2="608" stroke={THEME.ink} strokeWidth="1.3" opacity="0.55" />
+
+        {/* Acera Derecha (superficie y bordillo vertical) */}
+        <polygon
+          points="756,566 774,566 1440,722 1440,810 1195,810"
+          fill={THEME.sidewalkTop}
+          strokeWidth="2.2"
+        />
+        <polygon
+          points="756,566 1195,810 1168,810 756,573"
+          fill={THEME.sidewalkSide}
+          strokeWidth="2"
+        />
+        {/* Juntas de losas en la acera derecha */}
+        <line x1="1125" y1="766" x2="1440" y2="766" stroke={THEME.ink} strokeWidth="1.6" opacity="0.7" />
+        <line x1="992" y1="692" x2="1325" y2="692" stroke={THEME.ink} strokeWidth="1.5" opacity="0.65" />
+        <line x1="888" y1="640" x2="1105" y2="640" stroke={THEME.ink} strokeWidth="1.4" opacity="0.6" />
+        <line x1="815" y1="605" x2="942" y2="605" stroke={THEME.ink} strokeWidth="1.3" opacity="0.55" />
+
+        {/* Rejilla de alcantarilla en perspectiva (lado izquierdo de calzada) */}
+        <g id="street-drain-grate">
+          <polygon points="458,698 504,674 522,681 478,706" fill="#123047" strokeWidth="1.8" />
+          <line x1="468" y1="695" x2="486" y2="702" stroke={THEME.ink} strokeWidth="1.5" />
+          <line x1="479" y1="689" x2="497" y2="696" stroke={THEME.ink} strokeWidth="1.5" />
+          <line x1="490" y1="683" x2="508" y2="690" stroke={THEME.ink} strokeWidth="1.5" />
+        </g>
+
+        {/* Charco orgánico en primer plano izquierdo con reflejo nocturno */}
+        <g id="puddle-foreground-left">
+          <path
+            d="M 332 798 C 318 784, 355 772, 412 770 C 468 768, 515 778, 502 793 C 489 808, 425 812, 378 809 C 350 807, 340 806, 332 798 Z"
+            fill="#0d263b"
+            strokeWidth="2"
+          />
+          {/* Ondas de reflejo celeste y ámbar dentro del charco */}
+          <path d="M 358 785 C 385 781, 435 781, 468 785" fill="none" stroke="#428ec2" strokeWidth="2.2" />
+          <path d="M 378 794 C 405 792, 438 792, 456 795" fill="none" stroke="#ffd275" strokeWidth="2" opacity="0.8" />
+        </g>
+
+        {/* Charco orgánico en acera derecha reflejando la luz cálida de la farola */}
+        <g id="puddle-sidewalk-right">
+          <path
+            d="M 1068 748 C 1062 737, 1102 731, 1148 734 C 1192 737, 1218 747, 1205 758 C 1192 769, 1138 770, 1102 765 C 1080 762, 1072 756, 1068 748 Z"
+            fill="#143754"
+            strokeWidth="1.9"
+          />
+          <path d="M 1094 745 C 1122 742, 1162 743, 1184 748" fill="none" stroke="#ffe18c" strokeWidth="2.4" opacity="0.85" />
+          <path d="M 1110 755 C 1132 753, 1158 754, 1172 757" fill="none" stroke="#5aa5d6" strokeWidth="1.8" />
+        </g>
+
+        {/* Charco de luz radial proyectado por la farola principal sobre la acera derecha */}
+        <ellipse
+          cx="1032"
+          cy="694"
+          rx="125"
+          ry="32"
+          fill="url(#groundLightPool)"
+          stroke="none"
+        />
+      </g>
+    );
+
+    /**
+     * ============================================================================
+     * CAPA 3: ARQUITECTURA DE EDIFICIOS DEL FONDO Y PLANO INTERMEDIO
+     * ============================================================================
+     */
+    const MidgroundArchitectureLayer = () => (
+      <g id="layer-midground-buildings" stroke={THEME.ink} strokeLinejoin="round" strokeLinecap="round">
+        {/* --- BLOQUE INTERMEDIO IZQUIERDO (Edificios fugando hacia el fondo) --- */}
+        <g id="left-midground-block">
+          {/* Edificio lejano izquierdo */}
+          <polygon points="562,592 562,335 632,375 632,575" fill={THEME.farBuilding} strokeWidth="2" />
+          {/* Cara lateral en sombra */}
+          <polygon points="632,375 654,375 654,570 632,575" fill={THEME.midBuildingDark} strokeWidth="2" />
+          {/* Ventanas lejanas */}
+          <polygon points="576,388 594,398 594,432 576,423" fill={THEME.midBuildingDark} strokeWidth="1.6" />
+          <polygon points="604,404 620,413 620,445 604,437" fill="url(#warmWindowGrad)" strokeWidth="1.6" />
+          <polygon points="576,455 594,463 594,495 576,488" fill={THEME.midBuildingDark} strokeWidth="1.6" />
+          <polygon points="604,468 620,476 620,506 604,499" fill={THEME.midBuildingDark} strokeWidth="1.6" />
+
+          {/* Edificio intermedio izquierdo (fachada media) */}
+          <polygon points="418,628 418,220 562,302 562,592" fill={THEME.midBuilding} strokeWidth="2.2" />
+          {/* Cornisa superior en perspectiva */}
+          <polygon points="412,216 566,300 566,310 412,228" fill={THEME.fgTrim} strokeWidth="2" />
+
+          {/* Ventanas piso superior edificio intermedio */}
+          <polygon points="442,272 472,289 472,348 442,333" fill={THEME.midBuildingDark} strokeWidth="1.8" />
+          <polygon points="498,304 524,319 524,374 498,361" fill="url(#warmWindowGrad)" strokeWidth="1.8" />
+          {/* Silueta de persona leyendo en ventana iluminada */}
+          <path d="M 505 362 C 506 346, 514 344, 517 355 L 520 364 Z" fill={THEME.ink} stroke="none" />
+
+          {/* Ventanas piso medio edificio intermedio */}
+          <polygon points="442,374 472,389 472,448 442,435" fill={THEME.midBuildingDark} strokeWidth="1.8" />
+          <polygon points="498,402 524,415 524,468 498,457" fill={THEME.midBuildingDark} strokeWidth="1.8" />
+        </g>
+
+        {/* --- BLOQUE INTERMEDIO DERECHO (Edificios fugando hacia el fondo) --- */}
+        <g id="right-midground-block">
+          {/* Edificio lejano derecho */}
+          <polygon points="798,574 798,370 868,332 868,590" fill={THEME.farBuilding} strokeWidth="2" />
+          <polygon points="776,370 798,370 798,574 776,569" fill={THEME.midBuildingDark} strokeWidth="2" />
+          <polygon points="812,398 828,389 828,424 812,432" fill={THEME.midBuildingDark} strokeWidth="1.6" />
+          <polygon points="840,382 856,373 856,410 840,418" fill="url(#warmWindowGrad)" strokeWidth="1.6" />
+
+          {/* Edificio intermedio derecho */}
+          <polygon points="868,590 868,265 1038,162 1038,632" fill={THEME.midBuilding} strokeWidth="2.2" />
+          {/* Cara lateral derecha con profundidad */}
+          <polygon points="846,265 868,265 868,590 846,584" fill={THEME.midBuildingDark} strokeWidth="2.2" />
+          {/* Cornisa clásica con dentículos */}
+          <polygon points="842,262 1042,152 1042,166 842,274" fill={THEME.fgTrim} strokeWidth="2.2" />
+
+          {/* Ventanas altas edificio intermedio derecho */}
+          <polygon points="894,282 924,265 924,335 894,350" fill="url(#warmWindowGrad)" strokeWidth="1.9" />
+          <polygon points="956,246 992,226 992,302 956,320" fill={THEME.midBuildingDark} strokeWidth="1.9" />
+
+          {/* Ventanas medias edificio intermedio derecho */}
+          <polygon points="894,386 924,372 924,442 894,454" fill="url(#warmWindowGrad)" strokeWidth="1.9" />
+          <polygon points="956,356 992,339 992,415 956,430" fill="url(#warmWindowGrad)" strokeWidth="1.9" />
+          {/* Cortina decorativa en ventana */}
+          <path d="M 956 356 L 972 348 C 970 375, 964 395, 956 410 Z" fill={THEME.midBuildingDark} strokeWidth="1.4" />
+        </g>
+      </g>
+    );
+
+    /**
+     * ============================================================================
+     * CAPA 4: EDIFICIOS PRIMER PLANO Y ESCAPARATES ILUMINADOS (StorefrontsLayer)
+     * ============================================================================
+     */
+    const StorefrontsLayer = () => (
+      <g id="layer-foreground-storefronts" stroke={THEME.ink} strokeLinejoin="round" strokeLinecap="round">
+        {/* ====================================================================
+            LADO IZQUIERDO: EDIFICIO PRINCIPAL "LIBROS & CAFÉ"
+           ==================================================================== */}
+        <g id="building-left-bookstore">
+          {/* Fachada principal izquierda en perspectiva */}
+          <polygon points="0,735 0,0 418,0 418,628" fill={THEME.fgBuilding} strokeWidth="2.4" />
+          {/* Pilastras arquitectónicas verticales */}
+          <polygon points="78,0 104,0 104,708 78,715" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+          <polygon points="244,0 264,0 264,668 244,673" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+
+          {/* Cornisa intermedia que separa plantas */}
+          <polygon points="0,336 422,428 422,442 0,354" fill={THEME.fgTrim} strokeWidth="2.2" />
+          <polygon points="0,354 422,442 418,450 0,364" fill={THEME.fgBuildingShadow} strokeWidth="2" />
+
+          {/* --- VENTANAS SUPERIORES IZQUIERDAS --- */}
+          {/* Ventana 1 (extremo izquierdo con persiana y jardinera) */}
+          <g id="left-upper-window-1">
+            <polygon points="142,25 218,52 218,225 142,204" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            {/* Persiana enrollable superior */}
+            <polygon points="142,25 218,52 218,96 142,72" fill={THEME.fgTrim} strokeWidth="2" />
+            <line x1="142" y1="42" x2="218" y2="68" strokeWidth="1.4" />
+            <line x1="142" y1="57" x2="218" y2="82" strokeWidth="1.4" />
+            {/* Cuadro interior y lámpara */}
+            <polygon points="168,118 194,126 194,162 168,155" fill="none" strokeWidth="1.5" />
+            {/* Alféizar y jardinera con flores */}
+            <polygon points="134,202 226,227 226,238 134,213" fill={THEME.fgTrim} strokeWidth="2" />
+            <polygon points="148,186 210,203 206,222 152,207" fill={THEME.fgBuildingShadow} strokeWidth="1.8" />
+            <path d="M 155 188 C 154 176, 166 175, 170 185 C 176 174, 188 178, 188 190 C 194 182, 205 186, 203 198 Z" fill="#2b7578" strokeWidth="1.6" />
+          </g>
+
+          {/* Ventana 2 (con maceta interior) */}
+          <g id="left-upper-window-2">
+            <polygon points="282,76 334,95 334,255 282,240" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            <polygon points="276,238 340,256 340,266 276,248" fill={THEME.fgTrim} strokeWidth="2" />
+            {/* Maceta silueta en el alféizar interior */}
+            <polygon points="298,218 318,224 315,244 301,240" fill="#1b4d6e" strokeWidth="1.6" />
+            <path d="M 308 220 C 296 205, 300 192, 308 206 C 314 190, 324 202, 312 218" fill="#236478" strokeWidth="1.6" />
+          </g>
+
+          {/* Ventana 3 (con plantas colgantes) */}
+          <g id="left-upper-window-3">
+            <polygon points="358,104 398,119 398,272 358,260" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            <polygon points="352,258 404,273 404,282 352,267" fill={THEME.fgTrim} strokeWidth="2" />
+            <path d="M 366 258 C 362 242, 375 236, 380 250 C 385 238, 396 244, 391 262 Z" fill="#2b7578" strokeWidth="1.6" />
+          </g>
+
+          {/* --- ESCAPARATE IZQUIERDO PRIMER PLANO (LIBRERÍA) --- */}
+          <g id="left-foreground-shop-window">
+            {/* Luz cálida derramada sobre la acera izquierda */}
+            <polygon points="0,735 244,673 350,715 95,785" fill="url(#storefrontSpillLeft)" stroke="none" />
+
+            {/* Cristal amplio izquierdo */}
+            <polygon points="0,395 62,408 62,672 0,688" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            {/* Interior librería izquierda: libros y estantes */}
+            <polygon points="0,582 48,574 56,645 0,658" fill="#f7c868" strokeWidth="1.6" />
+            <polygon points="8,530 34,526 36,568 10,572" fill="#ffe79e" strokeWidth="1.5" />
+
+            {/* Puerta acristalada de acceso */}
+            <polygon points="104,418 148,427 148,696 104,708" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+            <polygon points="112,434 140,440 140,582 112,578" fill="url(#warmWindowGrad)" strokeWidth="1.8" />
+            <polygon points="112,598 140,601 140,676 112,682" fill="#174466" strokeWidth="1.8" />
+          </g>
+
+          {/* --- ESCAPARATE CENTRAL "LIBROS & CAFÉ" --- */}
+          <g id="left-cafe-bookstore">
+            {/* Friso con rótulo comercial */}
+            <polygon points="264,418 408,448 408,494 264,468" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+            <text
+              x="336"
+              y="464"
+              fill="#7ab8e0"
+              stroke="none"
+              fontSize="21"
+              fontWeight="600"
+              textAnchor="middle"
+              className="sign-condensed"
+              transform="skewY(11)"
+            >
+              LIBROS &amp; CAFÉ
+            </text>
+
+            {/* Gran ventanal panorámico cálido */}
+            <polygon points="274,482 398,504 398,616 274,628" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+
+            {/* Interior detallado: lámparas colgantes, mostrador y libros */}
+            <line x1="316" y1="490" x2="316" y2="528" strokeWidth="1.6" />
+            <path d="M 307 535 L 316 526 L 325 535 Z" fill="#ffd97d" strokeWidth="1.6" />
+            <line x1="362" y1="498" x2="362" y2="534" strokeWidth="1.6" />
+            <path d="M 354 540 L 362 532 L 370 540 Z" fill="#ffd97d" strokeWidth="1.6" />
+
+            {/* Mostrador y libros exhibidos */}
+            <polygon points="276,584 384,580 396,615 276,626" fill="#f5be58" strokeWidth="1.7" />
+            <polygon points="286,568 302,567 304,584 288,585" fill="#fff2c2" strokeWidth="1.4" />
+            <polygon points="310,566 326,565 328,583 312,584" fill="#fff2c2" strokeWidth="1.4" />
+            <polygon points="334,565 348,564 350,581 336,582" fill="#fff2c2" strokeWidth="1.4" />
+            {/* Lámpara de lectura sobre el mostrador */}
+            <path d="M 366 581 L 372 562 L 362 554" fill="none" strokeWidth="1.8" />
+            <polygon points="356,554 366,548 369,556 359,560" fill="#ffe699" strokeWidth="1.5" />
+
+            {/* Zócalo bajo escaparate */}
+            <polygon points="264,628 408,616 408,632 264,648" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+          </g>
+
+          {/* Local siguiente en perspectiva ("CAFÉ" cartel colgante y escaparate) */}
+          <g id="left-mid-shop">
+            <polygon points="434,506 462,512 462,532 434,527" fill={THEME.fgBuildingShadow} strokeWidth="1.8" />
+            <path d="M 442 515 L 453 517 L 451 525 L 444 524 Z" fill="#7ab8e0" strokeWidth="1.2" />
+            <polygon points="512,522 554,530 554,582 512,588" fill="url(#warmWindowGrad)" strokeWidth="2" />
+          </g>
+        </g>
+
+        {/* ====================================================================
+            LADO DERECHO: EDIFICIOS "MODA" Y "LA HORA DEL TÉ"
+           ==================================================================== */}
+        <g id="building-right-fashion">
+          {/* Fachada principal derecha en perspectiva */}
+          <polygon points="1038,632 1038,162 1440,0 1440,722" fill={THEME.fgBuilding} strokeWidth="2.4" />
+          {/* Pilastras estructurales */}
+          <polygon points="1216,90 1244,79 1244,678 1216,672" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+          <polygon points="1352,35 1378,25 1378,708 1352,702" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+
+          {/* Cornisa intermedia derecha */}
+          <polygon points="1034,432 1440,320 1440,338 1034,444" fill={THEME.fgTrim} strokeWidth="2.2" />
+
+          {/* --- VENTANAS SUPERIORES DERECHAS --- */}
+          <g id="right-upper-windows">
+            {/* Ventana alta 1 */}
+            <polygon points="1076,228 1126,204 1126,356 1076,374" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            <polygon points="1070,372 1132,354 1132,364 1070,382" fill={THEME.fgTrim} strokeWidth="2" />
+
+            {/* Ventana alta 2 (con silueta de gato mirando hacia la calle) */}
+            <polygon points="1272,135 1332,106 1332,292 1272,314" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            <polygon points="1264,312 1338,290 1338,302 1264,324" fill={THEME.fgTrim} strokeWidth="2" />
+            {/* Silueta del gato sentado en la esquina de la ventana */}
+            <g id="window-cat-silhouette" transform="translate(1312, 266)">
+              <path
+                d="M 4 28 C 2 18, 5 11, 8 9 L 7 2 L 11 6 L 15 6 L 18 1 L 18 9 C 21 12, 22 19, 19 28 Z"
+                fill="#e8d08e"
+                stroke={THEME.ink}
+                strokeWidth="1.6"
+              />
+              <circle cx="11" cy="11" r="1" fill={THEME.ink} stroke="none" />
+              <circle cx="16" cy="11" r="1" fill={THEME.ink} stroke="none" />
+            </g>
+          </g>
+
+          {/* --- ESCAPARATE "MODA / LA HORA DEL TÉ" --- */}
+          <g id="right-mid-boutique">
+            {/* Luz cálida derramada sobre la acera derecha */}
+            <polygon points="1038,632 1440,722 1250,785 950,695" fill="url(#storefrontSpillRight)" stroke="none" />
+
+            {/* Rótulo superior "MODA" */}
+            <polygon points="1058,448 1216,406 1216,456 1058,492" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+            <text
+              x="1136"
+              y="462"
+              fill="#7ab8e0"
+              stroke="none"
+              fontSize="24"
+              fontWeight="600"
+              textAnchor="middle"
+              className="sign-condensed"
+              transform="skewY(-14)"
+            >
+              MODA
+            </text>
+
+            {/* Ventanal escaparate boutique */}
+            <polygon points="1068,504 1204,474 1204,634 1068,614" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+
+            {/* Maniquí con abrigo estilizado y botas dentro del escaparate */}
+            <g id="storefront-mannequin-1">
+              <path
+                d="M 1152 536 L 1166 534 L 1178 552 L 1176 604 L 1146 602 L 1144 552 Z"
+                fill="#ebb14d"
+                strokeWidth="1.7"
+              />
+              <line x1="1159" y1="535" x2="1159" y2="603" strokeWidth="1.4" />
+              {/* Botas de exhibición */}
+              <path d="M 1124 606 L 1134 606 L 1136 620 L 1122 620 Z" fill="#d99b38" strokeWidth="1.5" />
+              <path d="M 1138 608 L 1148 608 L 1150 622 L 1136 622 Z" fill="#d99b38" strokeWidth="1.5" />
+            </g>
+
+            {/* Rotulación sobre el cristal "LA HORA DEL TÉ" */}
+            <text
+              x="1112"
+              y="558"
+              fill={THEME.ink}
+              stroke="none"
+              fontSize="16"
+              fontWeight="700"
+              textAnchor="middle"
+              className="sign-condensed"
+            >
+              LA HORA
+            </text>
+            <text
+              x="1112"
+              y="577"
+              fill={THEME.ink}
+              stroke="none"
+              fontSize="16"
+              fontWeight="700"
+              textAnchor="middle"
+              className="sign-condensed"
+            >
+              DEL TÉ
+            </text>
+          </g>
+
+          {/* --- ESCAPARATE PRIMER PLANO DERECHO "MODA" --- */}
+          <g id="right-foreground-boutique">
+            <polygon points="1244,400 1440,348 1440,408 1244,454" fill={THEME.fgBuildingShadow} strokeWidth="2.2" />
+            <text
+              x="1338"
+              y="412"
+              fill="#7ab8e0"
+              stroke="none"
+              fontSize="28"
+              fontWeight="600"
+              textAnchor="middle"
+              className="sign-condensed"
+              transform="skewY(-14)"
+            >
+              MODA
+            </text>
+
+            {/* Puerta acristalada con cartel de "Abierto/Cerrado" */}
+            <polygon points="1264,468 1326,454 1326,688 1264,676" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            <polygon points="1264,616 1326,626 1326,688 1264,676" fill={THEME.fgBuildingShadow} strokeWidth="2" />
+            {/* Cartel colgante en la puerta */}
+            <polyline points="1282,560 1295,546 1308,558" fill="none" strokeWidth="1.5" />
+            <polygon points="1280,560 1310,557 1310,578 1280,582" fill="#7ab8e0" strokeWidth="1.6" />
+
+            {/* Escaparate extremo derecho con silueta de abrigo */}
+            <polygon points="1378,442 1440,428 1440,676 1378,664" fill="url(#warmWindowGrad)" strokeWidth="2.2" />
+            <path
+              d="M 1424 510 L 1440 506 L 1440 634 L 1396 630 L 1404 542 Z"
+              fill="#5d94ba"
+              strokeWidth="2"
+            />
+          </g>
+        </g>
+      </g>
+    );
+
+    /**
+     * ============================================================================
+     * CAPA 5: MOBILIARIO URBANO Y OBJETOS INDEPENDIENTES (StreetPropsLayer)
+     * Farolas clásicas, macetas, bote de basura, bicicleta y aparcabicicletas.
+     * ============================================================================
+     */
+    const StreetPropsLayer = () => (
+      <g id="layer-street-props" stroke={THEME.ink} strokeLinejoin="round" strokeLinecap="round">
+        {/* 1. Bicicleta estacionada al fondo izquierdo */}
+        <g id="prop-parked-bicycle" transform="translate(518, 578) scale(0.85)">
+          <circle cx="14" cy="36" r="13" fill="none" strokeWidth="2.2" />
+          <circle cx="54" cy="36" r="13" fill="none" strokeWidth="2.2" />
+          <polyline points="14,36 30,18 48,18 54,36" fill="none" strokeWidth="2" />
+          <polyline points="30,18 34,36 14,36" fill="none" strokeWidth="2" />
+          <line x1="28" y1="12" x2="34" y2="12" strokeWidth="2.4" />
+          <line x1="46" y1="11" x2="52" y2="11" strokeWidth="2.4" />
+        </g>
+
+        {/* 2. Bote de basura urbano izquierdo */}
+        <g id="prop-trash-bin-left">
+          <polygon points="418,582 456,582 452,638 422,638" fill="#1b4d73" strokeWidth="2" />
+          <ellipse cx="437" cy="582" rx="19" ry="5" fill="#286896" strokeWidth="2" />
+          <line x1="427" y1="592" x2="429" y2="630" strokeWidth="1.6" />
+          <line x1="437" y1="592" x2="437" y2="630" strokeWidth="1.6" />
+          <line x1="447" y1="592" x2="445" y2="630" strokeWidth="1.6" />
+        </g>
+
+        {/* 3. Maceta decorativa junto a "LIBROS & CAFÉ" */}
+        <g id="prop-planter-left">
+          <polygon points="205,638 255,638 248,684 212,684" fill="#1b4e75" strokeWidth="2" />
+          <ellipse cx="230" cy="638" rx="25" ry="6" fill="#276999" strokeWidth="2" />
+          {/* Follaje estilizado con hojas orgánicas */}
+          <path
+            d="M 214 636 C 198 622, 204 602, 218 612 C 210 594, 226 584, 232 602 C 238 584, 254 594, 244 612 C 258 604, 262 624, 246 636 Z"
+            fill="#236b73"
+            strokeWidth="2"
+          />
+          <path d="M 222 632 C 220 618, 226 608, 230 604" fill="none" strokeWidth="1.5" />
+          <path d="M 238 632 C 240 618, 235 610, 232 606" fill="none" strokeWidth="1.5" />
+        </g>
+
+        {/* 4. Maceta decorativa en acera derecha */}
+        <g id="prop-planter-right">
+          <polygon points="1165,612 1212,612 1206,654 1171,654" fill="#1b4e75" strokeWidth="2" />
+          <ellipse cx="1188.5" cy="612" rx="23.5" ry="5.5" fill="#276999" strokeWidth="2" />
+          <path
+            d="M 1173 610 C 1158 598, 1164 580, 1178 590 C 1174 574, 1188 568, 1192 584 C 1198 570, 1212 578, 1204 592 C 1216 586, 1218 602, 1204 610 Z"
+            fill="#236b73"
+            strokeWidth="2"
+          />
+        </g>
+
+        {/* 5. Aparcabicicletas metálico en primer plano derecho */}
+        <g id="prop-bike-rack-right">
+          {[0, 32, 64].map((offset, idx) => (
+            <g key={idx} transform={`translate(${1292 + offset}, ${686 + idx * 8})`}>
+              <path
+                d="M 0 56 L 0 12 C 0 2, 18 2, 18 12 L 18 62"
+                fill="none"
+                stroke={THEME.ink}
+                strokeWidth="6.5"
+              />
+              <path
+                d="M 0 56 L 0 12 C 0 2, 18 2, 18 12 L 18 62"
+                fill="none"
+                stroke="#39759e"
+                strokeWidth="2.8"
+              />
+            </g>
+          ))}
+        </g>
+
+        {/* 6. Papel/volante caído en la acera frente al perro (detalle narrativo) */}
+        <g id="prop-street-flyer" transform="translate(954, 704)">
+          <polygon points="0,4 22,0 32,12 10,17" fill="#c7e0f4" strokeWidth="1.6" />
+          <line x1="7" y1="6" x2="19" y2="4" strokeWidth="1.2" />
+          <line x1="10" y1="10" x2="23" y2="8" strokeWidth="1.2" />
+        </g>
+
+        {/* 7. Farolas lejanas al fondo de la calle */}
+        <g id="prop-distant-streetlamps">
+          {/* Farola media */}
+          <circle cx="808" cy="482" r="32" fill="url(#lampHaloPrimary)" stroke="none" />
+          <line x1="808" y1="494" x2="808" y2="592" stroke={THEME.ironDark} strokeWidth="4.5" />
+          <polygon points="802,476 814,476 812,492 804,492" fill="#ffe694" strokeWidth="1.6" />
+          <polygon points="800,476 808,468 816,476" fill={THEME.ironDark} strokeWidth="1.6" />
+
+          {/* Farola lejana */}
+          <circle cx="766" cy="522" r="20" fill="url(#lampHaloPrimary)" stroke="none" />
+          <line x1="766" y1="530" x2="766" y2="582" stroke={THEME.ironDark} strokeWidth="3" />
+          <polygon points="762,518 770,518 769,528 763,528" fill="#ffe694" strokeWidth="1.3" />
+        </g>
+
+        {/* 8. Farola Clásica Principal en Primer Plano Derecho */}
+        <g id="prop-primary-streetlamp">
+          {/* Halo de luz cálida radial */}
+          <circle cx="992" cy="264" r="145" fill="url(#lampHaloPrimary)" stroke="none" />
+
+          {/* Base moldeada de hierro fundido */}
+          <ellipse cx="992" cy="692" rx="18" ry="5" fill={THEME.ironDark} strokeWidth="2.2" />
+          <path
+            d="M 978 691 L 982 652 L 1002 652 L 1006 691 Z"
+            fill={THEME.ironDark}
+            strokeWidth="2.2"
+          />
+          <rect x="980" y="646" width="24" height="6" rx="2" fill={THEME.ironHighlight} strokeWidth="2" />
+
+          {/* Fuste estriado vertical */}
+          <polygon points="986,646 988,318 996,318 998,646" fill={THEME.ironDark} strokeWidth="2.2" />
+          {/* Línea de brillo frío en el poste */}
+          <line x1="990" y1="642" x2="991" y2="322" stroke={THEME.ironHighlight} strokeWidth="2" />
+
+          {/* Collarín ornamental y soporte de linterna */}
+          <rect x="982" y="312" width="20" height="7" rx="3" fill={THEME.ironHighlight} strokeWidth="2" />
+          <polygon points="976,304 1008,304 1001,312 983,312" fill={THEME.ironDark} strokeWidth="2" />
+
+          {/* Linterna hexagonal de cristal iluminado */}
+          <polygon points="974,242 1010,242 1004,304 980,304" fill="#fff2bd" strokeWidth="2.2" />
+          {/* Núcleo incandescente interior */}
+          <ellipse cx="992" cy="272" rx="10" ry="18" fill="#ffffff" stroke="none" opacity="0.85" />
+          {/* Nervaduras metálicas de la linterna */}
+          <line x1="986" y1="242" x2="988" y2="304" stroke={THEME.ironDark} strokeWidth="2" />
+          <line x1="998" y1="242" x2="996" y2="304" stroke={THEME.ironDark} strokeWidth="2" />
+
+          {/* Sombrerete y remate superior */}
+          <polygon points="966,242 992,216 1018,242" fill={THEME.ironDark} strokeWidth="2.2" />
+          <polygon points="982,216 992,204 1002,216" fill={THEME.ironHighlight} strokeWidth="2" />
+          <line x1="992" y1="204" x2="992" y2="192" stroke={THEME.ink} strokeWidth="2.5" />
+        </g>
+      </g>
+    );
+
+    /**
+     * ============================================================================
+     * CAPA 6: PERSONAJE PROTAGONISTA ARTICULABLE (ProtagonistRig)
+     * Jerarquía modular por grupos SVG con pivotes anatómicos claros:
+     * - ProtagonistRoot -> LegsGroup (LeftLegGroup, RightLegGroup)
+     *                   -> TorsoGroup -> LeftArmGroup, RightArmGroup, HeadGroup
+     * ============================================================================
+     */
+    const ProtagonistRig = ({ pose }) => {
+      return (
+        <g
+          id="character-protagonist-root"
+          transform={`translate(716, ${532 + pose.girlOffsetY})`}
+          stroke={THEME.ink}
+          strokeWidth="2.3"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        >
+          {/* Sombra de contacto proyectada en el asfalto */}
+          <ellipse
+            cx="-4"
+            cy="226"
+            rx="54"
+            ry="8"
+            fill="#0d2538"
+            stroke="none"
+            opacity="0.72"
+          />
+
+          {/* ==================================================================
+              1. BRAZO IZQUIERDO (Plano posterior, detrás del torso)
+             ================================================================== */}
+          <g
+            id="protagonist-left-arm"
+            className="rig-limb"
+            transform={`translate(-6, 12) rotate(${pose.leftArmAngle})`}
+          >
+            <path
+              d="M -6 0 C -14 24, -18 46, -15 66 L -3 68 C 0 46, 3 24, 6 2 Z"
+              fill={THEME.girlJacketShade}
+            />
+            <circle cx="-9" cy="70" r="5.5" fill={THEME.girlSkinShadow} />
+          </g>
+
+          {/* ==================================================================
+              2. PIERNA IZQUIERDA (Pierna trasera en perspectiva)
+             ================================================================== */}
+          <g
+            id="protagonist-left-leg"
+            className="rig-limb"
+            transform={`translate(-10, 96) rotate(${pose.leftLegAngle})`}
+          >
+            {/* Muslo */}
+            <path
+              d="M -11 0 L 10 0 L 8 62 L -9 62 Z"
+              fill={THEME.girlPantsShade}
+            />
+            {/* Pantorrilla y zapatilla articuladas en la rodilla */}
+            <g
+              id="protagonist-left-shin"
+              className="rig-limb"
+              transform={`translate(0, 60) rotate(${pose.leftKneeAngle})`}
+            >
+              <path
+                d="M -8 0 L 7 0 L 5 56 L -7 56 Z"
+                fill={THEME.girlPantsShade}
+              />
+              {/* Calcetín */}
+              <rect x="-6.5" y="54" width="11" height="7" fill="#b8d0e6" />
+              {/* Zapatilla urbana */}
+              <path
+                d="M -8 60 L 6 60 C 12 63, 22 66, 24 72 L -10 72 Z"
+                fill={THEME.girlShoes}
+              />
+              <path d="M -10 70 L 24 70 L 24 74 L -10 74 Z" fill={THEME.shoeSole} />
+            </g>
+          </g>
+
+          {/* ==================================================================
+              3. PIERNA DERECHA (Pierna delantera)
+             ================================================================== */}
+          <g
+            id="protagonist-right-leg"
+            className="rig-limb"
+            transform={`translate(8, 96) rotate(${pose.rightLegAngle})`}
+          >
+            {/* Muslo */}
+            <path
+              d="M -11 0 L 12 0 L 10 62 L -9 62 Z"
+              fill={THEME.girlPants}
+            />
+            {/* Pliegue de tela en la cadera */}
+            <path d="M -4 14 Q 3 18 8 12" fill="none" strokeWidth="1.6" />
+            {/* Pantorrilla y zapatilla articuladas */}
+            <g
+              id="protagonist-right-shin"
+              className="rig-limb"
+              transform={`translate(1, 60) rotate(${pose.rightKneeAngle})`}
+            >
+              <path
+                d="M -9 0 L 8 0 L 6 56 L -7 56 Z"
+                fill={THEME.girlPants}
+              />
+              {/* Calcetín */}
+              <rect x="-6.5" y="54" width="11.5" height="7" fill="#d9eaf7" />
+              {/* Zapatilla urbana */}
+              <path
+                d="M -8 60 L 7 60 C 14 63, 24 66, 26 72 L -10 72 Z"
+                fill={THEME.girlShoes}
+              />
+              {/* Cordones blancos */}
+              <line x1="8" y1="63" x2="12" y2="62" stroke="#ffffff" strokeWidth="1.6" />
+              <line x1="12" y1="65" x2="16" y2="64" stroke="#ffffff" strokeWidth="1.6" />
+              <path d="M -10 70 L 26 70 L 26 74 L -10 74 Z" fill={THEME.shoeSole} />
+            </g>
+          </g>
+
+          {/* ==================================================================
+              4. TORSO, CHAQUETA COBALTO, CABEZA Y BRAZO DERECHO
+             ================================================================== */}
+          <g
+            id="protagonist-torso-group"
+            className="rig-limb"
+            transform={`translate(0, 96) rotate(${pose.torsoTilt})`}
+          >
+            {/* Cuerpo de la chaqueta azul cobalto con silueta holgada estilizada */}
+            <path
+              d="M -22 -88 C -25 -62, -26 -30, -24 -2 L 22 -2 C 25 -32, 22 -64, 16 -88 Z"
+              fill={THEME.girlJacket}
+            />
+            {/* Sombra lateral trasera de la chaqueta */}
+            <path
+              d="M -22 -88 C -25 -62, -26 -30, -24 -2 L -10 -2 C -12 -32, -12 -64, -10 -88 Z"
+              fill={THEME.girlJacketShade}
+              stroke="none"
+            />
+            {/* Contorno re-trazado tras sombra */}
+            <path
+              d="M -22 -88 C -25 -62, -26 -30, -24 -2 L 22 -2 C 25 -32, 22 -64, 16 -88 Z"
+              fill="none"
+            />
+            {/* Pretina inferior y cierre vertical de la chaqueta */}
+            <line x1="-24" y1="-11" x2="22" y2="-11" strokeWidth="2" />
+            <line x1="12" y1="-84" x2="14" y2="-2" strokeWidth="1.8" />
+            {/* Cuello levantado de la chaqueta */}
+            <path
+              d="M -13 -94 L 15 -94 L 18 -84 L -15 -84 Z"
+              fill={THEME.girlJacketShade}
+            />
+
+            {/* --- CABEZA, ROSTRO EXPRESIVO, CABELLO Y GORRO TEJIDO --- */}
+            <g
+              id="protagonist-head-group"
+              className="rig-limb"
+              transform={`translate(2, -94) rotate(${pose.headTilt})`}
+            >
+              {/* Cuello */}
+              <path d="M -6 -14 L 6 -14 L 7 2 L -7 2 Z" fill={THEME.girlSkin} />
+              <path d="M -6 -14 L 6 -14 L 6 -7 L -6 -5 Z" fill={THEME.girlSkinShadow} stroke="none" />
+
+              {/* Masa posterior del cabello oscuro ondulado (cae sobre la espalda) */}
+              <path
+                d="M -14 -44 C -28 -36, -34 -14, -30 8 C -28 18, -33 26, -24 32 C -17 36, -10 28, -8 18 C -4 24, 2 22, 1 10 L -2 -26 Z"
+                fill={THEME.girlHair}
+              />
+
+              {/* Rostro en perfil de tres cuartos mirando hacia la derecha */}
+              <path
+                d="M -10 -44 C -10 -52, 14 -52, 16 -38 C 17 -32, 20 -27, 21 -24 C 21 -22, 18 -21, 17 -20 C 17 -14, 15 -8, 8 -8 C 0 -8, -8 -12, -10 -22 Z"
+                fill={THEME.girlSkin}
+              />
+
+              {/* Rasgos faciales limpios de animación 2D */}
+              {/* Ceja y ojo expresivo */}
+              <path d="M 9 -35 Q 13 -37 16 -35" fill="none" strokeWidth="1.8" />
+              <ellipse cx="12.5" cy="-30.5" rx="1.8" ry="2.4" fill={THEME.ink} stroke="none" />
+              <circle cx="13" cy="-31.2" r="0.7" fill="#ffffff" stroke="none" />
+              {/* Sonrisa sutil */}
+              <path d="M 11 -16 Q 14.5 -14.5 16.5 -16.5" fill="none" strokeWidth="1.8" />
+              {/* Rubor sutil */}
+              <ellipse cx="7" cy="-22" rx="3" ry="1.6" fill="#e08979" stroke="none" opacity="0.55" />
+
+              {/* Mechón lateral y patilla enmarcando la oreja */}
+              <path
+                d="M -14 -42 C -14 -28, -10 -12, -3 -4 C 1 -10, 1 -22, -2 -30 C 2 -28, 4 -34, 2 -42 Z"
+                fill={THEME.girlHair}
+              />
+              {/* Oreja visible */}
+              <path d="M -2 -28 C -5 -28, -5 -20, -1 -20" fill={THEME.girlSkin} strokeWidth="1.8" />
+
+              {/* Gorro tejido (beanie) ocre/naranja */}
+              <g id="protagonist-beanie">
+                {/* Copa del gorro */}
+                <path
+                  d="M -18 -40 C -24 -56, -12 -72, 6 -68 C 17 -65, 20 -52, 16 -41 Z"
+                  fill={THEME.girlBeanie}
+                />
+                {/* Doblez acanalado inferior */}
+                <path
+                  d="M -20 -43 C -8 -47, 8 -46, 18 -40 L 16 -33 C 6 -38, -8 -39, -18 -35 Z"
+                  fill={THEME.girlBeanieRib}
+                />
+                {/* Líneas de tejido del gorro */}
+                <line x1="-10" y1="-44" x2="-9" y2="-36" strokeWidth="1.5" />
+                <line x1="-1" y1="-45" x2="0" y2="-37" strokeWidth="1.5" />
+                <line x1="8" y1="-44" x2="8" y2="-36" strokeWidth="1.5" />
+              </g>
+            </g>
+
+            {/* --- BRAZO DERECHO (Sostiene la correa del perro) --- */}
+            <g
+              id="protagonist-right-arm"
+              className="rig-limb"
+              transform={`translate(4, -80) rotate(${pose.rightArmAngle})`}
+            >
+              {/* Manga articulada doblada ligeramente hacia adelante */}
+              <path
+                d="M -8 0 C -6 22, 4 42, 24 62 L 33 54 C 18 36, 11 18, 8 -2 Z"
+                fill={THEME.girlJacket}
+              />
+              {/* Pliegue en el codo */}
+              <path d="M 3 28 Q 9 31 12 26" fill="none" strokeWidth="1.7" />
+              {/* Puño de la manga */}
+              <path d="M 23 61 L 32 53 L 36 57 L 27 65 Z" fill={THEME.girlJacketShade} />
+              {/* Mano cerrando el asa de la correa */}
+              <path
+                d="M 28 63 C 33 60, 41 63, 40 69 C 39 74, 31 74, 27 69 Z"
+                fill={THEME.girlSkin}
+              />
+              {/* Asa de la correa colgando de la mano */}
+              <path
+                d="M 34 71 C 32 82, 40 88, 43 80 C 45 75, 40 70, 36 70"
+                fill="none"
+                stroke={THEME.leashColor}
+                strokeWidth="2.4"
+              />
+            </g>
+          </g>
+        </g>
+      );
+    };
+
+    /**
+     * ============================================================================
+     * CAPA 7: PERRO PEQUEÑO ARTICULABLE + CORREA DINÁMICA (DogRig)
+     * Terrier peludo con contorno de mechones expresivos, pañuelo y cola articulada.
+     * ============================================================================
+     */
+    const DogRig = ({ pose }) => {
+      // Curva Bézier cúbica que conecta dinámicamente la mano de la protagonista con el collar del perro
+      const leashPath = `M ${pose.handAnchor.x} ${pose.handAnchor.y} C ${pose.handAnchor.x + 35} ${pose.handAnchor.y + 42}, ${pose.collarAnchor.x - 45} ${pose.collarAnchor.y - 12}, ${pose.collarAnchor.x} ${pose.collarAnchor.y}`;
+
+      return (
+        <g id="character-dog-and-leash">
+          {/* Correa flexible en curva Bézier */}
+          <path
+            id="dynamic-dog-leash"
+            d={leashPath}
+            fill="none"
+            stroke={THEME.leashColor}
+            strokeWidth="2.4"
+            strokeLinecap="round"
+          />
+
+          {/* Grupo raíz del perro */}
+          <g
+            id="character-dog-root"
+            transform={`translate(902, ${688 + pose.dogOffsetY})`}
+            stroke={THEME.ink}
+            strokeWidth="2.2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          >
+            {/* Sombra de contacto en la acera */}
+            <ellipse
+              cx="4"
+              cy="44"
+              rx="42"
+              ry="6.5"
+              fill="#122e45"
+              stroke="none"
+              opacity="0.65"
+            />
+
+            {/* Patas traseras (par izquierdo y derecho) */}
+            <g
+              id="dog-back-leg-far"
+              className="rig-limb"
+              transform={`translate(-24, 16) rotate(${pose.dogBackLegB})`}
+            >
+              <path
+                d="M -5 0 L 5 0 L 4 22 L 9 25 L -4 25 L -5 14 Z"
+                fill={THEME.dogFurShade}
+              />
+            </g>
+
+            <g
+              id="dog-back-leg-near"
+              className="rig-limb"
+              transform={`translate(-16, 16) rotate(${pose.dogBackLegA})`}
+            >
+              <path
+                d="M -6 0 L 6 0 L 5 23 L 10 26 L -4 26 L -6 14 Z"
+                fill={THEME.dogFur}
+              />
+            </g>
+
+            {/* Patas delanteras */}
+            <g
+              id="dog-front-leg-far"
+              className="rig-limb"
+              transform={`translate(14, 16) rotate(${pose.dogFrontLegB})`}
+            >
+              <path
+                d="M -5 0 L 5 0 L 5 22 L 10 25 L -3 25 Z"
+                fill={THEME.dogFurShade}
+              />
+            </g>
+
+            <g
+              id="dog-front-leg-near"
+              className="rig-limb"
+              transform={`translate(22, 16) rotate(${pose.dogFrontLegA})`}
+            >
+              <path
+                d="M -5 0 L 5 0 L 5 23 L 11 26 L -3 26 Z"
+                fill={THEME.dogFur}
+              />
+            </g>
+
+            {/* Cuerpo peludo del perro con mechones estilizados */}
+            <g
+              id="dog-body-group"
+              className="rig-limb"
+              transform={`rotate(${pose.dogBodyTilt})`}
+            >
+              {/* Cola articulada erguida */}
+              <g
+                id="dog-tail-group"
+                className="rig-limb"
+                transform={`translate(-28, -2) rotate(${pose.dogTailAngle})`}
+              >
+                <path
+                  d="M 0 4 C -10 -4, -14 -16, -8 -24 C -4 -20, -2 -12, 4 -4 Z"
+                  fill={THEME.dogFur}
+                />
+              </g>
+
+              {/* Tronco con textura de pelaje en el contorno inferior */}
+              <path
+                d="M -28 -4 C -16 -8, 10 -10, 26 -6 L 28 16 L 22 14 L 16 19 L 10 15 L 3 20 L -4 15 L -11 19 L -18 15 L -26 17 Z"
+                fill={THEME.dogFur}
+              />
+
+              {/* Pañuelo naranja al cuello con nudo flotante */}
+              <g id="dog-neck-scarf">
+                <path
+                  d="M 12 -10 L 28 -6 L 26 6 L 10 2 Z"
+                  fill={THEME.dogScarf}
+                />
+                {/* Puntas del pañuelo hacia atrás */}
+                <path
+                  d="M 11 -3 L -2 2 L 2 8 L 12 2 Z"
+                  fill={THEME.dogScarf}
+                />
+                <path
+                  d="M 10 1 L 0 11 L 6 14 L 14 4 Z"
+                  fill="#b54420"
+                />
+              </g>
+
+              {/* Cabeza expresiva tipo terrier */}
+              <g
+                id="dog-head-group"
+                className="rig-limb"
+                transform={`translate(24, -10) rotate(${pose.dogHeadTilt})`}
+              >
+                {/* Oreja trasera */}
+                <polygon points="-2,-16 3,-30 9,-16" fill={THEME.dogFurShade} />
+                {/* Cabeza con mechones en coronilla y barba */}
+                <path
+                  d="M -12 -6 C -14 -18, -2 -22, 8 -18 L 12 -26 L 15 -16 C 22 -14, 30 -12, 32 -6 C 32 -1, 26 2, 22 2 L 25 7 L 17 6 L 14 11 L 8 7 L 2 10 L -4 6 L -12 4 Z"
+                  fill={THEME.dogFur}
+                />
+                {/* Trufa (nariz) oscura */}
+                <ellipse cx="31" cy="-7" rx="3.2" ry="2.5" fill={THEME.ink} stroke="none" />
+                {/* Ceja peluda y ojo vivo */}
+                <path d="M 10 -13 L 17 -12" strokeWidth="2.2" />
+                <circle cx="15" cy="-8.5" r="2.2" fill={THEME.ink} stroke="none" />
+                <circle cx="15.7" cy="-9.2" r="0.7" fill="#ffffff" stroke="none" />
+              </g>
+            </g>
+          </g>
+        </g>
+      );
+    };
+
+    /**
+     * ============================================================================
+     * CAPA 8: DETALLES ATMOSFÉRICOS FINALES (LightingAtmosphereLayer)
+     * Viñeta cinematográfica sutil para enmarcar la profundidad nocturna.
+     * ============================================================================
+     */
+    const LightingAtmosphereLayer = () => (
+      <g id="layer-atmosphere-overlay" pointerEvents="none">
+        {/* Degradado sutil en borde inferior para anclar el primer plano */}
+        <rect
+          x="0"
+          y="775"
+          width="1440"
+          height="35"
+          fill="#07121d"
+          opacity="0.28"
+        />
+        {/* Marco fino editorial interior */}
+        <rect
+          x="1"
+          y="1"
+          width="1438"
+          height="808"
+          fill="none"
+          stroke={THEME.ink}
+          strokeWidth="3"
+        />
+      </g>
+    );
+
+    /**
+     * ============================================================================
+     * APLICACIÓN PRINCIPAL (App)
+     * Integra la composición SVG completa y un panel inspector discreto plegable.
+     * ============================================================================
+     */
+    const App = () => {
+      const [panelOpen, setPanelOpen] = useState(false);
+      const [currentPoseKey, setCurrentPoseKey] = useState('walkA');
+      const [visibleLayers, setVisibleLayers] = useState({
+        sky: true,
+        midground: true,
+        storefronts: true,
+        street: true,
+        props: true,
+        protagonist: true,
+        dog: true,
+        atmosphere: true
+      });
+
+      const activePose = RIG_POSES[currentPoseKey];
+
+      const toggleLayer = (layerKey) => {
+        setVisibleLayers((prev) => ({
+          ...prev,
+          [layerKey]: !prev[layerKey]
+        }));
+      };
+
+      const layerLabels = [
+        { key: 'sky', label: '1. Cielo y Horizonte' },
+        { key: 'street', label: '2. Calzada, Aceras y Charcos' },
+        { key: 'midground', label: '3. Edificios Plano Intermedio' },
+        { key: 'storefronts', label: '4. Escaparates Iluminados' },
+        { key: 'props', label: '5. Farolas y Mobiliario' },
+        { key: 'protagonist', label: '6. Rig Protagonista' },
+        { key: 'dog', label: '7. Rig Perro y Correa' },
+        { key: 'atmosphere', label: '8. Atmósfera y Encuadre' }
+      ];
+
+      return (
+        <div className="viewport-stage">
+          {/* Inspector discreto plegable en esquina superior izquierda */}
+          <div className="inspector-dock">
+            <button
+              type="button"
+              className="dock-toggle-btn"
+              onClick={() => setPanelOpen((o) => !o)}
+              title="Inspeccionar capas vectoriales y poses del rig"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                <polyline points="2 17 12 22 22 17" />
+                <polyline points="2 12 12 17 22 12" />
+              </svg>
+              <span>{panelOpen ? 'Cerrar Rig & Capas' : 'Rig & Capas SVG'}</span>
+            </button>
+
+            {panelOpen && (
+              <div className="dock-panel">
+                <div className="dock-section-title">Poses del Rig Articulable</div>
+                <div className="pose-grid">
+                  {Object.entries(RIG_POSES).map(([key, poseObj]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={`pose-btn ${currentPoseKey === key ? 'active' : ''}`}
+                      onClick={() => setCurrentPoseKey(key)}
+                    >
+                      {poseObj.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="dock-section-title">Visibilidad de Capas SVG</div>
+                <div className="layer-list">
+                  {layerLabels.map(({ key, label }) => (
+                    <label key={key} className="layer-item">
+                      <span>{label}</span>
+                      <input
+                        type="checkbox"
+                        checked={visibleLayers[key]}
+                        onChange={() => toggleLayer(key)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Escenario Cinematográfico 16:9 */}
+          <div className="canvas-frame">
+            <svg
+              id="urban-narrative-scene-svg"
+              className="narrative-scene"
+              viewBox="0 0 1440 810"
+              preserveAspectRatio="xMidYMid meet"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <SceneDefs />
+
+              {visibleLayers.sky && <SkyLayer />}
+              {visibleLayers.midground && <MidgroundArchitectureLayer />}
+              {visibleLayers.street && <StreetAndSidewalksLayer />}
+              {visibleLayers.storefronts && <StorefrontsLayer />}
+              {visibleLayers.props && <StreetPropsLayer />}
+              {visibleLayers.protagonist && <ProtagonistRig pose={activePose} />}
+              {visibleLayers.dog && <DogRig pose={activePose} />}
+              {visibleLayers.atmosphere && <LightingAtmosphereLayer />}
+            </svg>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
