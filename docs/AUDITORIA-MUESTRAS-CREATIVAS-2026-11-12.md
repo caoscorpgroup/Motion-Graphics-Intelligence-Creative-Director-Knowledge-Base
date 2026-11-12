@@ -95,3 +95,68 @@ La implementación incluye reloj con delta time limitado, ResizeObserver, DPR m�
 La base del skill pasa de una regla exclusivamente 2D a un enfoque **2D-first, con 2.5D y 3D selectivo**. El 2D conserva prioridad cuando resuelve el encargo; Three.js/WebGL se incorporan cuando se necesitan volumen, cámara, materiales, iluminación o interacción espacial reales. JSON se considera un formato para describir datos y configuración de escenas, no una tecnología de renderizado.
 
 La comparación entre el ecosistema de Facebook y el prototipo propio también debe mantenerse separada en dos ejes: complejidad de arquitectura/código y calidad visual comprobada. La primera se puede estudiar estáticamente; la segunda requiere ejecutar y observar ambos resultados.
+
+
+## Ampliación: comparación de ilustración urbana Gemini vs. Meta AI
+
+**Archivos revisados:** `referencias-visuales/por-clasificar/Chica, perro Gemini.html` y `Chica, perro meta.html`. La revisión fue principalmente estática sobre el código HTML/JSX/SVG compartido y recuperado del repositorio. No equivale a una auditoría exhaustiva de todos los controles ni a una prueba completa en Safari/iPad.
+
+### Resultado comparativo
+
+**Gemini**
+- Construye una escena urbana nocturna más desarrollada: cielo, arquitectura lejana e intermedia, fachadas, escaparates, calle y aceras en perspectiva, charcos, alcantarillas, bicicletas, farolas y mobiliario urbano.
+- Separa escenario, protagonista y perro en componentes y grupos SVG identificables.
+- Incluye poses seleccionables y pivotes articulados para partes de la chica y el perro, además de una correa curva.
+- La implementación evidencia preparación modular y poses articuladas, pero no demuestra por sí sola un ciclo de caminata continuo, timeline narrativo ni rigging anatómico avanzado. No atribuirle esas capacidades sin pruebas adicionales.
+- La explicación del propio modelo sobre la calidad de su trabajo es una justificación autogenerada, no una evaluación independiente.
+
+**Meta AI**
+- Presenta una interfaz de inspección y controles más desarrollada, con estructura de capas y opciones de visualización.
+- Su escena utiliza una construcción más esquemática y elemental que la de Gemini en la muestra examinada.
+- Incluye animaciones ambientales CSS, pero no se debe confundir ese movimiento con una secuencia narrativa o un ciclo de locomoción completo.
+- No se verificó exhaustivamente el comportamiento de cada control ni su compatibilidad en todos los dispositivos.
+
+### Qué se conserva como aprendizaje
+
+1. **Dirección visual antes de implementación:** interpretar el encargo como una imagen o escena que debe diseñarse. Resolver concepto, composición, punto focal, perspectiva, escala, siluetas, personajes, arquitectura, color, luz y atmósfera antes de elegir componentes o escribir código.
+2. **Escenario como espacio unificado:** establecer horizonte y puntos de fuga; organizar primer plano, plano medio y fondo; dar escala y coherencia a edificios, fachadas, objetos, personajes y calle. Las capas ayudan a producir y animar, pero no sustituyen la perspectiva dibujada.
+3. **Diseño de formas con identidad:** las figuras principales deben tener siluetas, contornos, proporciones y superficies deliberadas. Las primitivas son válidas para geometría intencional, guías y detalles, pero no como solución automática para personajes, animales, edificios u objetos que requieren ilustración.
+4. **Color e iluminación con función:** definir una paleta relacionada con el concepto y separar planos mediante valor, contraste, saturación, luz, sombra y atmósfera. Una combinación cromática coherente ayuda, pero no corrige un dibujo débil.
+5. **Diseño preparado para movimiento:** separar componentes y capas según las necesidades reales de animación; definir pivotes, articulaciones, poses, partes móviles, trayectorias y movimiento secundario. La modularidad del código es útil, pero no demuestra que la animación exista o sea fluida.
+6. **Interfaz e inspección:** conservar como referencia secundaria los controles y la inspección estructural de Meta. Deben complementar la escena, nunca desplazar tiempo de trabajo que corresponda al diseño visual.
+7. **Tecnología subordinada al resultado:** React organiza interfaz y estado; SVG representa elementos vectoriales; CSS puede animar propiedades; JavaScript puede coordinar tiempo y comportamiento. Ninguna tecnología garantiza por sí sola dirección de arte o calidad de ilustración.
+
+### Qué no se conserva como regla o conclusión
+
+- No aceptar como hechos las descripciones de los supuestos procesos mentales de Gemini o Meta. Son explicaciones generadas después del resultado; no permiten conocer literalmente el razonamiento interno de los modelos.
+- No adoptar la autocalificación de Gemini como «profesional», «cinematográfica» o equivalente a un estudio de animación. La calidad debe juzgarse observando el resultado y contrastándolo con criterios explícitos.
+- No inferir anatomía correcta, rigging avanzado, locomoción orgánica o continuidad narrativa por la mera presencia de curvas Bézier, nombres como `ProtagonistRig`, grupos SVG o varias poses.
+- No asumir que muchas capas, componentes, líneas de código, controles o elementos visuales significan mayor calidad.
+- No convertir la paleta nocturna azul/cian con escaparates cálidos, el estilo urbano ni la línea clara en una estética obligatoria para otros encargos.
+- No descartar React, SVG, primitivas o interfaces de control en general. El problema no es la herramienta: es utilizarlas sin una intención visual adecuada o confundir estructura técnica con acabado artístico.
+- No desechar los dos HTML: ambos se conservan como evidencia comparativa. Se descartan únicamente sus afirmaciones no demostradas y cualquier criterio que confunda complejidad técnica con calidad visual.
+
+### Escala de evaluación que se desprende de la prueba
+
+1. **Geometría básica:** formas elementales ensambladas. Es válida si el encargo pide abstracción o esquematismo; insuficiente si se pide ilustración desarrollada.
+2. **Ilustración vectorial diseñada:** siluetas, curvas, superficies, proporciones, detalles, color y profundidad con intención.
+3. **Dirección artística:** concepto, composición, jerarquía, perspectiva, identidad, atmósfera y coherencia entre todos los elementos.
+4. **Producción animada:** además de lo anterior, movimiento convincente, articulación, timing, continuidad, interacción y puesta en escena temporal.
+
+Estos niveles no son una escala de complejidad obligatoria para todos los proyectos. El nivel apropiado depende del encargo, pero no debe presentarse una pieza geométrica elemental como ilustración profesional cuando no cumple ese objetivo.
+
+### Siguiente experimento: conservar el estilo y añadir animación
+
+La prueba siguiente debe medir si Gemini puede trasladar el lenguaje visual de su propia escena urbana a una producción animada sin simplificarlo, cambiar de estilo ni sustituir la ilustración por una plantilla genérica.
+
+**Diseño de prueba recomendado:**
+- Usar el HTML de Gemini como referencia directa y conservar la misma escena, protagonista, perro, arquitectura, paleta, proporciones, contornos y tratamiento de luz.
+- Solicitar una secuencia animada breve con acción narrativa legible, no solo parpadeos, partículas o desplazamientos ambientales.
+- Exigir código editable y ejecutable; SVG y componentes/capas identificables. No aceptar un video rasterizado, GIF incrustado, secuencia de imágenes ni una captura estática como sustituto del proyecto.
+- Definir storyboard o momentos clave, duración, acciones, trayectorias, poses, timing y movimientos secundarios antes de implementar.
+- Animar a la chica y al perro con locomoción coherente, relación entre ambos y correa con seguimiento e inercia; mantener arquitectura y perspectiva estables. Incorporar movimiento ambiental solo si refuerza la escena.
+- Evaluar por separado: (a) fidelidad al estilo original; (b) calidad del dibujo; (c) coherencia espacial; (d) actuación y locomoción; (e) continuidad temporal; (f) calidad técnica y controles; (g) ejecución y adaptación al dispositivo.
+- Comparar el fotograma inicial con el HTML original y revisar varios momentos de la secuencia. Una animación técnicamente funcional que rediseña o degrada la escena no supera la prueba de continuidad estilística.
+- Registrar limitaciones: la inspección del código no demuestra calidad visual ni funcionamiento. Se requiere ejecutar y observar la secuencia en el entorno objetivo.
+
+**Hipótesis a comprobar:** Gemini puede conservar la dirección visual al pasar de una escena estática/articulada a una secuencia temporal. El resultado aún no se conoce; no anticipar que la prueba será exitosa.
