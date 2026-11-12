@@ -76,3 +76,22 @@ La revisión distingue las implementaciones funcionales de sus aproximaciones: e
 **Límite:** análisis estático. No se ha ejecutado la muestra ni validado su apariencia, fluidez o rendimiento en navegador/iPad.
 
 El análisis detallado y los criterios propuestos para el Director Creativo están en [ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md](ANALISIS-SISTEMA-PROCEDURAL-PARTICULAS.md).
+
+
+## Ampliación: Mundo luminoso, Face.html — ecosistema bioluminiscente
+
+Se incorporó el archivo `referencias-visuales/por-clasificar/Mundo luminoso, Face.html` como referencia técnica de ecosistema procedural 2D.
+
+**Tecnología observada:** React para interfaz y Canvas 2D para el renderizado; no se identificó Three.js, WebGL ni shaders GLSL. La muestra organiza cinco planos de profundidad/paralaje y varios subsistemas ambientales. Se identificaron árboles ramificados, plantas, hojas, flores, hongos, raíces luminosas, dos charcas con ondas, haces de luz y atmósfera. El código configura seis poblaciones de partículas (170 esporas, 54 luciérnagas, 210 polvo, 120 polen, 150 agua y 116 energía; 820 en total antes de aplicar el factor de densidad).
+
+La implementación incluye reloj con delta time limitado, ResizeObserver, DPR máximo 2, cuadrícula espacial de 64 px para consultas locales, semilla reproducible, interacción táctil/puntero y controles para fuerzas, viento, ondas y regeneración.
+
+**Valor como referencia:** arquitectura procedural 2D integrada, composición por planos, variedad de subsistemas, comportamiento ambiental e interacción. Es una referencia más elaborada que nuestro primer HTML autónomo de Canvas 2D en cuanto a estructura de escena y diversidad de elementos.
+
+**Límites:** cinco planos y paralaje no equivalen a geometría tridimensional real. La lectura del código no valida por sí sola la calidad del render, la fluidez ni la funcionalidad real de cada control. No se ha ejecutado en navegador ni probado en Safari/iPad.
+
+### Conclusión tecnológica ampliada
+
+La base del skill pasa de una regla exclusivamente 2D a un enfoque **2D-first, con 2.5D y 3D selectivo**. El 2D conserva prioridad cuando resuelve el encargo; Three.js/WebGL se incorporan cuando se necesitan volumen, cámara, materiales, iluminación o interacción espacial reales. JSON se considera un formato para describir datos y configuración de escenas, no una tecnología de renderizado.
+
+La comparación entre el ecosistema de Facebook y el prototipo propio también debe mantenerse separada en dos ejes: complejidad de arquitectura/código y calidad visual comprobada. La primera se puede estudiar estáticamente; la segunda requiere ejecutar y observar ambos resultados.
