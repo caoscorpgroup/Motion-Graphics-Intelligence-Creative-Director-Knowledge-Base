@@ -44,6 +44,10 @@ La tecnología se selecciona por la tarea: HTML estructura; CSS/SCSS presenta; S
 - [PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md](docs/PROTOCOLO-PRUEBA-DIRECTOR-CREATIVO-ILUSTRACION.md): prueba controlada para medir si la IA aplica las directrices mediante resultados reales.
 - [SISTEMA-CONTROL-CALIDAD-Y-VERIFICACION-PRODUCCION-CREATIVA.md](docs/SISTEMA-CONTROL-CALIDAD-Y-VERIFICACION-PRODUCCION-CREATIVA.md): sistema modular de QA para 2D, 2.5D y 3D, con inspección individual, pruebas temporales, evidencias y protocolo de evaluación cruzada con otras IA.
 
+## Capacidades multimodales
+
+- [CAPACIDADES-MULTIMODALES-PARA-DIRECCION-VISUAL-Y-ASSETS.md](CAPACIDADES-MULTIMODALES-PARA-DIRECCION-VISUAL-Y-ASSETS.md): directriz agnóstica de proveedor para análisis de referencias, generación y edición localizada de assets, continuidad visual, selección de modelos multimodales y límites de delegación.
+
 ## Referencias y entregas
 
 - [docs/direccion-creativa/](docs/direccion-creativa/): documentos rectores de dirección artística, implementación y profundidad.
